@@ -61,6 +61,8 @@ jobs:
                   uv run python run_tests.py --integration
 
             - name: Test portfolio CLI functionality
+              env:
+                  TESTING: "1"
               run: |
                   # Test portfolio creation and basic operations
                   uv run portfolio_manager.py create "Test Portfolio" --type personal --description "CI test portfolio"
@@ -154,9 +156,13 @@ jobs:
               run: uv sync --all-extras --dev
 
             - name: Run performance benchmarks
+              env:
+                  TESTING: "1"
               run: |
                   # Test portfolio operations performance
                   time uv run python -c "
+                  import os
+                  os.environ['TESTING'] = '1'
                   from src.portfolio.portfolio_manager import PortfolioManager
                   pm = PortfolioManager()
                   # Create test portfolio and measure performance
