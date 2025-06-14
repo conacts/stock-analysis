@@ -57,10 +57,10 @@ clean: ## Clean up generated files
 	find . -type f -name "*.pyc" -delete
 
 run-analyzer: ## Run the master stock analyzer
-	uv run master_stock_analyzer.py
+	uv run scripts/master_stock_analyzer.py
 
 run-app: ## Run the main research app
-	uv run main_app.py
+	uv run scripts/main_app.py
 
 # Development workflow commands
 dev-setup: install setup-hooks ## Complete development setup

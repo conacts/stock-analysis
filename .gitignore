@@ -45,6 +45,9 @@ coverage.xml
 .pytest_cache/
 cover/
 
+# Ruff cache
+.ruff_cache/
+
 # Translations
 *.mo
 *.pot
@@ -168,4 +171,11 @@ safety-report.json
 *.tmp
 *.temp
 
+# Output files
+output/
+
+# IDE and editor files
 .obsidian/
+
+# Trigger.dev
+.trigger/

@@ -6,9 +6,13 @@ Run database migrations for the stock analysis system
 
 import argparse
 import sys
+from pathlib import Path
 
-from src.db.connection import get_db_connection
-from src.db.migrations import MigrationRunner
+# Add src to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+from db.connection import get_db_connection
+from db.migrations import MigrationRunner
 
 
 def test_connection():
