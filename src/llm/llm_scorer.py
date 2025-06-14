@@ -10,7 +10,7 @@ implementing the new scoring weights:
 """
 
 import logging
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from .deepseek_analyzer import DeepSeekAnalyzer
 
@@ -25,20 +25,21 @@ class LLMScorer:
     to generate comprehensive investment scores.
     """
 
-    def __init__(self, deepseek_api_key: Optional[str] = None):
+    def __init__(self, deepseek_api_key: Optional[str] = None, enable_caching: bool = True):
         """
         Initialize LLM scorer.
 
         Args:
             deepseek_api_key: DeepSeek API key for AI analysis
+            enable_caching: Whether to enable response caching for cost optimization
         """
         self.llm_analyzer = None
 
-        # Try to initialize DeepSeek analyzer
+        # Try to initialize DeepSeek analyzer with enhanced features
         try:
-            self.llm_analyzer = DeepSeekAnalyzer(deepseek_api_key)
+            self.llm_analyzer = DeepSeekAnalyzer(deepseek_api_key, enable_caching=enable_caching)
             self.llm_enabled = True
-            logger.info("LLM analysis enabled with DeepSeek")
+            logger.info("Enhanced LLM analysis enabled with DeepSeek (caching: %s)", enable_caching)
         except Exception as e:
             logger.warning(f"LLM analysis disabled: {e}")
             self.llm_enabled = False
@@ -326,3 +327,59 @@ class LLMScorer:
                     "No AI-powered insights",
                 ],
             }
+
+    def batch_score_stocks(self, stock_analysis_data: List[Dict]) -> Dict[str, Dict]:
+        """
+        Score multiple stocks in batch for cost efficiency.
+
+        Args:
+            stock_analysis_data: List of dicts containing stock analysis data
+
+        Returns:
+            Dict mapping symbols to enhanced scores
+        """
+        if not self.llm_enabled or not self.llm_analyzer:
+            # Fallback to individual traditional scoring
+            results = {}
+            for stock_data in stock_analysis_data:
+                symbol = stock_data.get("symbol", "UNKNOWN")
+                results[symbol] = self._calculate_traditional_score(symbol, stock_data.get("fundamental_score", 50), stock_data.get("technical_score", 50), stock_data.get("sentiment_score", 50), stock_data.get("risk_score", 50))
+            return results
+
+        try:
+            # Use batch analysis from DeepSeek analyzer
+            batch_results = self.llm_analyzer.batch_analyze_stocks(stock_analysis_data)
+
+            # Enhance results with traditional component scores
+            for symbol, result in batch_results.items():
+                # Find corresponding stock data
+                stock_data = next((s for s in stock_analysis_data if s.get("symbol") == symbol), {})
+
+                # Add traditional component scores
+                result.update(
+                    {"fundamental_score": stock_data.get("fundamental_score", 50), "technical_score": stock_data.get("technical_score", 50), "sentiment_score": stock_data.get("sentiment_score", 50), "risk_score": stock_data.get("risk_score", 50), "weights_used": self.weights, "analysis_method": "batch_llm_enhanced"}
+                )
+
+            return batch_results
+
+        except Exception as e:
+            logger.error(f"Error in batch scoring: {e}")
+            # Fallback to individual traditional scoring
+            results = {}
+            for stock_data in stock_analysis_data:
+                symbol = stock_data.get("symbol", "UNKNOWN")
+                results[symbol] = self._calculate_traditional_score(symbol, stock_data.get("fundamental_score", 50), stock_data.get("technical_score", 50), stock_data.get("sentiment_score", 50), stock_data.get("risk_score", 50))
+            return results
+
+    def get_cost_summary(self) -> Dict:
+        """Get cost summary from the LLM analyzer."""
+        if self.llm_enabled and self.llm_analyzer:
+            return self.llm_analyzer.get_cost_summary()
+        else:
+            return {"total_tokens_used": 0, "total_cost_usd": 0.0, "api_calls_made": 0, "average_cost_per_call": 0.0, "cache_hit_rate": 0.0, "status": "LLM disabled"}
+
+    def clear_cache(self):
+        """Clear the LLM analyzer cache."""
+        if self.llm_enabled and self.llm_analyzer:
+            self.llm_analyzer.clear_cache()
+            logger.info("LLM cache cleared")

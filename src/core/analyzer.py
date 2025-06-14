@@ -71,12 +71,12 @@ class StockAnalyzer:
             },
         }
 
-        # Initialize LLM scorer if available and enabled
+        # Initialize enhanced LLM scorer if available and enabled
         self.llm_scorer = None
         if enable_llm and LLM_AVAILABLE:
             try:
-                self.llm_scorer = LLMScorer(deepseek_api_key)
-                logger.info("LLM-enhanced analysis enabled")
+                self.llm_scorer = LLMScorer(deepseek_api_key, enable_caching=True)
+                logger.info("Enhanced LLM analysis enabled with caching and cost optimization")
             except Exception as e:
                 logger.warning(f"Failed to initialize LLM scorer: {e}")
                 self.llm_scorer = None
@@ -669,3 +669,132 @@ class StockAnalyzer:
             strengths.append("Positive market sentiment")
 
         return strengths[:5]  # Top 5 strengths
+
+    def get_llm_cost_summary(self) -> Dict:
+        """Get LLM cost summary if available."""
+        if self.llm_scorer:
+            return self.llm_scorer.get_cost_summary()
+        else:
+            return {"total_tokens_used": 0, "total_cost_usd": 0.0, "api_calls_made": 0, "average_cost_per_call": 0.0, "cache_hit_rate": 0.0, "status": "LLM not enabled"}
+
+    def clear_llm_cache(self):
+        """Clear LLM cache if available."""
+        if self.llm_scorer:
+            self.llm_scorer.clear_cache()
+
+    def batch_analyze_stocks(self, symbols: List[str]) -> Dict[str, Optional[Dict]]:
+        """
+        Analyze multiple stocks efficiently using batch processing when possible.
+
+        Args:
+            symbols: List of stock symbols to analyze
+
+        Returns:
+            Dict mapping symbols to analysis results
+        """
+        results = {}
+
+        # First, gather all individual analysis data
+        stock_data_list = []
+        for symbol in symbols:
+            try:
+                # Get individual analysis components
+                ticker = yf.Ticker(symbol)
+                info = ticker.info
+
+                if not info or "currentPrice" not in info:
+                    results[symbol] = None
+                    continue
+
+                # Core analysis components
+                fundamentals = self._analyze_fundamentals(info, symbol)
+                technical = self._analyze_technical(ticker, symbol)
+                sentiment = self._analyze_sentiment(ticker, info, symbol)
+                risk = self._assess_risk(info, sentiment)
+
+                # Prepare data for batch processing
+                stock_data = {
+                    "symbol": symbol,
+                    "fundamental_score": fundamentals.get("fundamental_score", 50),
+                    "technical_score": technical.get("technical_score", 50),
+                    "sentiment_score": 50 + (sentiment.get("sentiment_score", 0) * 10),
+                    "risk_score": max(0, 100 - (risk.get("risk_score", 5) * 10)),
+                    "financial_data": {
+                        "market_cap": fundamentals.get("market_cap", 0),
+                        "pe_ratio": fundamentals.get("pe_ratio", 0),
+                        "revenue_growth": fundamentals.get("revenue_growth", 0),
+                        "profit_margin": fundamentals.get("profit_margin", 0),
+                        "roe": fundamentals.get("roe", 0),
+                        "debt_to_equity": fundamentals.get("debt_to_equity", 0),
+                    },
+                    "news_data": self._get_news_data(ticker),
+                    "technical_data": technical.get("indicators", {}),
+                    "market_context": {
+                        "sector": fundamentals.get("sector", "Unknown"),
+                        "market_trend": "neutral",
+                        "sector_performance": "neutral",
+                    },
+                    "fundamentals": fundamentals,
+                    "technical": technical,
+                    "sentiment": sentiment,
+                    "risk": risk,
+                }
+                stock_data_list.append(stock_data)
+
+            except Exception as e:
+                logger.error(f"Error preparing data for {symbol}: {e}")
+                results[symbol] = None
+
+        # Use batch scoring if LLM is available
+        if self.llm_scorer and len(stock_data_list) > 1:
+            try:
+                batch_scores = self.llm_scorer.batch_score_stocks(stock_data_list)
+
+                # Combine with individual analysis data
+                for stock_data in stock_data_list:
+                    symbol = stock_data["symbol"]
+                    score = batch_scores.get(symbol, {})
+
+                    # Generate recommendation
+                    recommendation = self._generate_recommendation(stock_data["fundamentals"], stock_data["technical"], stock_data["sentiment"], stock_data["risk"], score)
+
+                    results[symbol] = {
+                        "symbol": symbol,
+                        "timestamp": datetime.now().isoformat(),
+                        "fundamentals": stock_data["fundamentals"],
+                        "technical": stock_data["technical"],
+                        "sentiment": stock_data["sentiment"],
+                        "risk": stock_data["risk"],
+                        "score": score,
+                        "recommendation": recommendation,
+                    }
+
+            except Exception as e:
+                logger.error(f"Error in batch analysis: {e}")
+                # Fallback to individual analysis
+                for stock_data in stock_data_list:
+                    symbol = stock_data["symbol"]
+                    results[symbol] = self.analyze_stock(symbol)
+        else:
+            # Individual analysis for each stock
+            for symbol in symbols:
+                results[symbol] = self.analyze_stock(symbol)
+
+        return results
+
+    def _get_news_data(self, ticker) -> List[Dict]:
+        """Extract news data from ticker for LLM analysis."""
+        try:
+            news = ticker.news[:10] if hasattr(ticker, "news") else []
+            news_data = []
+            for article in news:
+                news_data.append(
+                    {
+                        "title": article.get("title", ""),
+                        "summary": article.get("summary", ""),
+                        "date": article.get("providerPublishTime", ""),
+                    }
+                )
+            return news_data
+        except Exception:
+            return []
