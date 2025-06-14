@@ -231,4 +231,10 @@ async def send_premarket_summary(data: Dict, token: str = Depends(verify_token))
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)  # nosec B104
+    print(f"🚀 Starting Stock Analysis API on port {port}")
+    print(f"🔍 Health check available at: http://0.0.0.0:{port}/health")
+    print(f"🌍 Environment: Railway={os.getenv('RAILWAY_ENVIRONMENT', 'local')}")
+    print(f"🔑 API Token configured: {bool(os.getenv('API_TOKEN'))}")
+    print(f"🗄️ Database URL configured: {bool(os.getenv('DATABASE_URL'))}")
+    print(f"🤖 DeepSeek API configured: {bool(os.getenv('DEEPSEEK_API_KEY'))}")
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")  # nosec B104
