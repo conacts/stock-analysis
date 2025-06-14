@@ -3,6 +3,7 @@ FastAPI server for Stock Analysis System
 Exposes Python analysis functions as REST API endpoints for Trigger.dev tasks
 """
 
+import asyncio
 import os
 import sys
 from datetime import datetime
@@ -27,7 +28,7 @@ from pipeline.research_engine import ResearchEngine
 
 # Import trading endpoints
 try:
-    from api.trading_endpoints import router as trading_router
+    from .trading_endpoints import router as trading_router
 
     TRADING_ENABLED = True
 except ImportError as e:
@@ -97,33 +98,57 @@ class AlertRequest(BaseModel):
 # Health Check Endpoint
 @app.get("/health", response_model=HealthCheckResult)
 async def health_check():
-    """System health check"""
+    """System health check with 30-second timeout"""
     try:
-        # Test database connection
-        db = get_db_connection()
-        db_healthy = db.test_connection()
-
-        # Test DeepSeek API if key is available
-        deepseek_healthy = True
-        deepseek_error = None
-        try:
-            if os.getenv("DEEPSEEK_API_KEY"):
-                _ = DeepSeekAnalyzer()  # Test initialization
-                # Simple test - this doesn't make an API call
-                deepseek_healthy = True
-        except Exception as e:
-            deepseek_healthy = False
-            deepseek_error = str(e)
-
-        overall_status = "healthy" if db_healthy and deepseek_healthy else "degraded"
-
-        return HealthCheckResult(
-            status=overall_status,
-            timestamp=datetime.now(),
-            checks={"database": {"status": "healthy" if db_healthy else "unhealthy"}, "deepseek": {"status": "healthy" if deepseek_healthy else "unhealthy", "error": deepseek_error}, "environment": {"status": "healthy", "python_version": sys.version, "api_token_configured": bool(os.getenv("API_TOKEN"))}},
-        )
+        # Run health checks with timeout
+        return await asyncio.wait_for(_perform_health_checks(), timeout=30.0)
+    except asyncio.TimeoutError:
+        return HealthCheckResult(status="unhealthy", timestamp=datetime.now(), checks={"error": "Health check timed out after 30 seconds"})
     except Exception as e:
         return HealthCheckResult(status="unhealthy", timestamp=datetime.now(), checks={"error": str(e)})
+
+
+async def _perform_health_checks():
+    """Perform individual health checks with timeouts"""
+    checks = {}
+
+    # Test database connection with timeout
+    db_healthy = False
+    db_error = None
+    try:
+        db = get_db_connection()
+        db_healthy = await asyncio.wait_for(asyncio.to_thread(db.test_connection), timeout=10.0)
+        checks["database"] = {"status": "healthy" if db_healthy else "unhealthy"}
+    except asyncio.TimeoutError:
+        checks["database"] = {"status": "unhealthy", "error": "Database check timed out"}
+    except Exception as e:
+        db_error = str(e)
+        checks["database"] = {"status": "unhealthy", "error": db_error}
+
+    # Test DeepSeek API if key is available with timeout
+    deepseek_healthy = True
+    deepseek_error = None
+    try:
+        if os.getenv("DEEPSEEK_API_KEY"):
+            # Test initialization with timeout
+            await asyncio.wait_for(asyncio.to_thread(lambda: DeepSeekAnalyzer()), timeout=10.0)
+            deepseek_healthy = True
+        checks["deepseek"] = {"status": "healthy" if deepseek_healthy else "unhealthy"}
+    except asyncio.TimeoutError:
+        deepseek_healthy = False
+        deepseek_error = "DeepSeek check timed out"
+        checks["deepseek"] = {"status": "unhealthy", "error": deepseek_error}
+    except Exception as e:
+        deepseek_healthy = False
+        deepseek_error = str(e)
+        checks["deepseek"] = {"status": "unhealthy", "error": deepseek_error}
+
+    # Environment check (always fast)
+    checks["environment"] = {"status": "healthy", "python_version": sys.version, "api_token_configured": bool(os.getenv("API_TOKEN")), "deepseek_key_configured": bool(os.getenv("DEEPSEEK_API_KEY")), "database_url_configured": bool(os.getenv("DATABASE_URL"))}
+
+    overall_status = "healthy" if db_healthy and deepseek_healthy else "degraded"
+
+    return HealthCheckResult(status=overall_status, timestamp=datetime.now(), checks=checks)
 
 
 # Portfolio Endpoints

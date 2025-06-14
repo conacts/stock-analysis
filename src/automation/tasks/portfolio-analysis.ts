@@ -11,6 +11,7 @@ import {
 
 export const portfolioAnalysisTask = task({
 	id: "portfolio-analysis",
+	maxDuration: 300, // 5 minutes max duration
 	run: async (payload: PortfolioPayload) => {
 		console.log(`🔍 Starting portfolio analysis for Portfolio ${payload.portfolioId} (${payload.portfolioName})`);
 
@@ -65,20 +66,28 @@ export const portfolioAnalysisTask = task({
 
 // Extract comprehensive portfolio data
 async function extractPortfolioData(portfolioId: number): Promise<PortfolioSummary> {
-	// This would call your Python portfolio extraction script
-	const result = await fetch(`${process.env.PYTHON_API_URL}/portfolio/${portfolioId}/summary`, {
-		method: 'GET',
-		headers: {
-			'Authorization': `Bearer ${process.env.API_TOKEN}`,
-			'Content-Type': 'application/json'
+	// This would call your Python portfolio extraction script with timeout
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+	try {
+		const result = await fetch(`${process.env.PYTHON_API_URL}/portfolio/${portfolioId}/summary`, {
+			method: 'GET',
+			headers: {
+				'Authorization': `Bearer ${process.env.API_TOKEN}`,
+				'Content-Type': 'application/json'
+			},
+			signal: controller.signal
+		});
+
+		if (!result.ok) {
+			throw new Error(`Failed to extract portfolio data: ${result.statusText}`);
 		}
-	});
 
-	if (!result.ok) {
-		throw new Error(`Failed to extract portfolio data: ${result.statusText}`);
+		return await result.json();
+	} finally {
+		clearTimeout(timeoutId);
 	}
-
-	return await result.json();
 }
 
 // Get LLM conversation history for context
@@ -122,20 +131,28 @@ async function runPortfolioAnalysisWithLLM(
 		store_conversation: true
 	};
 
-	const result = await fetch(`${process.env.PYTHON_API_URL}/portfolio/analyze-with-llm`, {
-		method: 'POST',
-		headers: {
-			'Authorization': `Bearer ${process.env.API_TOKEN}`,
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify(analysisPayload)
-	});
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-	if (!result.ok) {
-		throw new Error(`Failed to run LLM analysis: ${result.statusText}`);
+	try {
+		const result = await fetch(`${process.env.PYTHON_API_URL}/portfolio/analyze-with-llm`, {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${process.env.API_TOKEN}`,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(analysisPayload),
+			signal: controller.signal
+		});
+
+		if (!result.ok) {
+			throw new Error(`Failed to run LLM analysis: ${result.statusText}`);
+		}
+
+		return await result.json();
+	} finally {
+		clearTimeout(timeoutId);
 	}
-
-	return await result.json();
 }
 
 // Store analysis results in database
@@ -204,6 +221,7 @@ async function sendPortfolioAlerts(portfolioId: number, alerts: string[]): Promi
 // Scheduled portfolio analysis tasks
 export const dailyPortfolioAnalysis = task({
 	id: "daily-portfolio-analysis",
+	maxDuration: 600, // 10 minutes max duration for multiple portfolios
 	run: async () => {
 		console.log("🌅 Starting daily portfolio analysis for all portfolios");
 
