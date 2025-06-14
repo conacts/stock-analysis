@@ -197,3 +197,6 @@ output/
 
 # Prisma generated files
 /src/generated/prisma
+
+# Test results files
+test_results*.json
