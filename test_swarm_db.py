@@ -8,6 +8,17 @@ from src.models.swarm_models import PortfolioConfig, SwarmConversation, TradingD
 def test_swarm_database():
     """Test all Swarm database operations"""
     print("🧪 Testing Swarm Database...")
+    
+    # Clean up any existing test data first
+    db = get_swarm_db()
+    conn = db.get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute('DELETE FROM swarm_conversations WHERE portfolio_id = %s', ('test_portfolio',))
+            cursor.execute('DELETE FROM portfolio_configs WHERE portfolio_id = %s', ('test_portfolio',))
+            conn.commit()
+    finally:
+        db.return_connection(conn)
 
     # Test Swarm database connection
     db = get_swarm_db()
@@ -19,33 +30,56 @@ def test_swarm_database():
     config_id = db.save_portfolio_config(config)
     print(f"✅ Portfolio config saved with ID: {config_id}")
 
-    # Test retrieving the config
-    retrieved = db.get_portfolio_config("test_portfolio")
-    print(f"✅ Portfolio config retrieved: {retrieved.name if retrieved else None}")
+    # Test retrieving portfolio config
+    retrieved_config = db.get_portfolio_config("test_portfolio")
+    print(f"✅ Portfolio config retrieved: {retrieved_config}")
 
     # Test saving a conversation
     conversation = SwarmConversation(
         portfolio_id="test_portfolio",
         conversation_id="test_conv_001",
         user_message="What stocks should I buy?",
-        agent_responses=[{"agent": "market_analyst", "message": "Analyzing market conditions..."}, {"agent": "trader", "message": "I recommend AAPL based on analysis."}],
+        agent_responses=[
+            {"agent": "market_analyst", "message": "Analyzing market conditions..."},
+            {"agent": "trader", "message": "I recommend AAPL based on analysis."}
+        ],
         final_agent="trader",
         turns_used=2,
-        success=True,
+        success=True
     )
 
     conv_id = db.save_conversation(conversation)
     print(f"✅ Conversation saved with ID: {conv_id}")
 
     # Test retrieving conversation history
-    history = db.get_conversation_history("test_portfolio", limit=5)
+    history = db.get_conversation_history('test_portfolio', limit=5)
     print(f"✅ Retrieved {len(history)} conversations from history")
 
     # Test saving a trading decision
-    decision = TradingDecision(conversation_id="test_conv_001", portfolio_id="test_portfolio", decision_type="buy", symbol="AAPL", quantity=10.0, price=150.00, reasoning="Strong technical indicators and positive market sentiment", confidence_score=0.85)
+    decision = TradingDecision(
+        conversation_id="test_conv_001",
+        portfolio_id="test_portfolio",
+        decision_type="buy",
+        symbol="AAPL",
+        quantity=10.0,
+        price=150.0,
+        reasoning="Strong technical indicators and positive market sentiment",
+        confidence_score=0.85
+    )
 
     decision_id = db.save_trading_decision(decision)
     print(f"✅ Trading decision saved with ID: {decision_id}")
+
+    # Clean up test data
+    conn = db.get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute('DELETE FROM trading_decisions WHERE portfolio_id = %s', ('test_portfolio',))
+            cursor.execute('DELETE FROM swarm_conversations WHERE portfolio_id = %s', ('test_portfolio',))
+            cursor.execute('DELETE FROM portfolio_configs WHERE portfolio_id = %s', ('test_portfolio',))
+            conn.commit()
+    finally:
+        db.return_connection(conn)
 
     print("🎉 All Swarm database tests passed!")
 
