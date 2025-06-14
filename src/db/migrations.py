@@ -7,6 +7,8 @@ import os
 import sqlite3
 from datetime import datetime
 
+from sqlalchemy import text
+
 from .connection import db, get_engine
 from .models import Base, DailyAnalysis, DailyDecision, MarketContext, MigrationHistory, PerformanceTracking
 
@@ -23,11 +25,107 @@ class MigrationRunner:
         try:
             print("🏗️  Creating database tables...")
             Base.metadata.create_all(bind=self.engine)
+
+            # Create portfolio tables using raw SQL
+            self._create_portfolio_tables_sql()
+
             print("✅ Database tables created successfully")
             return True
         except Exception as e:
             print(f"❌ Error creating tables: {e}")
             return False
+
+    def _create_portfolio_tables_sql(self):
+        """Create portfolio tables using raw SQL for PostgreSQL"""
+        try:
+            with self.engine.connect() as conn:
+                # Portfolios table
+                conn.execute(
+                    text("""
+                    CREATE TABLE IF NOT EXISTS portfolios (
+                        id SERIAL PRIMARY KEY,
+                        name VARCHAR(255) NOT NULL UNIQUE,
+                        description TEXT,
+                        portfolio_type VARCHAR(50) DEFAULT 'personal',
+                        base_currency VARCHAR(10) DEFAULT 'USD',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        is_active BOOLEAN DEFAULT true
+                    )
+                """)
+                )
+
+                # Portfolio positions table
+                conn.execute(
+                    text("""
+                    CREATE TABLE IF NOT EXISTS portfolio_positions (
+                        id SERIAL PRIMARY KEY,
+                        portfolio_id INTEGER NOT NULL,
+                        symbol VARCHAR(20) NOT NULL,
+                        quantity DECIMAL(15,6) NOT NULL DEFAULT 0.0,
+                        average_cost DECIMAL(15,6) NOT NULL DEFAULT 0.0,
+                        current_price DECIMAL(15,6) DEFAULT 0.0,
+                        market_value DECIMAL(15,6) DEFAULT 0.0,
+                        unrealized_pnl DECIMAL(15,6) DEFAULT 0.0,
+                        unrealized_pnl_pct DECIMAL(8,4) DEFAULT 0.0,
+                        sector VARCHAR(100),
+                        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (portfolio_id) REFERENCES portfolios (id),
+                        UNIQUE(portfolio_id, symbol)
+                    )
+                """)
+                )
+
+                # Portfolio transactions table
+                conn.execute(
+                    text("""
+                    CREATE TABLE IF NOT EXISTS portfolio_transactions (
+                        id SERIAL PRIMARY KEY,
+                        portfolio_id INTEGER NOT NULL,
+                        symbol VARCHAR(20) NOT NULL,
+                        transaction_type VARCHAR(20) NOT NULL,
+                        quantity DECIMAL(15,6) NOT NULL,
+                        price DECIMAL(15,6) NOT NULL,
+                        total_amount DECIMAL(15,6) NOT NULL,
+                        fees DECIMAL(15,6) DEFAULT 0.0,
+                        transaction_date DATE NOT NULL,
+                        notes TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (portfolio_id) REFERENCES portfolios (id)
+                    )
+                """)
+                )
+
+                # Portfolio snapshots table
+                conn.execute(
+                    text("""
+                    CREATE TABLE IF NOT EXISTS portfolio_snapshots (
+                        id SERIAL PRIMARY KEY,
+                        portfolio_id INTEGER NOT NULL,
+                        snapshot_date DATE NOT NULL,
+                        total_value DECIMAL(15,6) DEFAULT 0.0,
+                        cash_balance DECIMAL(15,6) DEFAULT 0.0,
+                        invested_amount DECIMAL(15,6) DEFAULT 0.0,
+                        unrealized_pnl DECIMAL(15,6) DEFAULT 0.0,
+                        unrealized_pnl_pct DECIMAL(8,4) DEFAULT 0.0,
+                        day_change DECIMAL(15,6) DEFAULT 0.0,
+                        day_change_pct DECIMAL(8,4) DEFAULT 0.0,
+                        positions_count INTEGER DEFAULT 0,
+                        top_holdings JSONB,
+                        sector_allocation JSONB,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (portfolio_id) REFERENCES portfolios (id),
+                        UNIQUE(portfolio_id, snapshot_date)
+                    )
+                """)
+                )
+
+                conn.commit()
+                print("✅ Portfolio tables created successfully")
+
+        except Exception as e:
+            print(f"❌ Error creating portfolio tables: {e}")
+            raise
 
     def drop_tables(self) -> bool:
         """Drop all database tables (use with caution!)"""
@@ -301,3 +399,131 @@ class MigrationRunner:
         """Clean up database session"""
         if hasattr(self, "session"):
             self.session.close()
+
+    def create_performance_tracking_table(self):
+        """Create performance tracking table"""
+        query = """
+        CREATE TABLE IF NOT EXISTS performance_tracking (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            symbol TEXT NOT NULL,
+            recommendation_date TEXT NOT NULL,
+            entry_price REAL,
+            current_price REAL,
+            target_price REAL,
+            rating TEXT,
+            days_held INTEGER,
+            return_pct REAL,
+            status TEXT,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+        self.execute_query(query)
+        self.logger.info("Created performance_tracking table")
+
+    def create_portfolio_tables(self):
+        """Create all portfolio-related tables"""
+        # Portfolios table
+        portfolios_query = """
+        CREATE TABLE IF NOT EXISTS portfolios (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            description TEXT,
+            portfolio_type TEXT DEFAULT 'personal',
+            base_currency TEXT DEFAULT 'USD',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            is_active BOOLEAN DEFAULT 1
+        )
+        """
+
+        # Portfolio positions table
+        positions_query = """
+        CREATE TABLE IF NOT EXISTS portfolio_positions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            portfolio_id INTEGER NOT NULL,
+            symbol TEXT NOT NULL,
+            quantity REAL NOT NULL DEFAULT 0.0,
+            average_cost REAL NOT NULL DEFAULT 0.0,
+            current_price REAL DEFAULT 0.0,
+            market_value REAL DEFAULT 0.0,
+            unrealized_pnl REAL DEFAULT 0.0,
+            unrealized_pnl_pct REAL DEFAULT 0.0,
+            sector TEXT,
+            last_updated TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (portfolio_id) REFERENCES portfolios (id),
+            UNIQUE(portfolio_id, symbol)
+        )
+        """
+
+        # Portfolio transactions table
+        transactions_query = """
+        CREATE TABLE IF NOT EXISTS portfolio_transactions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            portfolio_id INTEGER NOT NULL,
+            symbol TEXT NOT NULL,
+            transaction_type TEXT NOT NULL,
+            quantity REAL NOT NULL,
+            price REAL NOT NULL,
+            total_amount REAL NOT NULL,
+            fees REAL DEFAULT 0.0,
+            transaction_date TEXT NOT NULL,
+            notes TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (portfolio_id) REFERENCES portfolios (id)
+        )
+        """
+
+        # Portfolio snapshots table
+        snapshots_query = """
+        CREATE TABLE IF NOT EXISTS portfolio_snapshots (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            portfolio_id INTEGER NOT NULL,
+            snapshot_date TEXT NOT NULL,
+            total_value REAL DEFAULT 0.0,
+            cash_balance REAL DEFAULT 0.0,
+            invested_amount REAL DEFAULT 0.0,
+            unrealized_pnl REAL DEFAULT 0.0,
+            unrealized_pnl_pct REAL DEFAULT 0.0,
+            day_change REAL DEFAULT 0.0,
+            day_change_pct REAL DEFAULT 0.0,
+            positions_count INTEGER DEFAULT 0,
+            top_holdings TEXT,
+            sector_allocation TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (portfolio_id) REFERENCES portfolios (id),
+            UNIQUE(portfolio_id, snapshot_date)
+        )
+        """
+
+        # Execute all queries
+        self.execute_query(portfolios_query)
+        self.logger.info("Created portfolios table")
+
+        self.execute_query(positions_query)
+        self.logger.info("Created portfolio_positions table")
+
+        self.execute_query(transactions_query)
+        self.logger.info("Created portfolio_transactions table")
+
+        self.execute_query(snapshots_query)
+        self.logger.info("Created portfolio_snapshots table")
+
+    def run_all_migrations(self):
+        """Run all database migrations"""
+        try:
+            self.create_migration_history_table()
+            self.create_daily_analysis_table()
+            self.create_daily_decisions_table()
+            self.create_performance_tracking_table()
+            self.create_portfolio_tables()  # Add portfolio tables
+
+            # Record migration
+            self.record_migration("001_initial_schema")
+            self.record_migration("002_portfolio_tables")
+
+            self.logger.info("All migrations completed successfully")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"Migration failed: {e}")
+            return False

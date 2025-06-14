@@ -2,6 +2,9 @@
 SQLAlchemy models for stock analysis database
 """
 
+from dataclasses import dataclass
+from typing import Optional
+
 from sqlalchemy import Column, Date, DateTime, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
@@ -99,3 +102,90 @@ class MigrationHistory(Base):
 
     def __repr__(self):
         return f"<MigrationHistory(version='{self.version}', applied='{self.applied_at}')>"
+
+
+@dataclass
+class PerformanceMetrics:
+    """Performance tracking metrics"""
+
+    symbol: str
+    recommendation_date: str
+    entry_price: float
+    current_price: float
+    target_price: float
+    rating: str
+    days_held: int
+    return_pct: float
+    status: str
+    updated_at: str
+
+
+# Portfolio Management Models
+
+
+@dataclass
+class Portfolio:
+    """Portfolio model for tracking multiple investment accounts"""
+
+    id: Optional[int] = None
+    name: str = ""
+    description: str = ""
+    portfolio_type: str = "personal"  # personal, ira, 401k, etc.
+    base_currency: str = "USD"
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    is_active: bool = True
+
+
+@dataclass
+class PortfolioPosition:
+    """Current holdings in a portfolio"""
+
+    id: Optional[int] = None
+    portfolio_id: int = 0
+    symbol: str = ""
+    quantity: float = 0.0
+    average_cost: float = 0.0
+    current_price: float = 0.0
+    market_value: float = 0.0
+    unrealized_pnl: float = 0.0
+    unrealized_pnl_pct: float = 0.0
+    sector: str = ""
+    last_updated: Optional[str] = None
+
+
+@dataclass
+class PortfolioTransaction:
+    """Transaction history for portfolio positions"""
+
+    id: Optional[int] = None
+    portfolio_id: int = 0
+    symbol: str = ""
+    transaction_type: str = ""  # buy, sell, dividend, split
+    quantity: float = 0.0
+    price: float = 0.0
+    total_amount: float = 0.0
+    fees: float = 0.0
+    transaction_date: str = ""
+    notes: str = ""
+    created_at: Optional[str] = None
+
+
+@dataclass
+class PortfolioSnapshot:
+    """Daily portfolio value and performance snapshots"""
+
+    id: Optional[int] = None
+    portfolio_id: int = 0
+    snapshot_date: str = ""
+    total_value: float = 0.0
+    cash_balance: float = 0.0
+    invested_amount: float = 0.0
+    unrealized_pnl: float = 0.0
+    unrealized_pnl_pct: float = 0.0
+    day_change: float = 0.0
+    day_change_pct: float = 0.0
+    positions_count: int = 0
+    top_holdings: str = ""  # JSON string of top 5 holdings
+    sector_allocation: str = ""  # JSON string of sector breakdown
+    created_at: Optional[str] = None

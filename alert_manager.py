@@ -15,6 +15,14 @@ import os
 import sys
 from pathlib import Path
 
+# Load environment variables
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(".env.local")
+except ImportError:
+    pass  # dotenv not available, use system env vars
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 

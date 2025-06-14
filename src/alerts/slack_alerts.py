@@ -41,30 +41,32 @@ class SlackNotifier:
     Free to use - just needs a Slack app with bot token
     """
 
-    def __init__(self, bot_token: Optional[str] = None, user_id: Optional[str] = None):
+    def __init__(self, bot_token: Optional[str] = None, channel: Optional[str] = None, test_connection: bool = True):
         """
         Initialize Slack notifier
 
         Args:
             bot_token: Slack bot token (or set SLACK_BOT_TOKEN env var)
-            user_id: Your Slack user ID (or set SLACK_USER_ID env var)
+            channel: Slack channel ID or user ID for DMs (or set SLACK_CHANNEL env var)
+                    Examples: '#general', 'C1234567890', '@username', 'U1234567890'
+            test_connection: Whether to test connection on initialization (disable for testing)
         """
         self.bot_token = bot_token or os.getenv("SLACK_BOT_TOKEN")
-        self.user_id = user_id or os.getenv("SLACK_USER_ID")
+        self.channel = channel or os.getenv("SLACK_CHANNEL") or os.getenv("SLACK_USER_ID")  # Backward compatibility
 
         if not self.bot_token:
             raise ValueError("Slack bot token required. Set SLACK_BOT_TOKEN environment variable or pass bot_token parameter.")
 
-        if not self.user_id:
-            raise ValueError("Slack user ID required. Set SLACK_USER_ID environment variable or pass user_id parameter.")
+        if not self.channel:
+            raise ValueError("Slack channel required. Set SLACK_CHANNEL environment variable or pass channel parameter.")
 
         self.base_url = "https://slack.com/api"
         self.headers = {"Authorization": f"Bearer {self.bot_token}", "Content-Type": "application/json"}
 
         self.logger = logging.getLogger(__name__)
 
-        # Test connection on initialization
-        if not self._test_connection():
+        # Test connection on initialization (unless disabled for testing)
+        if test_connection and not self._test_connection():
             raise ConnectionError("Failed to connect to Slack API. Check your bot token.")
 
     def _test_connection(self) -> bool:
@@ -93,8 +95,11 @@ class SlackNotifier:
             rating = analysis.get("recommendation", {}).get("rating", "Unknown")
             confidence = analysis.get("recommendation", {}).get("confidence", "Unknown")
             score = analysis.get("score", {}).get("composite_score", 0)
-            current_price = analysis.get("fundamentals", {}).get("current_price", 0)
-            target_price = analysis.get("recommendation", {}).get("price_target", 0)
+            # Try multiple paths for current price
+            current_price = analysis.get("current_price", 0) or analysis.get("fundamentals", {}).get("current_price", 0) or analysis.get("fundamentals", {}).get("price", 0)
+
+            # Try multiple paths for target price
+            target_price = analysis.get("target_price", 0) or analysis.get("recommendation", {}).get("price_target", 0) or analysis.get("recommendation", {}).get("target_price", 0)
             allocation = analysis.get("recommendation", {}).get("suggested_allocation", "Unknown")
 
             # Create rich message with blocks
@@ -102,7 +107,7 @@ class SlackNotifier:
 
             message = SlackMessage(
                 text=f"🚨 Stock Alert: {symbol} - {rating}",
-                channel=self.user_id,  # Send as DM
+                channel=self.channel,
                 blocks=blocks,
             )
 
@@ -124,7 +129,7 @@ class SlackNotifier:
             bool: True if message sent successfully
         """
         try:
-            slack_message = SlackMessage(text=f"{emoji} {message}", channel=self.user_id)
+            slack_message = SlackMessage(text=f"{emoji} {message}", channel=self.channel)
             return self._send_message(slack_message)
         except Exception as e:
             self.logger.error(f"Failed to send simple alert: {e}")
@@ -144,7 +149,7 @@ class SlackNotifier:
         try:
             blocks = self._create_daily_summary_blocks(top_picks, summary_stats)
 
-            message = SlackMessage(text="📊 Daily Stock Analysis Summary", channel=self.user_id, blocks=blocks)
+            message = SlackMessage(text="📊 Daily Stock Analysis Summary", channel=self.channel, blocks=blocks)
 
             return self._send_message(message)
 

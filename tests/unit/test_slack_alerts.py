@@ -17,7 +17,7 @@ class TestSlackNotifier:
     def mock_env_vars(self, monkeypatch):
         """Mock environment variables"""
         monkeypatch.setenv("SLACK_BOT_TOKEN", "xoxb-test-token")
-        monkeypatch.setenv("SLACK_USER_ID", "U123456789")
+        monkeypatch.setenv("SLACK_CHANNEL", "#test-channel")
 
     @pytest.fixture
     def sample_analysis(self):
@@ -43,24 +43,44 @@ class TestSlackNotifier:
         with patch.object(SlackNotifier, "_test_connection", return_value=True):
             notifier = SlackNotifier()
             assert notifier.bot_token == "xoxb-test-token"
-            assert notifier.user_id == "U123456789"
+            assert notifier.channel == "#test-channel"
 
     def test_init_with_parameters(self):
         """Test initialization with direct parameters"""
         with patch.object(SlackNotifier, "_test_connection", return_value=True):
-            notifier = SlackNotifier("xoxb-direct-token", "U987654321")
+            notifier = SlackNotifier("xoxb-direct-token", "#direct-channel")
             assert notifier.bot_token == "xoxb-direct-token"
-            assert notifier.user_id == "U987654321"
+            assert notifier.channel == "#direct-channel"
 
-    def test_init_missing_bot_token(self):
+    def test_init_missing_bot_token(self, monkeypatch):
         """Test initialization fails without bot token"""
-        with pytest.raises(ValueError, match="Slack bot token required"):
-            SlackNotifier(None, "U123456789")
+        # Clear environment variables
+        monkeypatch.delenv("SLACK_BOT_TOKEN", raising=False)
+        monkeypatch.delenv("SLACK_CHANNEL", raising=False)
+        monkeypatch.delenv("SLACK_USER_ID", raising=False)
 
-    def test_init_missing_user_id(self):
-        """Test initialization fails without user ID"""
-        with pytest.raises(ValueError, match="Slack user ID required"):
-            SlackNotifier("xoxb-test-token", None)
+        with pytest.raises(ValueError, match="Slack bot token required"):
+            SlackNotifier(None, "#test-channel", test_connection=False)
+
+    def test_init_missing_channel(self, monkeypatch):
+        """Test initialization fails without channel"""
+        # Clear environment variables
+        monkeypatch.delenv("SLACK_BOT_TOKEN", raising=False)
+        monkeypatch.delenv("SLACK_CHANNEL", raising=False)
+        monkeypatch.delenv("SLACK_USER_ID", raising=False)
+
+        with pytest.raises(ValueError, match="Slack channel required"):
+            SlackNotifier("xoxb-test-token", None, test_connection=False)
+
+    def test_backward_compatibility_user_id(self, monkeypatch):
+        """Test backward compatibility with SLACK_USER_ID env var"""
+        monkeypatch.setenv("SLACK_BOT_TOKEN", "xoxb-test-token")
+        monkeypatch.setenv("SLACK_USER_ID", "U123456789")
+        monkeypatch.delenv("SLACK_CHANNEL", raising=False)
+
+        with patch.object(SlackNotifier, "_test_connection", return_value=True):
+            notifier = SlackNotifier()
+            assert notifier.channel == "U123456789"
 
     def test_init_connection_failure(self, mock_env_vars):
         """Test initialization fails if connection test fails"""
@@ -113,7 +133,7 @@ class TestSlackNotifier:
 
         # Check the payload structure
         payload = call_args[1]["json"]
-        assert payload["channel"] == "U123456789"
+        assert payload["channel"] == "#test-channel"
         assert "AAPL" in payload["text"]
         assert "blocks" in payload
 
@@ -145,7 +165,7 @@ class TestSlackNotifier:
         call_args = mock_post.call_args
         payload = call_args[1]["json"]
         assert payload["text"] == "🚀 Test message"
-        assert payload["channel"] == "U123456789"
+        assert payload["channel"] == "#test-channel"
 
     @patch("requests.post")
     def test_send_daily_summary_success(self, mock_post, mock_env_vars, mock_successful_response):
@@ -231,7 +251,7 @@ class TestSlackNotifier:
         with patch.object(SlackNotifier, "_test_connection", return_value=True):
             notifier = SlackNotifier()
 
-        message = SlackMessage("Test", "U123456789")
+        message = SlackMessage("Test", "#test-channel")
         result = notifier._send_message(message)
 
         assert result is False
@@ -257,16 +277,16 @@ class TestSlackMessage:
 
     def test_slack_message_creation(self):
         """Test SlackMessage creation"""
-        message = SlackMessage("Test message", "U123456789")
+        message = SlackMessage("Test message", "#test-channel")
 
         assert message.text == "Test message"
-        assert message.channel == "U123456789"
+        assert message.channel == "#test-channel"
         assert message.blocks is None
         assert message.attachments is None
 
     def test_slack_message_with_blocks(self):
         """Test SlackMessage with blocks"""
         blocks = [{"type": "section", "text": {"type": "mrkdwn", "text": "Test"}}]
-        message = SlackMessage("Test", "U123456789", blocks=blocks)
+        message = SlackMessage("Test", "#test-channel", blocks=blocks)
 
         assert message.blocks == blocks
