@@ -8,14 +8,8 @@ import sqlite3
 from datetime import datetime
 
 from .connection import db, get_engine
-from .models import (
-    Base,
-    DailyAnalysis,
-    DailyDecision,
-    MarketContext,
-    MigrationHistory,
-    PerformanceTracking,
-)
+from .models import (Base, DailyAnalysis, DailyDecision, MarketContext,
+                     MigrationHistory, PerformanceTracking)
 
 
 class MigrationRunner:
@@ -126,19 +120,23 @@ class MigrationRunner:
         for row in cursor:
             try:
                 analysis = DailyAnalysis(
-                    date=datetime.strptime(row["date"], "%Y-%m-%d").date()
-                    if row["date"]
-                    else None,
+                    date=(
+                        datetime.strptime(row["date"], "%Y-%m-%d").date()
+                        if row["date"]
+                        else None
+                    ),
                     symbol=row["symbol"],
-                    analysis_data=json.loads(row["analysis_data"])
-                    if row["analysis_data"]
-                    else {},
+                    analysis_data=(
+                        json.loads(row["analysis_data"]) if row["analysis_data"] else {}
+                    ),
                     composite_score=row["composite_score"],
                     rating=row["rating"],
                     confidence=row["confidence"],
-                    created_at=datetime.fromisoformat(row["created_at"])
-                    if row["created_at"]
-                    else datetime.now(),
+                    created_at=(
+                        datetime.fromisoformat(row["created_at"])
+                        if row["created_at"]
+                        else datetime.now()
+                    ),
                 )
                 self.session.add(analysis)
                 count += 1
@@ -170,20 +168,28 @@ class MigrationRunner:
         for row in cursor:
             try:
                 decision = DailyDecision(
-                    date=datetime.strptime(row["date"], "%Y-%m-%d").date()
-                    if row["date"]
-                    else None,
+                    date=(
+                        datetime.strptime(row["date"], "%Y-%m-%d").date()
+                        if row["date"]
+                        else None
+                    ),
                     decision_type=row["decision_type"],
                     reasoning=row["reasoning"],
-                    selected_stocks=json.loads(row["selected_stocks"])
-                    if row["selected_stocks"]
-                    else None,
-                    market_context=json.loads(row["market_context"])
-                    if row["market_context"]
-                    else None,
-                    created_at=datetime.fromisoformat(row["created_at"])
-                    if row["created_at"]
-                    else datetime.now(),
+                    selected_stocks=(
+                        json.loads(row["selected_stocks"])
+                        if row["selected_stocks"]
+                        else None
+                    ),
+                    market_context=(
+                        json.loads(row["market_context"])
+                        if row["market_context"]
+                        else None
+                    ),
+                    created_at=(
+                        datetime.fromisoformat(row["created_at"])
+                        if row["created_at"]
+                        else datetime.now()
+                    ),
                 )
                 self.session.add(decision)
                 count += 1
@@ -217,11 +223,11 @@ class MigrationRunner:
             try:
                 performance = PerformanceTracking(
                     symbol=row["symbol"],
-                    recommendation_date=datetime.strptime(
-                        row["recommendation_date"], "%Y-%m-%d"
-                    ).date()
-                    if row["recommendation_date"]
-                    else None,
+                    recommendation_date=(
+                        datetime.strptime(row["recommendation_date"], "%Y-%m-%d").date()
+                        if row["recommendation_date"]
+                        else None
+                    ),
                     entry_price=row["entry_price"],
                     current_price=row["current_price"],
                     target_price=row["target_price"],
@@ -229,9 +235,11 @@ class MigrationRunner:
                     days_held=row["days_held"],
                     return_pct=row["return_pct"],
                     status=row["status"],
-                    updated_at=datetime.fromisoformat(row["updated_at"])
-                    if row["updated_at"]
-                    else datetime.now(),
+                    updated_at=(
+                        datetime.fromisoformat(row["updated_at"])
+                        if row["updated_at"]
+                        else datetime.now()
+                    ),
                 )
                 self.session.add(performance)
                 count += 1
@@ -264,23 +272,31 @@ class MigrationRunner:
         for row in cursor:
             try:
                 context = MarketContext(
-                    date=datetime.strptime(row["date"], "%Y-%m-%d").date()
-                    if row["date"]
-                    else None,
+                    date=(
+                        datetime.strptime(row["date"], "%Y-%m-%d").date()
+                        if row["date"]
+                        else None
+                    ),
                     market_sentiment=row["market_sentiment"],
                     vix_level=row["vix_level"],
-                    sector_rotation=json.loads(row["sector_rotation"])
-                    if row["sector_rotation"]
-                    else None,
-                    economic_indicators=json.loads(row["economic_indicators"])
-                    if row["economic_indicators"]
-                    else None,
-                    news_themes=json.loads(row["news_themes"])
-                    if row["news_themes"]
-                    else None,
-                    created_at=datetime.fromisoformat(row["created_at"])
-                    if row["created_at"]
-                    else datetime.now(),
+                    sector_rotation=(
+                        json.loads(row["sector_rotation"])
+                        if row["sector_rotation"]
+                        else None
+                    ),
+                    economic_indicators=(
+                        json.loads(row["economic_indicators"])
+                        if row["economic_indicators"]
+                        else None
+                    ),
+                    news_themes=(
+                        json.loads(row["news_themes"]) if row["news_themes"] else None
+                    ),
+                    created_at=(
+                        datetime.fromisoformat(row["created_at"])
+                        if row["created_at"]
+                        else datetime.now()
+                    ),
                 )
                 self.session.add(context)
                 count += 1

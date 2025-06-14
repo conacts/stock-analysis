@@ -383,8 +383,22 @@ class AnalysisStorage:
     def export_to_csv(self, table_name: str, output_path: str) -> bool:
         """Export table data to CSV"""
         try:
+            # Validate table name to prevent SQL injection
+            valid_tables = [
+                "daily_analysis",
+                "daily_decisions",
+                "market_context",
+                "performance_tracking",
+            ]
+
+            if table_name not in valid_tables:
+                self.logger.error(f"Invalid table name: {table_name}")
+                return False
+
             with sqlite3.connect(self.db_path) as conn:
-                df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
+                # Use validated table name (safe since it's from whitelist)
+                query = f"SELECT * FROM {table_name}"  # nosec B608
+                df = pd.read_sql_query(query, conn)
                 df.to_csv(output_path, index=False)
 
             self.logger.info(f"Exported {table_name} to {output_path}")
@@ -493,10 +507,12 @@ class DecisionTracker:
                     "selection_criteria": "Composite score + risk assessment",
                 },
                 "decision_metadata": {
-                    "avg_score": sum(s.get("score", 0) for s in selected_stocks)
-                    / len(selected_stocks)
-                    if selected_stocks
-                    else 0,
+                    "avg_score": (
+                        sum(s.get("score", 0) for s in selected_stocks)
+                        / len(selected_stocks)
+                        if selected_stocks
+                        else 0
+                    ),
                     "sectors_represented": list(
                         set(s.get("sector", "Unknown") for s in selected_stocks)
                     ),

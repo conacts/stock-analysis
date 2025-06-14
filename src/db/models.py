@@ -2,16 +2,8 @@
 SQLAlchemy models for stock analysis database
 """
 
-from sqlalchemy import (
-    Column,
-    Date,
-    DateTime,
-    Integer,
-    Numeric,
-    String,
-    Text,
-    UniqueConstraint,
-)
+from sqlalchemy import (Column, Date, DateTime, Integer, Numeric, String, Text,
+                        UniqueConstraint)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func

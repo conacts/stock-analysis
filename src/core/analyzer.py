@@ -284,9 +284,7 @@ class StockAnalyzer:
             analyst_sentiment = (
                 "Buy"
                 if recommendation < 2.5
-                else "Hold"
-                if recommendation < 3.5
-                else "Sell"
+                else "Hold" if recommendation < 3.5 else "Sell"
             )
 
             # Overall sentiment

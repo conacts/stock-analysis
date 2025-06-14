@@ -170,6 +170,7 @@
   },
   "active": "a3d8100d86f9c3ad",
   "lastOpenFiles": [
+    "master_stock_analyzer.py",
     "DEVELOPMENT.md",
     "Makefile",
     "scripts/setup-git-hooks.sh",
