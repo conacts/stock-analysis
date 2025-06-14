@@ -286,12 +286,17 @@ jobs:
                   PYTHON_API_URL: ${{ secrets.PYTHON_API_URL }}
                   API_TOKEN: ${{ secrets.API_TOKEN }}
 
-            - name: Authenticate with Trigger.dev
+            - name: Login to Trigger.dev
+              run: |
+                  # Force login using access token
+                  npx trigger.dev@latest login
+              env:
+                  TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
+
+            - name: Verify Authentication
               run: |
                   # Verify authentication works
                   npx trigger.dev@latest whoami
-              env:
-                  TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
 
             - name: Deploy to Trigger.dev Development
               run: |
@@ -330,12 +335,17 @@ jobs:
             - name: Install Node.js dependencies
               run: npm install
 
-            - name: Authenticate with Trigger.dev
+            - name: Login to Trigger.dev
+              run: |
+                  # Force login using access token
+                  npx trigger.dev@latest login
+              env:
+                  TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
+
+            - name: Verify Authentication
               run: |
                   # Verify authentication works
                   npx trigger.dev@latest whoami
-              env:
-                  TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
 
             - name: Deploy to Trigger.dev Production
               run: |
