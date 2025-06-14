@@ -34,3 +34,7 @@ dev = [
     "pre-commit>=4.2.0",
     "safety>=3.5.2",
 ]
+
+[tool.black]
+line-length = 320
+target-version = ['py313']
