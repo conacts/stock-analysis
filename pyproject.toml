@@ -35,6 +35,10 @@ dev = [
     "safety>=3.5.2",
 ]
 
-[tool.black]
+[tool.ruff]
 line-length = 320
-target-version = ['py313']
+target-version = "py313"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
