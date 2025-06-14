@@ -569,21 +569,24 @@ class AIConversationRequest(BaseModel):
 
 @app.post("/trading/ai-analysis")
 async def analyze_for_trading(symbols: List[str], token: str = Depends(verify_token)):
-    """Analyze symbols using AI for trading decisions (legacy endpoint)"""
+    """Analyze symbols using AI Swarm for trading decisions"""
     try:
-        from ai.deepseek_trading_bot import trading_bot
+        from ai.swarm_trading_system import SwarmTradingSystem
 
-        context = f"Analyze these symbols: {', '.join(symbols)}"
-        result = await trading_bot.analyze_and_trade(context, symbols)
+        swarm_system = SwarmTradingSystem()
+        context = f"Analyze these symbols for trading opportunities: {', '.join(symbols)}. Provide detailed market analysis and identify potential trades."
+
+        result = await swarm_system.process_conversation(message=context, starting_agent="market_analyst", max_turns=15)
 
         return {
             "symbols_analyzed": symbols,
-            "analysis_timestamp": result.get("timestamp"),
-            "ai_response": result.get("ai_response"),
-            "trade_actions": result.get("trade_actions", []),
-            "recommendations": [action.get("arguments", {}).get("reason", "") for action in result.get("trade_actions", [])],
-            "risk_assessment": "AI-driven analysis completed",
-            "suggested_actions": result.get("trade_actions", []),
+            "analysis_timestamp": datetime.now().isoformat(),
+            "ai_response": result.get("response", ""),
+            "final_agent": result.get("final_agent", ""),
+            "turns_used": result.get("turns_used", 0),
+            "success": result.get("success", False),
+            "conversation_id": result.get("conversation_id"),
+            "portfolio_id": result.get("portfolio_id"),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to analyze for trading: {str(e)}")
@@ -591,19 +594,24 @@ async def analyze_for_trading(symbols: List[str], token: str = Depends(verify_to
 
 @app.post("/trading/ai-trade")
 async def ai_trading_decision(request: AITradingRequest, token: str = Depends(verify_token)):
-    """Let AI make trading decisions based on context and conversation history"""
+    """Let AI Swarm make trading decisions based on context"""
     try:
-        from ai.deepseek_trading_bot import trading_bot
+        from ai.swarm_trading_system import SwarmTradingSystem
 
+        swarm_system = SwarmTradingSystem()
+
+        # Build comprehensive context
+        context = request.context
+        if request.symbols:
+            context += f"\n\nFocus on these symbols: {', '.join(request.symbols)}"
+
+        # Add conversation history context if provided
         if request.conversation_messages:
-            # Process full conversation
-            messages = [{"role": msg["role"], "content": msg["content"]} for msg in request.conversation_messages]
-            # Add current context as latest user message
-            messages.append({"role": "user", "content": request.context})
-            result = await trading_bot.process_conversation(messages, max_iterations=request.max_iterations, portfolio_id=request.portfolio_id)
-        else:
-            # Simple analysis and trade
-            result = await trading_bot.analyze_and_trade(request.context, request.symbols, portfolio_id=request.portfolio_id)
+            context += "\n\nPrevious conversation context:\n"
+            for msg in request.conversation_messages[-3:]:  # Last 3 messages for context
+                context += f"{msg['role']}: {msg['content']}\n"
+
+        result = await swarm_system.process_conversation(message=context, portfolio_id=str(request.portfolio_id) if request.portfolio_id else "default", max_turns=request.max_iterations, starting_agent="market_analyst")
 
         return result
     except Exception as e:
@@ -612,16 +620,120 @@ async def ai_trading_decision(request: AITradingRequest, token: str = Depends(ve
 
 @app.post("/trading/ai-conversation")
 async def ai_conversation(request: AIConversationRequest, token: str = Depends(verify_token)):
-    """Have a full conversation with the AI trading bot"""
+    """Have a full conversation with the AI Swarm trading system"""
     try:
-        from ai.deepseek_trading_bot import trading_bot
+        from ai.swarm_trading_system import SwarmTradingSystem
 
-        messages = [{"role": msg.role, "content": msg.content} for msg in request.messages]
-        result = await trading_bot.process_conversation(messages, max_iterations=request.max_iterations, portfolio_id=request.portfolio_id)
+        swarm_system = SwarmTradingSystem()
+
+        # Convert messages to a single conversation context
+        conversation_context = "Previous conversation:\n"
+        for msg in request.messages:
+            conversation_context += f"{msg.role}: {msg.content}\n"
+
+        # Use the last user message as the main message
+        last_user_message = ""
+        for msg in reversed(request.messages):
+            if msg.role == "user":
+                last_user_message = msg.content
+                break
+
+        if not last_user_message:
+            last_user_message = "Please analyze my portfolio and provide trading recommendations."
+
+        result = await swarm_system.process_conversation(message=f"{conversation_context}\n\nCurrent request: {last_user_message}", portfolio_id=str(request.portfolio_id) if request.portfolio_id else "default", max_turns=request.max_iterations, starting_agent="portfolio_manager")
 
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to process AI conversation: {str(e)}")
+
+
+# ============================================================================
+# 🤖 SWARM-SPECIFIC ENDPOINTS
+# ============================================================================
+
+
+class SwarmAgentRequest(BaseModel):
+    message: str
+    agent: str  # "market_analyst", "risk_manager", "trader", "portfolio_manager"
+    portfolio_id: Optional[str] = "default"
+    max_turns: int = 15
+
+
+@app.post("/trading/swarm/agent")
+async def talk_to_specific_agent(request: SwarmAgentRequest, token: str = Depends(verify_token)):
+    """Talk directly to a specific Swarm agent"""
+    try:
+        from ai.swarm_trading_system import SwarmTradingSystem
+
+        swarm_system = SwarmTradingSystem()
+
+        result = await swarm_system.process_conversation(message=request.message, portfolio_id=request.portfolio_id, max_turns=request.max_turns, starting_agent=request.agent)
+
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to communicate with {request.agent}: {str(e)}")
+
+
+@app.get("/trading/swarm/conversation-history/{portfolio_id}")
+async def get_swarm_conversation_history(portfolio_id: str, token: str = Depends(verify_token)):
+    """Get conversation history for a specific portfolio"""
+    try:
+        from ai.swarm_trading_system import SwarmTradingSystem
+
+        swarm_system = SwarmTradingSystem()
+        history = swarm_system.get_conversation_history(portfolio_id)
+
+        return {"portfolio_id": portfolio_id, "conversation_count": len(history), "conversations": history}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get conversation history: {str(e)}")
+
+
+@app.delete("/trading/swarm/conversation-history/{portfolio_id}")
+async def clear_swarm_conversation_history(portfolio_id: str, token: str = Depends(verify_token)):
+    """Clear conversation history for a specific portfolio"""
+    try:
+        from ai.swarm_trading_system import SwarmTradingSystem
+
+        swarm_system = SwarmTradingSystem()
+        success = swarm_system.clear_conversation_history(portfolio_id)
+
+        return {"portfolio_id": portfolio_id, "cleared": success, "message": f"Conversation history {'cleared' if success else 'not found'} for portfolio {portfolio_id}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to clear conversation history: {str(e)}")
+
+
+@app.get("/trading/swarm/agents")
+async def get_available_agents(token: str = Depends(verify_token)):
+    """Get list of available Swarm agents and their capabilities"""
+    return {
+        "agents": [
+            {
+                "name": "market_analyst",
+                "display_name": "Market Analyst",
+                "description": "Sophisticated market analyst specializing in equity analysis",
+                "capabilities": ["Analyze market data and trends", "Provide technical and fundamental analysis", "Identify trading opportunities", "Assess market conditions and sentiment", "Generate market insights and recommendations"],
+            },
+            {
+                "name": "risk_manager",
+                "display_name": "Risk Manager",
+                "description": "Conservative risk management specialist",
+                "capabilities": ["Evaluate trading opportunities for risk", "Ensure position sizing follows risk management rules", "Monitor portfolio exposure and diversification", "Prevent excessive risk-taking", "Validate all trades before execution"],
+            },
+            {
+                "name": "trader",
+                "display_name": "Trading Execution Specialist",
+                "description": "Precise trading execution specialist",
+                "capabilities": ["Execute approved trades with optimal timing", "Choose appropriate order types (market vs limit)", "Monitor order status and execution", "Handle trade confirmations and errors", "Provide execution reports"],
+            },
+            {
+                "name": "portfolio_manager",
+                "display_name": "Portfolio Manager",
+                "description": "Comprehensive portfolio management specialist",
+                "capabilities": ["Monitor overall portfolio performance", "Track position performance and P&L", "Manage portfolio rebalancing", "Provide performance analytics", "Coordinate with other agents for portfolio optimization"],
+            },
+        ]
+    }
 
 
 # ============================================================================

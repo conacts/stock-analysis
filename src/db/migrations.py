@@ -5,12 +5,14 @@ Database migration system for moving from SQLite to PostgreSQL
 import json
 import os
 import sqlite3
+import subprocess
 from datetime import datetime
 
 from sqlalchemy import text
 
 from .connection import get_db_connection, get_engine
 from .models import Base, DailyAnalysis, DailyDecision, MarketContext, MigrationHistory, PerformanceTracking
+from .swarm_db import SwarmDatabase
 
 
 class MigrationRunner:
@@ -375,6 +377,246 @@ class MigrationRunner:
             print(f"❌ Error during validation: {e}")
             return False
 
+    def create_swarm_tables(self) -> bool:
+        """Create Swarm AI trading system tables"""
+        try:
+            print("🤖 Creating Swarm database tables...")
+
+            # Initialize SwarmDatabase which will create tables
+            SwarmDatabase()
+
+            # Record migration
+            self.record_migration("003_swarm_tables", "Create Swarm AI trading system tables")
+
+            print("✅ Swarm database tables created successfully")
+            return True
+
+        except Exception as e:
+            print(f"❌ Error creating Swarm tables: {e}")
+            return False
+
+    def migrate_swarm_data(self, sqlite_path: str = "data/swarm_conversations.db") -> bool:
+        """Migrate existing Swarm conversation data if it exists"""
+        if not os.path.exists(sqlite_path):
+            print(f"⚠️  Swarm SQLite database not found at {sqlite_path}, skipping Swarm data migration")
+            return True  # Not an error if no existing Swarm data
+
+        try:
+            print(f"🤖 Starting Swarm data migration from SQLite: {sqlite_path}")
+
+            # Connect to SQLite
+            sqlite_conn = sqlite3.connect(sqlite_path)
+            sqlite_conn.row_factory = sqlite3.Row
+
+            # Migrate conversations if table exists
+            try:
+                cursor = sqlite_conn.cursor()
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='conversations'")
+                if cursor.fetchone():
+                    self._migrate_swarm_conversations(sqlite_conn)
+            except sqlite3.OperationalError:
+                print("   ⚠️  No conversations table found in Swarm database")
+
+            # Migrate trading decisions if table exists
+            try:
+                cursor = sqlite_conn.cursor()
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='trading_decisions'")
+                if cursor.fetchone():
+                    self._migrate_swarm_decisions(sqlite_conn)
+            except sqlite3.OperationalError:
+                print("   ⚠️  No trading_decisions table found in Swarm database")
+
+            sqlite_conn.close()
+
+            # Record migration
+            self.record_migration("004_swarm_data", "Migrate Swarm conversation and decision data")
+
+            print("✅ Swarm data migration completed successfully")
+            return True
+
+        except Exception as e:
+            print(f"❌ Error during Swarm data migration: {e}")
+            return False
+
+    def _migrate_swarm_conversations(self, sqlite_conn: sqlite3.Connection):
+        """Migrate Swarm conversation data"""
+        print("   🗣️  Migrating Swarm conversations...")
+
+        cursor = sqlite_conn.cursor()
+        cursor.execute("SELECT * FROM conversations")
+
+        count = 0
+        for row in cursor.fetchall():
+            try:
+                from models.swarm_models import SwarmConversation
+
+                conversation = SwarmConversation(
+                    portfolio_id=row.get("portfolio_id", "default"),
+                    conversation_id=row["conversation_id"],
+                    user_message=row["user_message"],
+                    agent_responses=json.loads(row["agent_responses"]) if row["agent_responses"] else [],
+                    final_agent=row.get("final_agent", "unknown"),
+                    turns_used=row.get("turns_used", 1),
+                    success=bool(row.get("success", True)),
+                    error_message=row.get("error_message"),
+                    metadata=json.loads(row["metadata"]) if row.get("metadata") else None,
+                )
+
+                SwarmDatabase().save_conversation(conversation)
+                count += 1
+
+            except Exception as e:
+                print(f"   ⚠️  Error migrating conversation record: {e}")
+
+        print(f"   ✅ Migrated {count} Swarm conversation records")
+
+    def _migrate_swarm_decisions(self, sqlite_conn: sqlite3.Connection):
+        """Migrate Swarm trading decision data"""
+        print("   📈 Migrating Swarm trading decisions...")
+
+        cursor = sqlite_conn.cursor()
+        cursor.execute("SELECT * FROM trading_decisions")
+
+        count = 0
+        for row in cursor.fetchall():
+            try:
+                from models.swarm_models import TradingDecision
+
+                decision = TradingDecision(
+                    conversation_id=row["conversation_id"],
+                    portfolio_id=row.get("portfolio_id", "default"),
+                    decision_type=row["decision_type"],
+                    symbol=row.get("symbol"),
+                    quantity=float(row["quantity"]) if row.get("quantity") else None,
+                    price=float(row["price"]) if row.get("price") else None,
+                    reasoning=row["reasoning"],
+                    confidence_score=float(row["confidence_score"]) if row.get("confidence_score") else None,
+                    risk_assessment=row.get("risk_assessment"),
+                    executed=bool(row.get("executed", False)),
+                    execution_result=json.loads(row["execution_result"]) if row.get("execution_result") else None,
+                )
+
+                SwarmDatabase().save_trading_decision(decision)
+                count += 1
+
+            except Exception as e:
+                print(f"   ⚠️  Error migrating trading decision record: {e}")
+
+        print(f"   ✅ Migrated {count} Swarm trading decision records")
+
+    def setup_alembic(self) -> bool:
+        """Set up Alembic for automatic migration generation"""
+        try:
+            print("🔧 Setting up Alembic for automatic migrations...")
+
+            # Check if alembic is already initialized
+            if os.path.exists("src/db/alembic"):
+                print("   ✅ Alembic already initialized")
+                return True
+
+            # Initialize Alembic
+            result = subprocess.run(["uv", "run", "alembic", "init", "src/db/alembic"], capture_output=True, text=True)
+
+            if result.returncode != 0:
+                print(f"   ❌ Failed to initialize Alembic: {result.stderr}")
+                return False
+
+            print("   ✅ Alembic initialized successfully")
+            return True
+
+        except Exception as e:
+            print(f"❌ Error setting up Alembic: {e}")
+            return False
+
+    def generate_migration(self, message: str = "Auto-generated migration") -> bool:
+        """Generate a new migration using Alembic autogenerate"""
+        try:
+            print(f"🔄 Generating migration: {message}")
+
+            # Run alembic revision --autogenerate
+            result = subprocess.run(["uv", "run", "alembic", "revision", "--autogenerate", "-m", message], capture_output=True, text=True)
+
+            if result.returncode != 0:
+                print(f"   ❌ Failed to generate migration: {result.stderr}")
+                return False
+
+            print("   ✅ Migration generated successfully")
+            print(f"   📝 Output: {result.stdout}")
+            return True
+
+        except Exception as e:
+            print(f"❌ Error generating migration: {e}")
+            return False
+
+    def apply_migrations(self) -> bool:
+        """Apply pending migrations using Alembic"""
+        try:
+            print("🚀 Applying pending migrations...")
+
+            # Run alembic upgrade head
+            result = subprocess.run(["uv", "run", "alembic", "upgrade", "head"], capture_output=True, text=True)
+
+            if result.returncode != 0:
+                print(f"   ❌ Failed to apply migrations: {result.stderr}")
+                return False
+
+            print("   ✅ Migrations applied successfully")
+            print(f"   📝 Output: {result.stdout}")
+            return True
+
+        except Exception as e:
+            print(f"❌ Error applying migrations: {e}")
+            return False
+
+    def show_migration_history(self) -> bool:
+        """Show current migration history"""
+        try:
+            print("📋 Current migration history:")
+
+            # Run alembic history
+            result = subprocess.run(["uv", "run", "alembic", "history"], capture_output=True, text=True)
+
+            if result.returncode != 0:
+                print(f"   ❌ Failed to get migration history: {result.stderr}")
+                return False
+
+            print(result.stdout)
+            return True
+
+        except Exception as e:
+            print(f"❌ Error getting migration history: {e}")
+            return False
+
+    def run_alembic_migration_workflow(self) -> bool:
+        """Complete Alembic-based migration workflow"""
+        print("🚀 Starting Alembic migration workflow...")
+
+        # Test connection
+        if not get_db_connection().test_connection():
+            print("❌ Database connection failed")
+            return False
+
+        # Set up Alembic if needed
+        if not self.setup_alembic():
+            return False
+
+        # Generate initial migration if no migrations exist
+        migrations_dir = "src/db/alembic/versions"
+        if os.path.exists(migrations_dir) and not os.listdir(migrations_dir):
+            print("📝 No existing migrations found, generating initial migration...")
+            if not self.generate_migration("Initial migration with all models"):
+                return False
+
+        # Apply migrations
+        if not self.apply_migrations():
+            return False
+
+        # Show current state
+        self.show_migration_history()
+
+        print("🎉 Alembic migration workflow completed successfully!")
+        return True
+
     def run_full_migration(self) -> bool:
         """Run complete migration process"""
         print("🚀 Starting full database migration...")
@@ -398,6 +640,14 @@ class MigrationRunner:
 
         # Validate migration
         if not self.validate_migration():
+            return False
+
+        # Create Swarm tables
+        if not self.create_swarm_tables():
+            return False
+
+        # Migrate Swarm data
+        if not self.migrate_swarm_data():
             return False
 
         print("🎉 Full migration completed successfully!")

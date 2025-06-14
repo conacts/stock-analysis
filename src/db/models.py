@@ -5,7 +5,7 @@ SQLAlchemy models for stock analysis database
 from dataclasses import dataclass
 from typing import Optional
 
-from sqlalchemy import Column, Date, DateTime, Integer, Numeric, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Column, Date, DateTime, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
@@ -189,3 +189,113 @@ class PortfolioSnapshot:
     top_holdings: str = ""  # JSON string of top 5 holdings
     sector_allocation: str = ""  # JSON string of sector breakdown
     created_at: Optional[str] = None
+
+
+# Swarm AI Trading System Models
+
+
+class SwarmAgentPrompt(Base):
+    """Agent system prompts for Swarm AI trading system"""
+
+    __tablename__ = "agent_prompts"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    agent_name = Column(String(100), nullable=False, index=True)
+    prompt_version = Column(String(50), nullable=False)
+    system_prompt = Column(Text, nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    created_by = Column(String(100))
+    description = Column(Text)
+
+    __table_args__ = (UniqueConstraint("agent_name", "prompt_version", name="uq_agent_prompts_name_version"),)
+
+    def __repr__(self):
+        return f"<SwarmAgentPrompt(agent='{self.agent_name}', version='{self.prompt_version}')>"
+
+
+class SwarmPortfolioConfig(Base):
+    """Portfolio configurations for Swarm AI trading system"""
+
+    __tablename__ = "portfolio_configs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    portfolio_id = Column(String(100), unique=True, nullable=False, index=True)
+    name = Column(String(200), nullable=False)
+    symbols = Column(JSONB, nullable=False)
+    risk_tolerance = Column(String(50), nullable=False)
+    max_position_size_pct = Column(Numeric(5, 2), default=5.0)
+    max_sector_exposure_pct = Column(Numeric(5, 2), default=20.0)
+    cash_reserve_pct = Column(Numeric(5, 2), default=10.0)
+    trading_enabled = Column(Boolean, default=True)
+    rebalance_frequency = Column(String(50), default="weekly")
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    is_active = Column(Boolean, default=True)
+
+    def __repr__(self):
+        return f"<SwarmPortfolioConfig(portfolio_id='{self.portfolio_id}', name='{self.name}')>"
+
+
+class SwarmConversationHistory(Base):
+    """Conversation history for Swarm AI trading system"""
+
+    __tablename__ = "swarm_conversations"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    portfolio_id = Column(String(100), nullable=False, index=True)
+    conversation_id = Column(String(100), unique=True, nullable=False, index=True)
+    user_message = Column(Text, nullable=False)
+    agent_responses = Column(JSONB, nullable=False)
+    final_agent = Column(String(100), nullable=False)
+    turns_used = Column(Integer, nullable=False)
+    success = Column(Boolean, nullable=False)
+    error_message = Column(Text)
+    created_at = Column(DateTime, default=func.now())
+    conversation_metadata = Column(JSONB)  # Renamed from metadata to avoid conflict
+
+    def __repr__(self):
+        return f"<SwarmConversationHistory(portfolio_id='{self.portfolio_id}', conversation_id='{self.conversation_id}')>"
+
+
+class SwarmTradingDecision(Base):
+    """Trading decisions made by Swarm AI system"""
+
+    __tablename__ = "trading_decisions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    conversation_id = Column(String(100), nullable=False, index=True)
+    portfolio_id = Column(String(100), nullable=False, index=True)
+    decision_type = Column(String(50), nullable=False)
+    symbol = Column(String(20), index=True)
+    quantity = Column(Numeric(15, 6))
+    price = Column(Numeric(15, 6))
+    reasoning = Column(Text, nullable=False)
+    confidence_score = Column(Numeric(3, 2))
+    risk_assessment = Column(Text)
+    executed = Column(Boolean, default=False)
+    execution_result = Column(JSONB)
+    created_at = Column(DateTime, default=func.now())
+    executed_at = Column(DateTime)
+
+    def __repr__(self):
+        return f"<SwarmTradingDecision(symbol='{self.symbol}', decision_type='{self.decision_type}')>"
+
+
+class SwarmMarketContext(Base):
+    """Market context data for Swarm AI trading system"""
+
+    __tablename__ = "swarm_market_context"  # Renamed to avoid conflict
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    portfolio_id = Column(String(100), nullable=False, index=True)
+    context_type = Column(String(100), nullable=False, index=True)
+    symbol = Column(String(20), index=True)
+    data = Column(JSONB, nullable=False)
+    relevance_score = Column(Numeric(3, 2))
+    created_at = Column(DateTime, default=func.now())
+    expires_at = Column(DateTime)
+
+    def __repr__(self):
+        return f"<SwarmMarketContext(portfolio_id='{self.portfolio_id}', context_type='{self.context_type}')>"
