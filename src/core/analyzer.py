@@ -22,7 +22,8 @@ try:
     LLM_AVAILABLE = True
 except ImportError:
     LLM_AVAILABLE = False
-    logging.warning("LLM module not available. Using traditional scoring only.")
+    # This is expected when LLM dependencies are not available
+    # logging.warning("LLM module not available. Using traditional scoring only.")
 
 logger = logging.getLogger(__name__)
 
