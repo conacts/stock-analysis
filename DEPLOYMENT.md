@@ -1,380 +1,409 @@
-# 🚀 Production Deployment Guide - Stock Analysis & AI Trading System
+# 🚀 Deployment Guide
 
-This document outlines the complete deployment strategy for the AI-powered stock analysis system with trading capabilities.
+This guide covers deploying the Stock Analysis API to Railway and other platforms.
 
-**Current Status**: ✅ **Fully Deployed and Operational**
+## 🌐 Current Production Deployment
 
--   **Production URL**: https://stock-analysis-production-31e9.up.railway.app
--   **API Status**: 100% operational (7/7 endpoints)
--   **AI Trading**: DeepSeek integration working
--   **Database**: PostgreSQL on Railway
+**Production URL**: `https://stock-analysis-production-31e9.up.railway.app`
+**Platform**: Railway
+**Status**: ✅ Active
+**Health Check**: `/health` and `/healthz` endpoints
 
-## 🏗️ Architecture Overview
+## 📋 Prerequisites
 
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   GitHub Repo   │───▶│   Python API    │───▶│   Trigger.dev   │
-│                 │    │   (Railway)     │    │   (Tasks)       │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  Auto Deploy    │    │   PostgreSQL    │    │   DeepSeek AI   │
-│  (Railway)      │    │   (Railway)     │    │   Integration   │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
+1. **Environment Variables**:
 
-## 🎯 Current Deployment Status
+    - `API_TOKEN` - Authentication token for API access
+    - `DEEPSEEK_API_KEY` - DeepSeek AI API key for LLM functionality
+    - `DATABASE_URL` - PostgreSQL database connection string
 
-### ✅ **Production Environment (Railway)**
+2. **Dependencies**:
+    - Python 3.12+
+    - uv package manager
+    - Docker (for containerized deployment)
 
--   **URL**: https://stock-analysis-production-31e9.up.railway.app
--   **Status**: 100% operational
--   **Endpoints**: 7/7 working with 30-second timeouts
--   **AI Integration**: DeepSeek API fully configured
--   **Database**: PostgreSQL connected and healthy
--   **Auto-deployment**: Enabled from main branch
+## 🚂 Railway Deployment
 
-### ✅ **API Endpoints Status**
+### Initial Setup
 
--   **Health Check**: `/health` - ✅ Working
--   **Portfolio Management**: `/portfolios/*` - ✅ Working
--   **AI Analysis**: `/portfolio/analyze-with-llm` - ✅ Working
--   **AI Trading**: `/trading/*` - ✅ All 4 endpoints operational
--   **Analysis Tools**: `/analysis/*` - ✅ Working
--   **Documentation**: `/docs` - ✅ Interactive Swagger UI
+1. **Connect Repository**:
 
-### ✅ **AI Trading System**
+    ```bash
+    # Install Railway CLI
+    npm install -g @railway/cli
 
--   **Trading Config**: Position limits (10%), daily loss limits (2%)
--   **Market Status**: Real-time market hours and status
--   **Risk Assessment**: AI-powered portfolio risk analysis
--   **Emergency Controls**: Trading halt capabilities
--   **DeepSeek Integration**: Advanced AI analysis working
+    # Login to Railway
+    railway login
 
-## 🚀 Railway Deployment (Current Setup)
+    # Link to existing project
+    railway link
+    ```
 
-### **Why Railway Works Perfectly**
+2. **Environment Configuration**:
 
--   ✅ **Zero-config deployment** - Automatic Python detection
--   ✅ **Built-in PostgreSQL** - Managed database with backups
--   ✅ **Auto-deployment** - Deploys on every push to main
--   ✅ **Environment management** - Secure secret handling
--   ✅ **Health monitoring** - Built-in health checks
--   ✅ **Custom domains** - Professional URLs
--   ✅ **Affordable pricing** - $5/month for current usage
+    ```bash
+    # Set environment variables
+    railway variables set API_TOKEN=your-api-token
+    railway variables set DEEPSEEK_API_KEY=your-deepseek-key
+    railway variables set DATABASE_URL=your-postgres-url
+    ```
 
-### **Current Railway Configuration**
+3. **Database Setup**:
 
-**Project**: `stock-analysis-production-31e9`
-**Service**: `web` (Python API)
-**Database**: `postgres` (PostgreSQL 15)
-**Domain**: `stock-analysis-production-31e9.up.railway.app`
+    ```bash
+    # Add PostgreSQL service
+    railway add postgresql
 
-## 🔧 Environment Variables (Production)
+    # Get database URL
+    railway variables
+    ```
 
-### **Required Variables (Set in Railway Dashboard)**
+### Deployment Process
 
-```bash
-# Database (Auto-generated by Railway)
-DATABASE_URL=postgresql://postgres:password@host:port/railway
+1. **Automatic Deployment**:
 
-# AI Integration
-DEEPSEEK_API_KEY=sk-your-deepseek-api-key
+    - Railway automatically deploys on push to `main` branch
+    - Build uses `Dockerfile` in project root
+    - Health checks run on `/health` endpoint
 
-# API Security
-API_TOKEN=your-secure-production-token
+2. **Manual Deployment**:
 
-# Market Data
-ALPHA_VANTAGE_API_KEY=your-alpha-vantage-key
+    ```bash
+    # Deploy current branch
+    railway up
 
-# Trigger.dev Integration
-TRIGGER_SECRET_KEY=tr_prod_your-trigger-secret
-TRIGGER_ACCESS_TOKEN=tr_pat_your-trigger-token
-PYTHON_API_URL=https://stock-analysis-production-31e9.up.railway.app
+    # Deploy specific branch
+    railway up --branch dev
+    ```
 
-# Optional Integrations
-SLACK_BOT_TOKEN=xoxb-your-slack-token
-SLACK_CHANNEL=#trading-alerts
+3. **Monitor Deployment**:
 
-# Environment
-ENVIRONMENT=production
-RAILWAY_ENVIRONMENT=production
-```
+    ```bash
+    # View logs
+    railway logs
 
-### **Environment Variable Security**
+    # Check service status
+    railway status
+    ```
 
--   ✅ All secrets stored in Railway dashboard
--   ✅ No secrets in code or version control
--   ✅ Automatic injection at runtime
--   ✅ Separate staging/production environments
+### Railway Configuration
 
-## 📋 Deployment Process
+**railway.json**:
 
-### **Automatic Deployment (Current)**
-
-1. **Push to main branch** → Triggers Railway deployment
-2. **Railway builds** → Uses Dockerfile for consistent builds
-3. **Health check** → Verifies `/health` endpoint
-4. **Live deployment** → Updates production URL
-5. **Trigger.dev sync** → Updates automation tasks
-
-### **Deployment Files**
-
-#### **Dockerfile** (Production-ready)
-
-```dockerfile
-FROM python:3.12-slim
-
-WORKDIR /app
-
-# Install uv package manager
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
-
-# Copy dependency files
-COPY pyproject.toml uv.lock ./
-
-# Install dependencies
-RUN uv sync --frozen --no-cache
-
-# Copy source code
-COPY src/ ./src/
-COPY tools/ ./tools/
-COPY run_with_env.sh ./
-
-# Expose port
-EXPOSE 8000
-
-# Health check with 30-second timeout
-HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:8000/health || exit 1
-
-# Run the API server
-CMD ["uv", "run", "python", "-c", "import sys; sys.path.append('src'); from api.main import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000)"]
-```
-
-#### **railway.toml** (Railway Configuration)
-
-```toml
-[build]
-builder = "dockerfile"
-
-[deploy]
-healthcheckPath = "/health"
-healthcheckTimeout = 30
-restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 3
-
-[services.web]
-source = "."
-```
-
-## 🧪 Testing Deployment
-
-### **Comprehensive Testing Tool**
-
-```bash
-# Test production deployment
-./run_with_env.sh uv run python tools/check_api_environments.py
-
-# Expected result: 100% success rate (7/7 endpoints)
-```
-
-### **Manual Testing Commands**
-
-```bash
-# Health check (no auth required)
-curl https://stock-analysis-production-31e9.up.railway.app/health
-
-# Test AI trading endpoints
-curl -H "Authorization: Bearer your-token" \
-  https://stock-analysis-production-31e9.up.railway.app/trading/trading-config
-
-# Test AI portfolio analysis
-curl -X POST https://stock-analysis-production-31e9.up.railway.app/portfolio/analyze-with-llm \
-  -H "Authorization: Bearer your-token" \
-  -H "Content-Type: application/json" \
-  -d '{"portfolio_data": {"portfolio_id": 1, "positions": []}}'
-```
-
-### **Interactive Testing**
-
--   **API Documentation**: https://stock-analysis-production-31e9.up.railway.app/docs
--   **Health Dashboard**: https://stock-analysis-production-31e9.up.railway.app/health
-
-## 📊 Monitoring and Health Checks
-
-### **Built-in Health Monitoring**
-
-```python
-# Health check endpoint with comprehensive status
-@app.get("/health")
-async def health_check():
-    return {
-        "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
-        "checks": {
-            "database": {"status": "healthy"},
-            "deepseek": {"status": "healthy"},
-            "environment": {
-                "status": "healthy",
-                "api_token_configured": True,
-                "database_configured": True,
-                "deepseek_configured": True
-            }
-        },
-        "version": "2.0.0",
-        "features": {
-            "ai_trading": True,
-            "portfolio_analysis": True,
-            "risk_management": True
-        }
+```json
+{
+    "$schema": "https://railway.app/railway.schema.json",
+    "build": {
+        "builder": "dockerfile"
+    },
+    "deploy": {
+        "healthcheckPath": "/health",
+        "healthcheckTimeout": 30,
+        "restartPolicyType": "on_failure"
     }
+}
 ```
 
-### **Monitoring Capabilities**
+## 🐳 Docker Deployment
 
--   ✅ **Railway Dashboard**: Real-time metrics, logs, resource usage
--   ✅ **Health Checks**: 30-second timeout with automatic restarts
--   ✅ **Error Tracking**: Comprehensive logging and error reporting
--   ✅ **Performance Metrics**: Response times, success rates
--   ✅ **Database Monitoring**: Connection health, query performance
-
-## 🔄 Trigger.dev Integration
-
-### **Current Setup**
-
--   **Environment**: Production
--   **API URL**: https://stock-analysis-production-31e9.up.railway.app
--   **Tasks**: Portfolio analysis with 300s/600s timeouts
--   **Status**: Ready for development and testing
-
-### **Deployment Commands**
+### Build Image
 
 ```bash
-# Deploy Trigger.dev tasks to production
-bunx trigger.dev@latest deploy
+# Build production image
+docker build -t stock-analysis .
 
-# Start development server
-npx trigger.dev@latest dev
+# Build with specific tag
+docker build -t stock-analysis:v1.0.0 .
 ```
 
-## 🚨 Rollback and Recovery
-
-### **Automatic Recovery**
-
--   **Health Check Failures**: Automatic container restart
--   **Database Issues**: Connection retry with exponential backoff
--   **API Errors**: Graceful error handling with proper status codes
-
-### **Manual Rollback (Railway)**
+### Run Container
 
 ```bash
-# Install Railway CLI
-npm install -g @railway/cli
+# Run with environment file
+docker run --env-file .env.local -p 8000:8000 stock-analysis
 
-# Login and rollback
-railway login
-railway rollback
+# Run with individual environment variables
+docker run \
+  -e API_TOKEN=your-token \
+  -e DEEPSEEK_API_KEY=your-key \
+  -e DATABASE_URL=your-db-url \
+  -p 8000:8000 \
+  stock-analysis
 ```
 
-### **Emergency Procedures**
+### Docker Compose
 
-1. **API Issues**: Check Railway logs and health endpoint
-2. **Database Problems**: Verify DATABASE_URL and connection
-3. **AI Integration**: Verify DEEPSEEK_API_KEY configuration
-4. **Environment Variables**: Check Railway dashboard settings
+**docker-compose.yml**:
 
-## 💰 Cost Analysis
+```yaml
+version: "3.8"
 
-### **Current Railway Costs**
+services:
+    api:
+        build: .
+        ports:
+            - "8000:8000"
+        environment:
+            - API_TOKEN=${API_TOKEN}
+            - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+            - DATABASE_URL=${DATABASE_URL}
+        depends_on:
+            - db
+        restart: unless-stopped
 
--   **Hobby Plan**: $5/month
-    -   512MB RAM, 1 vCPU
-    -   PostgreSQL included
-    -   Perfect for current usage
+    db:
+        image: postgres:15
+        environment:
+            - POSTGRES_DB=stockanalysis
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=password
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        ports:
+            - "5432:5432"
 
-### **Scaling Options**
+volumes:
+    postgres_data:
+```
 
--   **Pro Plan**: $20/month (8GB RAM, 8 vCPU)
--   **Team Plan**: $50/month (High availability)
-
-### **Total Monthly Cost**
-
--   **Current**: ~$5/month (Railway Hobby)
--   **With Trigger.dev Pro**: ~$25/month
--   **Full Production**: ~$50/month (Railway Pro + Trigger.dev)
-
-## 🎯 Local Development
-
-### **Environment Setup**
+Run with:
 
 ```bash
-# 1. Clone and setup
-git clone https://github.com/your-username/stock-analysis.git
-cd stock-analysis
-
-# 2. Configure environment
-cp .env.example .env.local
-# Edit .env.local with your API keys
-
-# 3. Start local server
-./run_with_env.sh bash -c "cd src/api && uv run python main.py"
-
-# 4. Test local deployment
-./run_with_env.sh bash -c "API_BASE_URL=http://localhost:8000 uv run python tools/check_api_environments.py"
+docker-compose up -d
 ```
 
-### **Local vs Production**
+## ☁️ Other Cloud Platforms
 
--   **Local**: Uses .env.local for environment variables
--   **Production**: Uses Railway environment variables
--   **Testing**: Same comprehensive testing tool works for both
--   **Features**: Identical functionality in both environments
+### AWS ECS
 
-## 🔗 Useful Resources
+1. **Create ECR Repository**:
 
-### **Production URLs**
+    ```bash
+    aws ecr create-repository --repository-name stock-analysis
+    ```
 
--   **API Base**: https://stock-analysis-production-31e9.up.railway.app
--   **Health Check**: https://stock-analysis-production-31e9.up.railway.app/health
--   **Documentation**: https://stock-analysis-production-31e9.up.railway.app/docs
--   **Railway Dashboard**: https://railway.app/project/your-project-id
+2. **Push Image**:
 
-### **Documentation Links**
+    ```bash
+    # Get login token
+    aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123456789012.dkr.ecr.us-east-1.amazonaws.com
 
--   **Railway Docs**: https://docs.railway.app/
--   **Trigger.dev Docs**: https://trigger.dev/docs
--   **API Testing Guide**: [API_TESTING_GUIDE.md](API_TESTING_GUIDE.md)
--   **AI Trading Plan**: [AI_TRADING_PLAN.md](AI_TRADING_PLAN.md)
+    # Tag and push
+    docker tag stock-analysis:latest 123456789012.dkr.ecr.us-east-1.amazonaws.com/stock-analysis:latest
+    docker push 123456789012.dkr.ecr.us-east-1.amazonaws.com/stock-analysis:latest
+    ```
 
-## 🎉 Deployment Success Checklist
+3. **Create ECS Service**:
+    - Use AWS Console or CLI to create ECS cluster
+    - Define task definition with environment variables
+    - Create service with load balancer
 
-### ✅ **Completed Items**
+### Google Cloud Run
 
--   [x] Railway project created and configured
--   [x] PostgreSQL database provisioned and connected
--   [x] Environment variables configured securely
--   [x] Dockerfile optimized for production
--   [x] Health checks implemented with 30s timeout
--   [x] Auto-deployment from main branch working
--   [x] All 7 API endpoints operational (100% success rate)
--   [x] DeepSeek AI integration working
--   [x] AI trading system deployed and functional
--   [x] Comprehensive testing tool created
--   [x] Documentation updated and complete
+```bash
+# Build and deploy
+gcloud run deploy stock-analysis \
+  --source . \
+  --platform managed \
+  --region us-central1 \
+  --set-env-vars API_TOKEN=your-token,DEEPSEEK_API_KEY=your-key,DATABASE_URL=your-db-url
+```
 
-### 🎯 **Next Steps for Enhancement**
+### Azure Container Instances
 
--   [ ] Set up staging environment for testing
--   [ ] Implement GitHub Actions for CI/CD
--   [ ] Add monitoring alerts and notifications
--   [ ] Scale to Railway Pro plan if needed
--   [ ] Implement advanced logging and analytics
+```bash
+# Create resource group
+az group create --name stock-analysis-rg --location eastus
+
+# Deploy container
+az container create \
+  --resource-group stock-analysis-rg \
+  --name stock-analysis \
+  --image your-registry/stock-analysis:latest \
+  --dns-name-label stock-analysis \
+  --ports 8000 \
+  --environment-variables API_TOKEN=your-token DEEPSEEK_API_KEY=your-key DATABASE_URL=your-db-url
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+| Variable           | Required | Description                    | Example                               |
+| ------------------ | -------- | ------------------------------ | ------------------------------------- |
+| `API_TOKEN`        | Yes      | Authentication token           | `default-dev-token`                   |
+| `DEEPSEEK_API_KEY` | Yes      | DeepSeek AI API key            | `sk-xxx`                              |
+| `DATABASE_URL`     | Yes      | PostgreSQL connection          | `postgresql://user:pass@host:5432/db` |
+| `PORT`             | No       | Server port (default: 8000)    | `8000`                                |
+| `HOST`             | No       | Server host (default: 0.0.0.0) | `0.0.0.0`                             |
+
+### Health Checks
+
+The application provides two health check endpoints:
+
+1. **`/health`** - Comprehensive health check with environment validation
+2. **`/healthz`** - Minimal health check for load balancers
+
+Configure your platform to use `/health` with a 30-second timeout.
+
+### Database Migration
+
+The application automatically creates tables on startup. For production:
+
+1. **Backup existing data**:
+
+    ```bash
+    pg_dump $DATABASE_URL > backup.sql
+    ```
+
+2. **Run migrations**:
+    ```bash
+    # Application handles this automatically
+    # Or run manually if needed
+    uv run python -c "from src.database.db_manager import DatabaseManager; DatabaseManager().create_tables()"
+    ```
+
+## 📊 Monitoring
+
+### Health Monitoring
+
+```bash
+# Check health
+curl https://your-domain.com/health
+
+# Check minimal health
+curl https://your-domain.com/healthz
+```
+
+### Logs
+
+```bash
+# Railway logs
+railway logs --tail
+
+# Docker logs
+docker logs container-name --tail 100 -f
+
+# Application logs are structured JSON
+```
+
+### Metrics
+
+The application exposes metrics through:
+
+-   Health check endpoints
+-   Portfolio health check endpoint
+-   Trading system status
+
+## 🔒 Security
+
+### API Authentication
+
+All endpoints (except health checks) require Bearer token authentication:
+
+```bash
+Authorization: Bearer your-api-token
+```
+
+### Environment Security
+
+1. **Never commit secrets** to version control
+2. **Use platform secret management**:
+
+    - Railway: Environment variables
+    - AWS: Parameter Store / Secrets Manager
+    - GCP: Secret Manager
+    - Azure: Key Vault
+
+3. **Rotate keys regularly**
+4. **Use least privilege access**
+
+### Network Security
+
+1. **HTTPS only** in production
+2. **Firewall rules** to restrict access
+3. **Rate limiting** (implement as needed)
+4. **CORS configuration** for web clients
+
+## 🚨 Troubleshooting
+
+### Common Issues
+
+1. **Health Check Failures**:
+
+    ```bash
+    # Check environment variables
+    railway variables
+
+    # Check logs
+    railway logs --tail
+
+    # Test locally
+    docker run --env-file .env.local -p 8000:8000 stock-analysis
+    ```
+
+2. **Database Connection Issues**:
+
+    ```bash
+    # Test database connection
+    psql $DATABASE_URL -c "SELECT 1;"
+
+    # Check database logs
+    railway logs --service postgresql
+    ```
+
+3. **Memory Issues**:
+
+    - Railway: Upgrade to higher memory plan
+    - Docker: Increase memory limits
+    - Optimize application memory usage
+
+4. **Build Failures**:
+
+    ```bash
+    # Test build locally
+    docker build -t test .
+
+    # Check Dockerfile syntax
+    docker build --no-cache -t test .
+    ```
+
+### Performance Optimization
+
+1. **Docker Image Size**:
+
+    - Current size: ~851MB (optimized from 6.2GB)
+    - Uses multi-stage builds
+    - Python slim base image
+
+2. **Database Performance**:
+
+    - Connection pooling
+    - Query optimization
+    - Index creation
+
+3. **API Response Times**:
+    - Async endpoints where possible
+    - Caching for expensive operations
+    - Background task processing
+
+## 📈 Scaling
+
+### Horizontal Scaling
+
+1. **Load Balancer** configuration
+2. **Database connection pooling**
+3. **Stateless application design**
+4. **Session management** (if needed)
+
+### Vertical Scaling
+
+1. **Memory allocation** based on usage
+2. **CPU allocation** for AI processing
+3. **Storage** for logs and temporary files
 
 ---
 
-**🚀 Status**: Production deployment is 100% operational with all AI trading features working perfectly. The system is ready for active use and further development.
-
-**🔧 Support**: For deployment issues, check Railway logs or run the comprehensive testing tool to identify specific problems.
+**Last Updated**: 2025-06-14
+**Deployment Status**: ✅ Production Ready
+**Platform**: Railway (Primary)
