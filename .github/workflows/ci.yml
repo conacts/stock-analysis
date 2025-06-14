@@ -268,8 +268,20 @@ jobs:
             - name: Validate Python API URL
               run: |
                   # Test that the Python API server is accessible
+                  if [ -z "$PYTHON_API_URL" ]; then
+                      echo "⚠️  PYTHON_API_URL not set - skipping API validation"
+                      echo "This is expected for initial deployments or when API is not yet deployed"
+                      exit 0
+                  fi
+
                   echo "Testing Python API at: $PYTHON_API_URL"
-                  curl -f "$PYTHON_API_URL/health" -H "Authorization: Bearer $API_TOKEN" || (echo "Python API server is not accessible at $PYTHON_API_URL" && exit 1)
+                  if curl -f "$PYTHON_API_URL/health" -H "Authorization: Bearer $API_TOKEN" --max-time 10; then
+                      echo "✅ Python API server is accessible"
+                  else
+                      echo "❌ Python API server is not accessible at $PYTHON_API_URL"
+                      echo "This might be expected if the API is still deploying"
+                      exit 1
+                  fi
               env:
                   PYTHON_API_URL: ${{ secrets.PYTHON_API_URL }}
                   API_TOKEN: ${{ secrets.API_TOKEN }}

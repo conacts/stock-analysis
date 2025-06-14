@@ -11,6 +11,17 @@ repos:
             pass_filenames: false
             description: "Validate database migrations before commit"
 
+    # Git lint check on staged files
+    - repo: local
+      hooks:
+          - id: git-lint-staged
+            name: Git Lint Staged Files
+            entry: bash -c 'git diff --cached --name-only --diff-filter=ACM | grep -E "\.(py)$" | xargs -r uv run ruff check --fix'
+            language: system
+            stages: [pre-commit]
+            pass_filenames: false
+            description: "Run ruff lint on staged Python files"
+
     # Python code formatting and linting
     - repo: https://github.com/astral-sh/ruff-pre-commit
       rev: v0.8.4
