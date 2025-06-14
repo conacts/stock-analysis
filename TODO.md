@@ -41,7 +41,7 @@
     -   [x] Portfolio summary and analysis
     -   [x] Transaction recording
 
-## ✅ PHASE 2: Testing Infrastructure & CI/CD (COMPLETED)
+		 ## ✅ PHASE 2: Testing Infrastructure & CI/CD (COMPLETED)
 
 ### ✅ Streamlined Testing Strategy
 

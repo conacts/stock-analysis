@@ -1,0 +1,168 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model DailyAnalysis {
+  id             Int      @id @default(autoincrement())
+  date           DateTime @db.Date
+  symbol         String   @db.VarChar(10)
+  analysisData   Json     @map("analysis_data") @db.JsonB
+  compositeScore Decimal? @map("composite_score") @db.Decimal(5, 2)
+  rating         String?  @db.VarChar(20)
+  confidence     String?  @db.VarChar(20)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@unique([date, symbol], name: "uq_daily_analysis_date_symbol")
+  @@index([date])
+  @@index([symbol])
+  @@map("daily_analysis")
+}
+
+model DailyDecision {
+  id             Int      @id @default(autoincrement())
+  date           DateTime @unique @db.Date
+  decisionType   String   @map("decision_type") @db.VarChar(50)
+  reasoning      String   @db.Text
+  selectedStocks Json?    @map("selected_stocks") @db.JsonB
+  marketContext  Json?    @map("market_context") @db.JsonB
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([date])
+  @@map("daily_decisions")
+}
+
+model PerformanceTracking {
+  id                 Int      @id @default(autoincrement())
+  symbol             String   @db.VarChar(10)
+  recommendationDate DateTime @map("recommendation_date") @db.Date
+  entryPrice         Decimal? @map("entry_price") @db.Decimal(10, 2)
+  currentPrice       Decimal? @map("current_price") @db.Decimal(10, 2)
+  targetPrice        Decimal? @map("target_price") @db.Decimal(10, 2)
+  rating             String?  @db.VarChar(20)
+  daysHeld           Int?     @map("days_held")
+  returnPct          Decimal? @map("return_pct") @db.Decimal(8, 4)
+  status             String?  @db.VarChar(20) // active, closed
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([symbol])
+  @@map("performance_tracking")
+}
+
+model MarketContext {
+  id                  Int      @id @default(autoincrement())
+  date                DateTime @unique @db.Date
+  marketSentiment     String?  @map("market_sentiment") @db.VarChar(50)
+  vixLevel            Decimal? @map("vix_level") @db.Decimal(6, 2)
+  sectorRotation      Json?    @map("sector_rotation") @db.JsonB
+  economicIndicators  Json?    @map("economic_indicators") @db.JsonB
+  newsThemes          Json?    @map("news_themes") @db.JsonB
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  @@index([date])
+  @@map("market_context")
+}
+
+model MigrationHistory {
+  id          Int      @id @default(autoincrement())
+  version     String   @unique @db.VarChar(50)
+  description String?  @db.VarChar(200)
+  appliedAt   DateTime @default(now()) @map("applied_at")
+
+  @@map("migration_history")
+}
+
+// Portfolio Management Models
+model Portfolio {
+  id           Int      @id @default(autoincrement())
+  name         String   @db.VarChar(100)
+  description  String?  @db.Text
+  portfolioType String  @default("personal") @map("portfolio_type") @db.VarChar(50)
+  baseCurrency String   @default("USD") @map("base_currency") @db.VarChar(3)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+  isActive     Boolean  @default(true) @map("is_active")
+
+  positions    PortfolioPosition[]
+  transactions PortfolioTransaction[]
+  snapshots    PortfolioSnapshot[]
+
+  @@map("portfolios")
+}
+
+model PortfolioPosition {
+  id                Int       @id @default(autoincrement())
+  portfolioId       Int       @map("portfolio_id")
+  symbol            String    @db.VarChar(10)
+  quantity          Decimal   @db.Decimal(15, 6)
+  averageCost       Decimal   @map("average_cost") @db.Decimal(10, 2)
+  currentPrice      Decimal   @map("current_price") @db.Decimal(10, 2)
+  marketValue       Decimal   @map("market_value") @db.Decimal(15, 2)
+  unrealizedPnl     Decimal   @map("unrealized_pnl") @db.Decimal(15, 2)
+  unrealizedPnlPct  Decimal   @map("unrealized_pnl_pct") @db.Decimal(8, 4)
+  sector            String?   @db.VarChar(50)
+  lastUpdated       DateTime? @map("last_updated")
+
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioId, symbol])
+  @@index([portfolioId])
+  @@index([symbol])
+  @@map("portfolio_positions")
+}
+
+model PortfolioTransaction {
+  id              Int      @id @default(autoincrement())
+  portfolioId     Int      @map("portfolio_id")
+  symbol          String   @db.VarChar(10)
+  transactionType String   @map("transaction_type") @db.VarChar(20) // buy, sell, dividend, split
+  quantity        Decimal  @db.Decimal(15, 6)
+  price           Decimal  @db.Decimal(10, 2)
+  totalAmount     Decimal  @map("total_amount") @db.Decimal(15, 2)
+  fees            Decimal  @default(0) @db.Decimal(10, 2)
+  transactionDate DateTime @map("transaction_date") @db.Date
+  notes           String?  @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@index([portfolioId])
+  @@index([symbol])
+  @@index([transactionDate])
+  @@map("portfolio_transactions")
+}
+
+model PortfolioSnapshot {
+  id                 Int      @id @default(autoincrement())
+  portfolioId        Int      @map("portfolio_id")
+  snapshotDate       DateTime @map("snapshot_date") @db.Date
+  totalValue         Decimal  @map("total_value") @db.Decimal(15, 2)
+  cashBalance        Decimal  @map("cash_balance") @db.Decimal(15, 2)
+  investedAmount     Decimal  @map("invested_amount") @db.Decimal(15, 2)
+  unrealizedPnl      Decimal  @map("unrealized_pnl") @db.Decimal(15, 2)
+  unrealizedPnlPct   Decimal  @map("unrealized_pnl_pct") @db.Decimal(8, 4)
+  dayChange          Decimal  @map("day_change") @db.Decimal(15, 2)
+  dayChangePct       Decimal  @map("day_change_pct") @db.Decimal(8, 4)
+  positionsCount     Int      @map("positions_count")
+  topHoldings        String?  @map("top_holdings") @db.Text // JSON string
+  sectorAllocation   String?  @map("sector_allocation") @db.Text // JSON string
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioId, snapshotDate])
+  @@index([portfolioId])
+  @@index([snapshotDate])
+  @@map("portfolio_snapshots")
+}

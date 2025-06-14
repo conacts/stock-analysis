@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@prisma/client": "^6.9.0",
+    "@trigger.dev/sdk": "^3.3.17",
+    "prisma": "^6.9.0"
+  },
+  "devDependencies": {
+    "@trigger.dev/build": "^3.3.17"
+  },
+  "trustedDependencies": [
+    "protobufjs"
+  ]
+}
