@@ -163,6 +163,13 @@ bun.lockb
 dist/
 build/
 
+# Testing
+coverage/
+test-results.html
+test-results.json
+assets/
+favicon.ico
+
 # Project specific
 *.db
 *.sqlite
