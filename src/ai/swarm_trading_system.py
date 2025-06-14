@@ -212,10 +212,13 @@ Ensure all decisions align with portfolio objectives and constraints.""",
     async def analyze_portfolio(self, portfolio_id: str, user_message: str) -> Dict[str, Any]:
         """Analyze portfolio using multi-agent system"""
         try:
-            # Get portfolio configuration
-            config = await self.db.get_portfolio_config(portfolio_id)
+            # Get or create portfolio configuration
+            config = self.db.get_portfolio_config(portfolio_id)
             if not config:
-                raise ValueError(f"Portfolio {portfolio_id} not found")
+                # Create default portfolio config
+                config = self.db.get_default_portfolio_config(portfolio_id)
+                self.db.save_portfolio_config(config)
+                logger.info(f"Created default portfolio config for {portfolio_id}")
 
             # Create analysis task
             task = f"""
@@ -235,19 +238,20 @@ Please provide a comprehensive analysis and recommendations.
             conversation_id = f"conv_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             conversation = SwarmConversation(portfolio_id=portfolio_id, conversation_id=conversation_id, user_message=user_message, agent_responses=result["agent_responses"], final_agent=result["final_agent"], turns_used=result["turns_used"], success=result["success"])
 
-            await self.db.save_conversation(conversation)
+            self.db.save_conversation(conversation)
 
-            return {"conversation_id": conversation_id, "analysis": result, "portfolio_config": config}
+            return {"conversation_id": conversation_id, "analysis": result, "portfolio_config": {"portfolio_id": config.portfolio_id, "name": config.name, "symbols": config.symbols, "risk_tolerance": config.risk_tolerance}}
 
         except Exception as e:
             logger.error(f"Error in portfolio analysis: {e}")
-            raise
+            # Return a graceful error response
+            return {"conversation_id": f"error_{datetime.now().strftime('%Y%m%d_%H%M%S')}", "analysis": {"success": False, "agent_responses": [{"agent": "system", "message": f"Error: {str(e)}"}], "final_agent": "system", "turns_used": 0}, "portfolio_config": None}
 
     async def make_trading_decision(self, conversation_id: str, portfolio_id: str) -> Optional[TradingDecision]:
         """Extract trading decision from conversation"""
         try:
             # Get conversation history
-            conversations = await self.db.get_conversation_history(portfolio_id, limit=1)
+            conversations = self.db.get_conversation_history(portfolio_id, limit=1)
             if not conversations or conversations[0].conversation_id != conversation_id:
                 raise ValueError(f"Conversation {conversation_id} not found")
 
@@ -267,7 +271,7 @@ Please provide a comprehensive analysis and recommendations.
             decision = self._extract_decision_from_response(final_response, conversation_id, portfolio_id)
 
             if decision:
-                await self.db.save_trading_decision(decision)
+                self.db.save_trading_decision(decision)
 
             return decision
 
