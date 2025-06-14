@@ -1,13 +1,21 @@
 {
-  "dependencies": {
-    "@prisma/client": "^6.9.0",
-    "@trigger.dev/sdk": "^3.3.17",
-    "prisma": "^6.9.0"
-  },
-  "devDependencies": {
-    "@trigger.dev/build": "^3.3.17"
-  },
-  "trustedDependencies": [
-    "protobufjs"
-  ]
+    "scripts": {
+        "trigger:dev": "npx trigger.dev@latest dev",
+        "trigger:deploy": "npx trigger.dev@latest deploy",
+        "trigger:deploy:dev": "npx trigger.dev@latest deploy --env staging",
+        "trigger:deploy:prod": "npx trigger.dev@latest deploy --env prod",
+        "trigger:whoami": "npx trigger.dev@latest whoami"
+    },
+    "dependencies": {
+        "@prisma/client": "^6.9.0",
+        "@trigger.dev/python": "^3.3.17",
+        "@trigger.dev/sdk": "^3.3.17",
+        "prisma": "^6.9.0"
+    },
+    "devDependencies": {
+        "@trigger.dev/build": "^3.3.17"
+    },
+    "trustedDependencies": [
+        "protobufjs"
+    ]
 }

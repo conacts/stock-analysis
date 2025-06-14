@@ -62,6 +62,9 @@ run-analyzer: ## Run the master stock analyzer
 run-app: ## Run the main research app
 	uv run scripts/main_app.py
 
+run-api: ## Run the FastAPI server
+	uv run scripts/run_api.py
+
 # Development workflow commands
 dev-setup: install setup-hooks ## Complete development setup
 	@echo "🎉 Development environment ready!"

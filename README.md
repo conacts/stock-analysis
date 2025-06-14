@@ -1,85 +1,57 @@
 # 🚀 Advanced Stock Analysis System
 
-A comprehensive, AI-powered stock analysis platform that combines traditional financial analysis with cutting-edge LLM technology for enhanced investment decision-making.
+A comprehensive, AI-powered stock analysis platform with automated monitoring, portfolio management, and intelligent alerts powered by Trigger.dev automation.
 
-[![CI/CD Pipeline](https://github.com/your-username/stock-analysis/workflows/CI/CD%20Pipeline/badge.svg)](https://github.com/your-username/stock-analysis/actions)
-[![Coverage](https://codecov.io/gh/your-username/stock-analysis/branch/main/graph/badge.svg)](https://codecov.io/gh/your-username/stock-analysis)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests: 157 Passing](https://img.shields.io/badge/tests-157%20passing-green.svg)](#testing)
 
-## ✨ Features
+## ✨ Key Features
 
-### 🧠 AI-Enhanced Analysis
+### 🤖 **Automated Stock Monitoring**
 
--   **LLM Integration**: DeepSeek AI for sophisticated market analysis
--   **Intelligent Scoring**: AI-enhanced composite scoring system
--   **News Impact Analysis**: Real-time news sentiment and catalyst identification
+-   **Real-time Price Alerts**: Automated notifications for significant price movements (±5%, ±10%, ±15%)
+-   **Portfolio Analysis**: Scheduled analysis with LLM-powered insights
+-   **Health Monitoring**: System health checks with email alerts
+-   **Trigger.dev Integration**: 18 automated tasks for comprehensive monitoring
+
+### 🧠 **AI-Enhanced Analysis**
+
+-   **DeepSeek LLM Integration**: Sophisticated market analysis and insights
+-   **Intelligent Scoring**: AI-enhanced composite scoring system (157 passing tests)
+-   **News Impact Analysis**: Real-time sentiment and catalyst identification
 -   **Growth Catalyst Detection**: AI-powered identification of growth drivers
 
-### 📊 Comprehensive Analysis Engine
+### 💼 **Portfolio Management**
 
--   **Fundamental Analysis**: P/E ratios, growth metrics, financial health
--   **Technical Analysis**: Moving averages, RSI, MACD, volatility metrics
--   **Sentiment Analysis**: News sentiment, social media trends
+-   **Multi-Portfolio Support**: Personal, IRA, 401k tracking with real-time P&L
 -   **Risk Assessment**: Volatility analysis, sector risk, market correlation
-
-### 🎯 Investment Tools
-
--   **Master Stock Analyzer**: Interactive analysis for individual stocks
--   **Portfolio Management**: Complete portfolio tracking with real-time P&L
--   **Universe Screening**: S&P 500 scanning and ranking
--   **Portfolio Analytics**: Sell signals, buy recommendations, rebalancing
--   **Performance Tracking**: Historical analysis and backtesting
--   **Slack Alerts**: Real-time stock alerts and daily summaries via Slack
-
-### 🔧 Professional Development Setup
-
--   **Comprehensive Testing**: 157 unit tests, integration tests, 88%+ coverage
--   **CI/CD Pipeline**: GitHub Actions with PostgreSQL, multi-Python testing
--   **Code Quality**: Pre-commit hooks, linting, security scanning, performance tests
--   **Documentation**: Extensive guides and API documentation
+-   **Rebalancing**: Automated recommendations and portfolio health scoring
+-   **Slack Integration**: Real-time alerts and daily summaries
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
--   Python 3.11 or higher
--   [uv](https://docs.astral.sh/uv/) package manager
+-   Python 3.11+ with [uv](https://docs.astral.sh/uv/) package manager
+-   Node.js 18+ with Bun (for Trigger.dev automation)
 -   DeepSeek API key (optional, for AI features)
 
-### Installation
+### Installation & Setup
 
 ```bash
-# Clone the repository
+# 1. Clone and setup
 git clone https://github.com/your-username/stock-analysis.git
 cd stock-analysis
-
-# Complete development setup
 make dev-setup
 
-# Verify installation
-make test-fast
-```
+# 2. Verify installation
+make test-fast  # Should show 157 passing tests
 
-### Basic Usage
+# 3. Start the API server
+make run-api    # Starts FastAPI server on http://localhost:8000
 
-```bash
-# Run the master stock analyzer
-make run-analyzer
-
-# Or run the research application
-make run-app
-
-# Portfolio management
-uv run portfolio_manager.py create "My Portfolio" personal "Main investment portfolio"
-uv run portfolio_manager.py add 1 AAPL 100 150.00
-uv run portfolio_manager.py show 1
-
-# Set up Slack alerts (optional)
-uv run alert_manager.py test
-uv run alert_manager.py watchlist
-
-# Analyze a specific stock
+# 4. Test basic analysis
 python -c "
 from src.core.analyzer import StockAnalyzer
 analyzer = StockAnalyzer()
@@ -88,212 +60,117 @@ print(f'Rating: {result[\"rating\"]} | Score: {result[\"composite_score\"]:.1f}'
 "
 ```
 
-## 📋 System Architecture
+### Environment Configuration
+
+Create a `.env` file with your API keys:
+
+```bash
+# Required for AI features
+DEEPSEEK_API_KEY=your-deepseek-api-key
+
+# Required for automation (Trigger.dev dashboard)
+PYTHON_API_URL=http://localhost:8000
+API_TOKEN=your-secure-api-token
+
+# Optional for enhanced features
+DATABASE_URL=postgresql://user:pass@localhost/stockdb
+SLACK_BOT_TOKEN=xoxb-your-slack-token
+SLACK_USER_ID=@your-username
+```
+
+## 🏗️ System Architecture
 
 ```
 stock-analysis/
-├── src/                    # Core application code
-│   ├── core/              # Analysis engine and scoring
-│   ├── portfolio/         # Portfolio management system
-│   ├── llm/               # AI integration (DeepSeek)
-│   ├── data/              # Data storage and retrieval
-│   ├── db/                # Database models and migrations
-│   ├── alerts/            # Slack notification system
-│   └── pipeline/          # Research and screening pipelines
-├── tests/                 # Comprehensive test suite
-│   ├── unit/              # Fast unit tests (157 tests)
-│   ├── integration/       # Integration tests
-│   └── conftest.py        # Test configuration and fixtures
-├── portfolio_manager.py   # CLI tool for portfolio management
-├── alert_manager.py       # CLI tool for managing alerts
-├── .github/workflows/     # CI/CD pipeline configuration
-└── scripts/               # Development and deployment scripts
+├── src/
+│   ├── api/main.py              # FastAPI server (NEW)
+│   ├── automation/              # Trigger.dev tasks (NEW)
+│   │   ├── tasks/              # 18 automated monitoring tasks
+│   │   └── shared/             # Environment validation & utilities
+│   ├── core/analyzer.py        # Main analysis engine
+│   ├── portfolio/              # Portfolio management system
+│   ├── llm/deepseek_analyzer.py # AI integration
+│   ├── alerts/slack_alerts.py  # Notification system
+│   └── db/                     # Database models & migrations
+├── tests/                      # 157 comprehensive tests
+├── scripts/run_api.py          # API server runner
+└── trigger.config.ts           # Trigger.dev configuration
 ```
+
+## 🤖 Automation System (NEW)
+
+Our Trigger.dev-powered automation provides 24/7 monitoring:
+
+### Available Tasks
+
+-   **Health Monitor**: System health checks every minute
+-   **Stock Price Alerts**: Real-time price movement notifications
+-   **Portfolio Analysis**: Scheduled LLM-powered portfolio insights
+-   **Pre-market Analysis**: Overnight news analysis and market prep
+-   **Scheduled Orchestrator**: Coordinated multi-task execution
+
+### Setup Automation
+
+```bash
+# 1. Deploy to Trigger.dev
+bunx trigger.dev@latest deploy
+
+# 2. Set environment variables in Trigger.dev dashboard:
+PYTHON_API_URL=http://your-api-server.com
+API_TOKEN=your-secure-token
+DEEPSEEK_API_KEY=your-deepseek-key
+DATABASE_URL=your-database-url
+
+# 3. Start development server for testing
+bunx trigger.dev@latest dev
+```
+
+## 💼 Portfolio Management
+
+### Quick Commands
+
+```bash
+# Create and manage portfolios
+uv run portfolio_manager.py create "My Portfolio" personal "Main investment portfolio"
+uv run portfolio_manager.py add 1 AAPL 100 150.00
+uv run portfolio_manager.py show 1
+
+# Get AI-powered recommendations
+uv run portfolio_manager.py sells 1    # Sell recommendations
+uv run portfolio_manager.py health 1   # Portfolio health check
+
+# Set up Slack alerts
+uv run alert_manager.py test
+uv run alert_manager.py watchlist
+```
+
+### Features
+
+-   **Real-time P&L**: Live position tracking with current market prices
+-   **Risk Analysis**: Sector concentration and volatility assessment
+-   **AI Recommendations**: LLM-powered buy/sell suggestions
+-   **Performance Analytics**: Historical analysis and backtesting
 
 ## 🧪 Testing & Quality
 
-Our system maintains high code quality through comprehensive testing:
+We maintain high code quality with comprehensive testing:
 
 ```bash
-# Run different test suites
-make test-fast          # Quick unit tests (~10s)
+make test-fast          # Quick unit tests (157 tests, ~10s)
 make test-integration   # Integration tests (~30s)
 make test-all          # Complete test suite
-make coverage          # Generate coverage report
-
-# Code quality checks
-make lint              # Linting and style checks
-make security          # Security vulnerability scanning
-make format            # Auto-format code
+make coverage          # Generate coverage report (88%+ coverage)
 ```
 
 ### Test Coverage
 
 -   **Core Analyzer**: 80%+ coverage
--   **Portfolio Management**: 90%+ coverage with comprehensive tests
+-   **Portfolio Management**: 90%+ coverage
 -   **LLM Components**: 88-92% coverage
--   **Slack Alerts**: 68 comprehensive tests
--   **Integration Tests**: Full workflow validation with PostgreSQL
--   **Total Tests**: 157 tests across unit and integration suites
+-   **Automation Tasks**: Comprehensive integration tests
+-   **Total**: 157 tests across unit and integration suites
 
-## 📱 Slack Alerts System
-
-Get real-time stock alerts and daily summaries delivered directly to your Slack workspace - completely free!
-
-### Features
-
--   **Real-time Alerts**: Instant notifications for Buy/Strong Buy signals
--   **Rich Formatting**: Beautiful Slack blocks with stock data, prices, and upside potential
--   **Smart Filtering**: Market hours awareness, rate limiting, and duplicate prevention
--   **Daily Summaries**: End-of-day reports with top picks and portfolio statistics
--   **Risk Warnings**: Alerts for high allocation recommendations
--   **CLI Management**: Professional command-line tool for system control
-
-### Quick Setup
-
-```bash
-# 1. Create a free Slack app at https://api.slack.com/apps
-# 2. Add chat:write permission and install to your workspace
-# 3. Set environment variables
-export SLACK_BOT_TOKEN="xoxb-your-bot-token"
-export SLACK_USER_ID="@your-username"
-
-# 4. Test the system
-uv run alert_manager.py test
-
-# 5. Start monitoring your watchlist
-uv run alert_manager.py watchlist
-```
-
-### Alert Types
-
--   **BUY_SIGNAL**: Score ≥75, Rating="Buy"
--   **STRONG_BUY**: Score ≥85, Rating="Buy/Strong Buy"
--   **RISK_WARNING**: High allocation recommendations (>10%)
--   **DAILY_SUMMARY**: Portfolio overview with top picks
-
-See [Slack Alerts Documentation](src/alerts/README.md) for complete setup guide.
-
-## 💼 Portfolio Management System
-
-Complete portfolio tracking and analytics with real-time market data integration.
-
-### Features
-
--   **Multi-Portfolio Support**: Personal, IRA, 401k, and custom portfolio types
--   **Real-time Tracking**: Live position updates with current market prices
--   **P&L Calculations**: Automatic profit/loss tracking with percentage returns
--   **Sector Analysis**: Portfolio allocation and concentration tracking
--   **Sell Signals**: AI-powered sell recommendations for existing positions
--   **Buy Recommendations**: Portfolio-aware buy suggestions to prevent over-concentration
--   **Rebalancing**: Automated rebalancing recommendations
--   **Performance Analytics**: Portfolio health scoring and risk assessment
-
-### Quick Start
-
-```bash
-# Create a new portfolio
-uv run portfolio_manager.py create "My Portfolio" personal "Main investment portfolio"
-
-# Add positions
-uv run portfolio_manager.py add 1 AAPL 100 150.00
-uv run portfolio_manager.py add 1 GOOGL 50 120.00
-uv run portfolio_manager.py add 1 MSFT 75 200.00
-
-# View portfolio summary
-uv run portfolio_manager.py show 1
-
-# Get sell recommendations
-uv run portfolio_manager.py sells 1
-
-# Check portfolio health
-uv run portfolio_manager.py health 1
-```
-
-### Database Schema
-
--   **portfolios**: Portfolio metadata and configuration
--   **portfolio_positions**: Current holdings with quantities and cost basis
--   **portfolio_transactions**: Complete transaction history
--   **portfolio_snapshots**: Daily portfolio value tracking
-
-## 🤖 AI Integration
-
-### DeepSeek LLM Features
-
--   **Comprehensive Analysis**: Multi-factor AI evaluation
--   **News Impact Scoring**: Real-time news sentiment analysis
--   **Growth Catalyst Identification**: AI-powered catalyst detection
--   **Risk Assessment**: Enhanced risk evaluation with market context
-
-### Configuration
-
-```bash
-# Set your DeepSeek API key
-export DEEPSEEK_API_KEY="your-api-key-here"
-
-# Test LLM integration
-make test-llm
-```
-
-## 📊 Analysis Capabilities
-
-### Scoring System
-
--   **Traditional Mode**: 50% fundamentals, 25% technical, 15% sentiment, 10% risk
--   **AI-Enhanced Mode**: 40% fundamentals, 20% technical, 30% LLM analysis, 10% risk
-
-### Investment Ratings
-
--   **Strong Buy**: Score 80+ with high confidence
--   **Buy**: Score 60-79 with good confidence
--   **Hold**: Score 40-59 or low confidence
--   **Sell**: Score 20-39
--   **Strong Sell**: Score <20
-
-### Risk Assessment
-
--   **Low Risk**: Stable, established companies
--   **Medium Risk**: Growth companies with moderate volatility
--   **High Risk**: Speculative or highly volatile stocks
-
-## 🛠️ Development
-
-### Development Workflow
-
-```bash
-# Set up development environment
-make dev-setup
-
-# Daily development commands
-make check             # Quick lint + test
-make format            # Format code
-make test-fast         # Quick feedback
-
-# Before committing (automatic via git hooks)
-make pre-commit        # Full pre-commit checks
-
-# Before pushing (automatic via git hooks)
-make pre-push          # Comprehensive test suite
-```
-
-### Git Workflow
-
-We use conventional commits and automated testing:
-
-```bash
-# Commit format
-git commit -m "feat: add new analysis feature"
-git commit -m "fix: resolve data parsing issue"
-git commit -m "test: add comprehensive unit tests"
-
-# Automated checks
-# On commit: Fast tests + linting (~10s)
-# On push: Full test suite (~30s)
-# On PR: Complete CI/CD pipeline (~2min)
-```
-
-## 📈 Example Analysis Output
+## 📊 Analysis Output Example
 
 ```python
 {
@@ -305,7 +182,6 @@ git commit -m "test: add comprehensive unit tests"
     "fundamental_score": 82.0,
     "technical_score": 75.0,
     "sentiment_score": 80.0,
-    "risk_score": 70.0,
     "llm_analysis": {
         "investment_thesis": "Strong AI market position with robust fundamentals",
         "key_strengths": ["Market leadership", "Strong margins", "AI growth"],
@@ -320,40 +196,67 @@ git commit -m "test: add comprehensive unit tests"
 }
 ```
 
-## 📚 Documentation
+## 🛠️ Development
 
--   **[Development Guide](DEVELOPMENT.md)**: Complete development workflow
--   **[Configuration Guide](CONFIGURATION.md)**: Setup and configuration
--   **[Testing Guide](tests/README.md)**: Testing framework and practices
--   **[API Documentation](src/README.md)**: Code structure and APIs
+### Daily Workflow
+
+```bash
+make check             # Quick lint + test
+make format            # Format code
+make pre-commit        # Full pre-commit checks (automatic via git hooks)
+```
+
+### API Development
+
+```bash
+make run-api           # Start FastAPI server
+curl http://localhost:8000/health  # Test API health
+curl http://localhost:8000/docs    # View API documentation
+```
+
+### Automation Development
+
+```bash
+bunx trigger.dev@latest dev        # Start development server
+bunx trigger.dev@latest deploy     # Deploy to production
+```
+
+## 📚 Documentation Structure
+
+-   **[DEVELOPMENT.md](DEVELOPMENT.md)**: Complete development setup and workflow
+-   **[DEPLOYMENT.md](DEPLOYMENT.md)**: GitHub Actions and Trigger.dev deployment guide
+-   **[src/automation/README.md](src/automation/README.md)**: Trigger.dev automation guide
+-   **[tests/README.md](tests/README.md)**: Testing framework and practices
+-   **[src/alerts/README.md](src/alerts/README.md)**: Slack alerts setup guide
+
+## 🚨 Important Notes
+
+### Environment Validation
+
+The system now uses **fail-fast environment validation**. Missing required environment variables will cause tasks to fail immediately with clear error messages, rather than silently using mock data.
+
+### Mock Testing
+
+For development, you can use mock values:
+
+```bash
+export API_TOKEN="mock-api-token-12345"
+export PYTHON_API_URL="http://localhost:8000"
+export DEEPSEEK_API_KEY="mock-deepseek-key-67890"
+```
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes and add tests
+3. Add tests for your changes
 4. Run the test suite: `make test-all`
 5. Commit using conventional commits: `git commit -m "feat: add amazing feature"`
-6. Push to your branch: `git push origin feature/amazing-feature`
-7. Open a Pull Request
+6. Open a Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
--   **yfinance**: Financial data retrieval
--   **DeepSeek**: AI-powered analysis capabilities
--   **pandas**: Data manipulation and analysis
--   **pytest**: Comprehensive testing framework
--   **GitHub Actions**: CI/CD pipeline automation
-
-## 📞 Support
-
--   **Issues**: [GitHub Issues](https://github.com/your-username/stock-analysis/issues)
--   **Discussions**: [GitHub Discussions](https://github.com/your-username/stock-analysis/discussions)
--   **Documentation**: [Project Wiki](https://github.com/your-username/stock-analysis/wiki)
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 

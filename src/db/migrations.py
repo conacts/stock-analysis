@@ -41,7 +41,8 @@ class MigrationRunner:
             with self.engine.connect() as conn:
                 # Portfolios table
                 conn.execute(
-                    text("""
+                    text(
+                        """
                     CREATE TABLE IF NOT EXISTS portfolios (
                         id SERIAL PRIMARY KEY,
                         name VARCHAR(255) NOT NULL UNIQUE,
@@ -52,12 +53,14 @@ class MigrationRunner:
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         is_active BOOLEAN DEFAULT true
                     )
-                """)
+                """
+                    )
                 )
 
                 # Portfolio positions table
                 conn.execute(
-                    text("""
+                    text(
+                        """
                     CREATE TABLE IF NOT EXISTS portfolio_positions (
                         id SERIAL PRIMARY KEY,
                         portfolio_id INTEGER NOT NULL,
@@ -73,12 +76,14 @@ class MigrationRunner:
                         FOREIGN KEY (portfolio_id) REFERENCES portfolios (id),
                         UNIQUE(portfolio_id, symbol)
                     )
-                """)
+                """
+                    )
                 )
 
                 # Portfolio transactions table
                 conn.execute(
-                    text("""
+                    text(
+                        """
                     CREATE TABLE IF NOT EXISTS portfolio_transactions (
                         id SERIAL PRIMARY KEY,
                         portfolio_id INTEGER NOT NULL,
@@ -93,12 +98,14 @@ class MigrationRunner:
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY (portfolio_id) REFERENCES portfolios (id)
                     )
-                """)
+                """
+                    )
                 )
 
                 # Portfolio snapshots table
                 conn.execute(
-                    text("""
+                    text(
+                        """
                     CREATE TABLE IF NOT EXISTS portfolio_snapshots (
                         id SERIAL PRIMARY KEY,
                         portfolio_id INTEGER NOT NULL,
@@ -117,7 +124,8 @@ class MigrationRunner:
                         FOREIGN KEY (portfolio_id) REFERENCES portfolios (id),
                         UNIQUE(portfolio_id, snapshot_date)
                     )
-                """)
+                """
+                    )
                 )
 
                 conn.commit()

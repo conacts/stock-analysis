@@ -5,8 +5,9 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  provider      = "prisma-client-js"
+  output        = "../src/generated/prisma"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -97,6 +98,9 @@ model Portfolio {
   positions    PortfolioPosition[]
   transactions PortfolioTransaction[]
   snapshots    PortfolioSnapshot[]
+  llm_messages PortfolioLlmMessage[]
+  analysis_history PortfolioAnalysisHistory[]
+  price_alerts StockPriceAlert[]
 
   @@map("portfolios")
 }
@@ -165,4 +169,110 @@ model PortfolioSnapshot {
   @@index([portfolioId])
   @@index([snapshotDate])
   @@map("portfolio_snapshots")
+}
+
+// NEW: Portfolio LLM Message History
+model PortfolioLlmMessage {
+  id           Int      @id @default(autoincrement())
+  portfolio_id Int
+  role         String   // "user", "assistant", "system"
+  content      String   @db.Text
+  tokens_used  Int?
+  cost_usd     Decimal? @db.Decimal(10, 6)
+  model        String?  // "deepseek-chat", etc.
+  created_at   DateTime @default(now())
+
+  // Context metadata
+  analysis_type String?  // "daily", "weekly", "alert", "rebalance"
+  stock_symbols String[] // Array of stocks discussed
+
+  // Relations
+  portfolio Portfolio @relation(fields: [portfolio_id], references: [id], onDelete: Cascade)
+
+  @@map("portfolio_llm_messages")
+  @@index([portfolio_id, created_at])
+  @@index([analysis_type, created_at])
+}
+
+// NEW: Stock Price Alerts Configuration
+model StockPriceAlert {
+  id            Int      @id @default(autoincrement())
+  symbol        String
+  alert_type    String   // "percentage_up", "percentage_down", "price_target"
+  threshold     Decimal  @db.Decimal(10, 4) // Percentage or price
+  is_active     Boolean  @default(true)
+  portfolio_id  Int?     // Optional: alert specific to portfolio
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  // Alert history
+  last_triggered_at DateTime?
+  trigger_count     Int      @default(0)
+
+  // Relations
+  portfolio Portfolio? @relation(fields: [portfolio_id], references: [id], onDelete: Cascade)
+  triggers  StockAlertTrigger[]
+
+  @@map("stock_price_alerts")
+  @@index([symbol, is_active])
+  @@index([portfolio_id, is_active])
+}
+
+// NEW: Stock Alert Trigger History
+model StockAlertTrigger {
+  id               Int      @id @default(autoincrement())
+  alert_id         Int
+  symbol           String
+  trigger_price    Decimal  @db.Decimal(10, 4)
+  previous_price   Decimal  @db.Decimal(10, 4)
+  percentage_change Decimal @db.Decimal(10, 4)
+  volume           BigInt?
+  triggered_at     DateTime @default(now())
+
+  // Alert context
+  market_hours     Boolean  @default(true)
+  alert_sent       Boolean  @default(false)
+  alert_channels   String[] // ["slack", "email", "sms"]
+
+  // Relations
+  alert StockPriceAlert @relation(fields: [alert_id], references: [id], onDelete: Cascade)
+
+  @@map("stock_alert_triggers")
+  @@index([symbol, triggered_at])
+  @@index([alert_id, triggered_at])
+}
+
+// NEW: Portfolio Analysis History
+model PortfolioAnalysisHistory {
+  id           Int      @id @default(autoincrement())
+  portfolio_id Int
+  analysis_type String  // "daily", "weekly", "monthly", "rebalance", "alert"
+
+  // Analysis results
+  total_value       Decimal  @db.Decimal(15, 2)
+  daily_return      Decimal? @db.Decimal(10, 6)
+  total_return      Decimal? @db.Decimal(10, 6)
+  risk_score        Decimal? @db.Decimal(5, 4)
+  diversification   Decimal? @db.Decimal(5, 4)
+
+  // LLM insights
+  llm_summary       String?  @db.Text
+  recommendations   String[] // Array of recommendation strings
+  risk_factors      String[] // Array of identified risks
+  opportunities     String[] // Array of identified opportunities
+
+  // Performance metrics
+  sharpe_ratio      Decimal? @db.Decimal(10, 6)
+  max_drawdown      Decimal? @db.Decimal(10, 6)
+  volatility        Decimal? @db.Decimal(10, 6)
+  beta              Decimal? @db.Decimal(10, 6)
+
+  created_at        DateTime @default(now())
+
+  // Relations
+  portfolio Portfolio @relation(fields: [portfolio_id], references: [id], onDelete: Cascade)
+
+  @@map("portfolio_analysis_history")
+  @@index([portfolio_id, analysis_type, created_at])
+  @@index([analysis_type, created_at])
 }

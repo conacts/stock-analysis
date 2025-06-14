@@ -1,375 +1,367 @@
-# Development Guide
+# 🛠️ Development Guide
 
-This guide covers the development workflow, testing strategy, and Git practices for the Stock Analysis System.
+Complete development setup and workflow for the Stock Analysis System.
 
-## 🚀 Quick Start
+## 🚀 Quick Setup
+
+### Prerequisites
+
+-   **Python 3.11+** with [uv](https://docs.astral.sh/uv/) package manager
+-   **Node.js 18+** with Bun (for Trigger.dev automation)
+-   **Git** with conventional commit support
+
+### One-Command Setup
 
 ```bash
-# Clone and setup
-git clone <repository-url>
+git clone https://github.com/your-username/stock-analysis.git
 cd stock-analysis
-make dev-setup
-
-# Verify everything works
-make test-fast
+make dev-setup  # Complete development environment setup
 ```
 
-## 📋 Development Workflow
+This command:
 
-### Git Workflow Strategy
+-   Installs Python dependencies with `uv`
+-   Installs Node.js dependencies with `bun`
+-   Sets up pre-commit hooks
+-   Configures the database
+-   Runs initial tests to verify setup
 
-We use a **feature branch workflow** with automated testing at each stage:
+## 🔧 Development Workflow
 
-```
-main (production) ← develop (integration) ← feature/your-feature
-```
-
-### Testing Strategy by Git Stage
-
-| Git Stage      | Tests Run                      | Purpose              | Speed   |
-| -------------- | ------------------------------ | -------------------- | ------- |
-| **git add**    | None                           | Stage files          | Instant |
-| **git commit** | Fast unit tests + linting      | Catch basic issues   | ~10s    |
-| **git push**   | All tests (unit + integration) | Ensure quality       | ~30s    |
-| **GitHub PR**  | Full CI/CD pipeline            | Production readiness | ~2min   |
-
-## 🔧 Development Commands
-
-### Using Make (Recommended)
+### Daily Commands
 
 ```bash
-# Show all available commands
-make help
+# Quick development cycle
+make check          # Fast lint + test (~10s)
+make format         # Auto-format code
+make test-fast      # Quick unit tests (157 tests)
 
-# Development setup
-make dev-setup          # Complete setup with Git hooks
-make install            # Install dependencies only
+# Before committing (automatic via git hooks)
+make pre-commit     # Full pre-commit checks
 
-# Testing
-make test-fast          # Quick feedback (10s)
-make test-unit          # All unit tests
-make test-integration   # Integration tests
-make test-all           # Everything except slow tests
-make coverage           # Tests with coverage report
+# API development
+make run-api        # Start FastAPI server on :8000
+make run-analyzer   # Interactive stock analyzer
 
-# Code Quality
-make lint               # Check code style
-make format             # Auto-format code
-make security           # Security checks
-
-# Quick development commands
-make check              # lint + fast tests
-make quick-test         # Alias for test-fast
-
-# Run applications
-make run-analyzer       # Master stock analyzer
-make run-app           # Main research app
+# Automation development
+bunx trigger.dev@latest dev     # Start Trigger.dev development server
+bunx trigger.dev@latest deploy  # Deploy automation tasks
 ```
 
-### Using Python directly
+### Testing Strategy
 
 ```bash
-# Testing
-python run_tests.py --fast
-python run_tests.py --integration
-python run_tests.py --all --coverage
+# Test categories
+make test-fast          # Unit tests (~10s) - 157 tests
+make test-integration   # Integration tests (~30s)
+make test-llm          # LLM tests (requires DEEPSEEK_API_KEY)
+make test-all          # Complete test suite
+make coverage          # Generate coverage report (88%+)
 
-# Code quality
-uv run black src/ tests/
-uv run flake8 src/ tests/
-uv run bandit -r src/
+# Specific test areas
+make test-portfolio    # Portfolio management tests
+make test-alerts       # Slack alerts tests
+make test-automation   # Trigger.dev automation tests
 ```
 
-## 🪝 Git Hooks Setup
+## 🏗️ Architecture Overview
 
-### Automatic Setup
-
-```bash
-make setup-hooks
-```
-
-### Manual Setup
-
-```bash
-chmod +x scripts/setup-git-hooks.sh
-./scripts/setup-git-hooks.sh
-```
-
-### What Gets Installed
-
-1. **Pre-commit hooks**:
-
-    - Code formatting (black, isort)
-    - Linting (flake8)
-    - Security checks (bandit)
-    - Fast unit tests
-    - File checks (trailing whitespace, etc.)
-
-2. **Commit message validation**:
-
-    - Enforces conventional commit format
-    - Examples: `feat: add new feature`, `fix: resolve bug`
-
-3. **Pre-push hooks**:
-    - Comprehensive test suite
-    - Prevents pushing broken code
-
-## 📝 Commit Message Format
-
-We use **Conventional Commits** for clear, semantic commit messages:
+### Core Components
 
 ```
-type(scope): description
-
-feat: add LLM integration for enhanced analysis
-fix(analyzer): handle missing financial data gracefully
-test: add comprehensive unit tests for scoring
-docs: update API documentation
-refactor: simplify technical analysis logic
+src/
+├── api/main.py              # FastAPI server (NEW)
+├── automation/              # Trigger.dev tasks (18 tasks)
+├── core/analyzer.py         # Main analysis engine
+├── portfolio/               # Portfolio management
+├── llm/deepseek_analyzer.py # AI integration
+├── alerts/slack_alerts.py  # Notification system
+└── db/                      # Database models
 ```
 
-### Types
+### Key Technologies
 
--   `feat`: New features
--   `fix`: Bug fixes
--   `docs`: Documentation changes
--   `test`: Adding or updating tests
--   `refactor`: Code refactoring
--   `style`: Code style changes
--   `perf`: Performance improvements
--   `chore`: Maintenance tasks
--   `ci`: CI/CD changes
+-   **Python**: Core analysis engine with 157 passing tests
+-   **FastAPI**: REST API server for automation integration
+-   **Trigger.dev**: Automation platform (18 tasks deployed)
+-   **PostgreSQL**: Production database with Prisma ORM
+-   **DeepSeek LLM**: AI-powered analysis
+-   **Slack API**: Real-time notifications
 
-## 🧪 Testing Guidelines
+## 🧪 Testing Framework
 
-### Test Categories
+### Test Structure
 
-1. **Unit Tests** (`tests/unit/`)
+```
+tests/
+├── unit/                    # Fast unit tests (157 tests)
+│   ├── test_stock_analyzer.py
+│   ├── test_portfolio_*.py
+│   └── test_llm_components.py
+├── integration/             # Integration tests
+│   └── test_analyzer_integration.py
+└── conftest.py             # Test configuration
+```
 
-    - Fast, isolated tests
-    - Mock external dependencies
-    - 80%+ coverage target
-    - Run on every commit
+### Coverage Targets
 
-2. **Integration Tests** (`tests/integration/`)
+-   **Core Analyzer**: 80%+ coverage
+-   **Portfolio Management**: 90%+ coverage
+-   **LLM Components**: 88-92% coverage
+-   **Automation Tasks**: Integration test coverage
+-   **Overall**: 88%+ coverage maintained
 
-    - Test component interactions
-    - Mock external services
-    - Test complete workflows
-    - Run on push
-
-3. **LLM Tests** (`tests/unit/test_llm_components.py`)
-    - Require API keys
-    - Cost money to run
-    - Only run in CI on main branch
-
-### Writing Tests
+### Test Data Management
 
 ```python
-# Unit test example
-def test_analyze_fundamentals(mock_yfinance_ticker):
-    analyzer = StockAnalyzer(enable_llm=False)
-    result = analyzer._analyze_fundamentals(
-        mock_yfinance_ticker.info, "TEST"
-    )
-    assert result['fundamental_score'] >= 0
+# Use fixtures for consistent test data
+@pytest.fixture
+def sample_portfolio():
+    return create_test_portfolio()
 
-# Integration test example
-@pytest.mark.integration
-def test_full_workflow(mock_ticker_class, mock_yfinance_ticker):
-    mock_ticker_class.return_value = mock_yfinance_ticker
-    analyzer = StockAnalyzer(enable_llm=False)
-    result = analyzer.analyze_stock("TEST")
-    assert result is not None
+# Mock external APIs in tests
+@pytest.fixture
+def mock_yfinance():
+    with patch('yfinance.Ticker') as mock:
+        yield mock
 ```
 
-### Test Markers
+## 🔄 Git Workflow
+
+### Commit Standards
+
+We use [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```bash
-# Run specific test types
-pytest -m "unit"                    # Unit tests only
-pytest -m "integration"             # Integration tests only
-pytest -m "not llm"                 # Everything except LLM tests
-pytest -m "unit and not slow"       # Fast unit tests only
+# Feature additions
+git commit -m "feat: add automated price alerts"
+
+# Bug fixes
+git commit -m "fix: resolve portfolio calculation error"
+
+# Tests
+git commit -m "test: add comprehensive LLM integration tests"
+
+# Documentation
+git commit -m "docs: update automation setup guide"
+
+# Refactoring
+git commit -m "refactor: improve error handling in analyzer"
 ```
 
-## 🔍 Code Quality Standards
+### Automated Checks
 
-### Formatting
+-   **On Commit**: Fast tests + linting (~10s)
+-   **On Push**: Full test suite (~30s)
+-   **On PR**: Complete CI/CD pipeline
 
--   **Black**: Code formatting (88 char line length)
--   **isort**: Import sorting
--   **flake8**: Linting and style checks
-
-### Security
-
--   **Bandit**: Security vulnerability scanning
--   **Safety**: Dependency vulnerability checking
-
-### Coverage
-
--   **Target**: 80%+ for core components
--   **Reports**: HTML reports in `htmlcov/`
-
-## 🚀 CI/CD Pipeline
-
-### GitHub Actions Workflow
-
-1. **On Pull Request**:
-
-    - Lint checks
-    - Security scans
-    - Unit tests
-    - Integration tests
-    - Multiple Python versions (3.11, 3.12, 3.13)
-
-2. **On Push to Main**:
-    - All above tests
-    - LLM tests (if API key available)
-    - Coverage reporting
-    - Security artifact uploads
-
-### Local CI Simulation
+### Branch Strategy
 
 ```bash
-# Run the full CI pipeline locally
-make ci
+# Feature development
+git checkout -b feat/automated-alerts
+git commit -m "feat: implement price alert system"
+git push origin feat/automated-alerts
+
+# Bug fixes
+git checkout -b fix/portfolio-calculation
+git commit -m "fix: correct P&L calculation logic"
 ```
 
-## 🛠️ Development Environment
+## 🚀 API Development
 
-### Required Tools
-
--   **Python 3.11+**
--   **uv** (package manager)
--   **make** (task runner)
--   **git** (version control)
-
-### Optional Tools
-
--   **pre-commit** (Git hooks)
--   **VS Code** with Python extension
--   **GitHub CLI** for PR management
-
-### Environment Variables
+### FastAPI Server
 
 ```bash
-# Required for LLM tests
-export DEEPSEEK_API_KEY="your-api-key"
+# Start development server
+make run-api
 
-# Optional for database tests
-export DATABASE_URL="postgresql://..."
+# Test endpoints
+curl http://localhost:8000/health
+curl http://localhost:8000/docs  # Interactive API docs
+curl http://localhost:8000/analyze/AAPL
 ```
 
-## 📁 Project Structure
+### API Structure
 
-```
-stock-analysis/
-├── src/                    # Source code
-│   ├── core/              # Core analysis logic
-│   ├── llm/               # LLM integration
-│   ├── data/              # Data handling
-│   └── db/                # Database operations
-├── tests/                 # Test suite
-│   ├── unit/              # Unit tests
-│   ├── integration/       # Integration tests
-│   └── conftest.py        # Test configuration
-├── scripts/               # Development scripts
-├── .github/workflows/     # CI/CD configuration
-└── docs/                  # Documentation
+```python
+# src/api/main.py
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+@app.post("/analyze/{symbol}")
+async def analyze_stock(symbol: str):
+    analyzer = StockAnalyzer()
+    return analyzer.analyze_stock(symbol)
 ```
 
-## 🐛 Debugging
+## 🤖 Automation Development
 
-### Test Debugging
+### Trigger.dev Tasks
 
 ```bash
-# Run specific test with verbose output
-pytest tests/unit/test_stock_analyzer.py::TestStockAnalyzer::test_analyze_fundamentals -v -s
+# Local development
+export API_TOKEN="mock-api-token-12345"
+export PYTHON_API_URL="http://localhost:8000"
+bunx trigger.dev@latest dev
 
-# Debug with pdb
-pytest --pdb tests/unit/test_stock_analyzer.py
+# Deploy to production
+bunx trigger.dev@latest deploy
 
-# Run tests with coverage and open report
-make coverage && open htmlcov/index.html
+# Monitor tasks
+# Visit: https://cloud.trigger.dev/
 ```
 
-### Application Debugging
+### Task Development Pattern
+
+```typescript
+// src/automation/tasks/example-task.ts
+import {task} from "@trigger.dev/sdk/v3";
+import {getValidatedEnv} from "../shared/env-validation";
+
+export const exampleTask = task({
+    id: "example-task",
+    run: async (payload) => {
+        const env = getValidatedEnv();
+        // Task implementation
+    },
+});
+```
+
+## 🔧 Environment Configuration
+
+### Development Environment
 
 ```bash
-# Run with debug logging
-PYTHONPATH=src python -c "
-import logging
-logging.basicConfig(level=logging.DEBUG)
-from core.analyzer import StockAnalyzer
-analyzer = StockAnalyzer()
-result = analyzer.analyze_stock('AAPL')
-print(result)
-"
+# .env (for local development)
+DEEPSEEK_API_KEY=your-deepseek-key
+SLACK_BOT_TOKEN=xoxb-your-slack-token
+SLACK_USER_ID=@your-username
+DATABASE_URL=sqlite:///data/stock_analysis.db
+
+# Mock values for testing
+API_TOKEN=mock-api-token-12345
+PYTHON_API_URL=http://localhost:8000
 ```
 
-## 🚨 Troubleshooting
+### Production Environment
+
+Set these in your Trigger.dev dashboard:
+
+-   `PYTHON_API_URL` - Production API server URL
+-   `API_TOKEN` - Secure authentication token
+-   `DEEPSEEK_API_KEY` - AI analysis features
+-   `DATABASE_URL` - Production database connection
+
+## 🐛 Debugging & Troubleshooting
 
 ### Common Issues
 
-1. **Tests failing locally but passing in CI**
+**Tests Failing:**
 
-    - Check Python version differences
-    - Verify environment variables
-    - Clear pytest cache: `rm -rf .pytest_cache/`
+```bash
+# Check specific test category
+make test-fast --verbose
+make test-integration --verbose
 
-2. **Pre-commit hooks failing**
+# Check coverage
+make coverage
+```
 
-    - Update hooks: `pre-commit autoupdate`
-    - Run manually: `pre-commit run --all-files`
+**API Connection Issues:**
 
-3. **Import errors in tests**
+```bash
+# Verify API server is running
+curl http://localhost:8000/health
 
-    - Check PYTHONPATH: `export PYTHONPATH="${PYTHONPATH}:./src"`
-    - Verify test structure matches source structure
+# Check logs
+tail -f logs/api.log
+```
 
-4. **LLM tests failing**
-    - Check API key: `echo $DEEPSEEK_API_KEY`
-    - Verify account balance
-    - Skip LLM tests: `pytest -m "not llm"`
+**Automation Task Failures:**
 
-### Getting Help
+```bash
+# Check Trigger.dev logs in dashboard
+# Verify environment variables are set
+# Test with mock values locally
+```
 
-1. Check the test output for specific error messages
-2. Run `make help` for available commands
-3. Check the GitHub Actions logs for CI failures
-4. Review the test documentation in `tests/README.md`
+### Performance Optimization
 
-## 🎯 Best Practices
+```bash
+# Profile test performance
+make test-fast --profile
 
-### Development
+# Check database query performance
+make db-analyze
 
--   Write tests first (TDD approach)
--   Keep commits small and focused
--   Use descriptive commit messages
--   Run `make check` before committing
+# Monitor API response times
+make api-benchmark
+```
 
-### Testing
+## 📦 Dependency Management
 
--   Mock external dependencies
--   Test both success and failure scenarios
--   Aim for 80%+ coverage on new code
--   Use appropriate test markers
+### Python Dependencies
 
-### Code Quality
+```bash
+# Add new dependency
+uv add package-name
 
--   Follow PEP 8 style guidelines
--   Use type hints where helpful
--   Write docstrings for public functions
--   Keep functions small and focused
+# Update dependencies
+uv sync
 
-### Git
+# Check for security issues
+uv audit
+```
 
--   Create feature branches for new work
--   Rebase before merging to keep history clean
--   Use conventional commit messages
--   Don't commit sensitive data (API keys, etc.)
+### Node.js Dependencies
+
+```bash
+# Add automation dependency
+bun add package-name
+
+# Update dependencies
+bun update
+
+# Check bundle size
+bun analyze
+```
+
+## 🚀 Deployment
+
+### Local Testing
+
+```bash
+# Test complete system locally
+make run-api &          # Start API server
+make test-all           # Run all tests
+bunx trigger.dev@latest dev  # Test automation
+```
+
+### Production Deployment
+
+```bash
+# Deploy API server (your choice of platform)
+# Deploy automation tasks
+bunx trigger.dev@latest deploy
+
+# Verify deployment
+make test-production
+```
+
+## 📚 Additional Resources
+
+-   **[Main README](README.md)**: System overview and quick start
+-   **[Automation Guide](src/automation/README.md)**: Trigger.dev setup and tasks
+-   **[Testing Guide](tests/README.md)**: Testing framework details
+-   **[Configuration Guide](CONFIGURATION.md)**: Environment setup
 
 ---
 
-**Happy coding! 🚀**
+**💡 Pro Tips:**
+
+-   Use `make check` for quick feedback during development
+-   Set up your IDE with Python and TypeScript language servers
+-   Use the Trigger.dev dashboard for monitoring automation tasks
+-   Run `make pre-commit` before pushing to catch issues early

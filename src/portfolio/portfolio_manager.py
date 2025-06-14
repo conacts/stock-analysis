@@ -49,11 +49,13 @@ class PortfolioManager:
             now = datetime.now().isoformat()
 
             # Use raw SQL since we don't have SQLAlchemy models for portfolio tables yet
-            query = text("""
+            query = text(
+                """
                 INSERT INTO portfolios (name, description, portfolio_type, created_at, updated_at)
                 VALUES (:name, :description, :portfolio_type, :created_at, :updated_at)
                 RETURNING id
-            """)
+            """
+            )
 
             result = session.execute(query, {"name": name, "description": description, "portfolio_type": portfolio_type, "created_at": now, "updated_at": now})
 
@@ -141,19 +143,23 @@ class PortfolioManager:
                 new_quantity = existing_quantity + new_quantity_add
                 new_avg_cost = ((existing_quantity * existing_avg_cost) + (new_quantity_add * new_avg_cost_add)) / new_quantity if new_quantity > 0 else 0
 
-                query = text("""
+                query = text(
+                    """
                     UPDATE portfolio_positions
                     SET quantity = :quantity, average_cost = :average_cost, last_updated = :last_updated
                     WHERE portfolio_id = :portfolio_id AND symbol = :symbol
-                """)
+                """
+                )
                 session.execute(query, {"quantity": new_quantity, "average_cost": new_avg_cost, "last_updated": datetime.now().isoformat(), "portfolio_id": portfolio_id, "symbol": symbol})
             else:
                 # Create new position
-                query = text("""
+                query = text(
+                    """
                     INSERT INTO portfolio_positions
                     (portfolio_id, symbol, quantity, average_cost, sector, last_updated)
                     VALUES (:portfolio_id, :symbol, :quantity, :average_cost, :sector, :last_updated)
-                """)
+                """
+                )
                 session.execute(query, {"portfolio_id": portfolio_id, "symbol": symbol, "quantity": quantity, "average_cost": average_cost, "sector": sector, "last_updated": datetime.now().isoformat()})
 
             session.commit()
@@ -176,10 +182,12 @@ class PortfolioManager:
         """Get a specific position"""
         try:
             session = self.db.get_session()
-            query = text("""
+            query = text(
+                """
                 SELECT * FROM portfolio_positions
                 WHERE portfolio_id = :portfolio_id AND symbol = :symbol
-            """)
+            """
+            )
             result = session.execute(query, {"portfolio_id": portfolio_id, "symbol": symbol}).fetchone()
             session.close()
 
@@ -197,11 +205,13 @@ class PortfolioManager:
         """Get all positions for a portfolio"""
         try:
             session = self.db.get_session()
-            query = text("""
+            query = text(
+                """
                 SELECT * FROM portfolio_positions
                 WHERE portfolio_id = :portfolio_id AND quantity > 0
                 ORDER BY market_value DESC
-            """)
+            """
+            )
             results = session.execute(query, {"portfolio_id": portfolio_id}).fetchall()
             session.close()
 
@@ -241,13 +251,15 @@ class PortfolioManager:
 
             # Update database
             session = self.db.get_session()
-            query = text("""
+            query = text(
+                """
                 UPDATE portfolio_positions
                 SET current_price = :current_price, market_value = :market_value,
                     unrealized_pnl = :unrealized_pnl, unrealized_pnl_pct = :unrealized_pnl_pct,
                     last_updated = :last_updated
                 WHERE portfolio_id = :portfolio_id AND symbol = :symbol
-            """)
+            """
+            )
 
             session.execute(query, {"current_price": current_price, "market_value": market_value, "unrealized_pnl": unrealized_pnl, "unrealized_pnl_pct": unrealized_pnl_pct, "last_updated": datetime.now().isoformat(), "portfolio_id": portfolio_id, "symbol": symbol})
 
@@ -303,13 +315,15 @@ class PortfolioManager:
             total_amount = quantity * price + fees
 
             session = self.db.get_session()
-            query = text("""
+            query = text(
+                """
                 INSERT INTO portfolio_transactions
                 (portfolio_id, symbol, transaction_type, quantity, price,
                  total_amount, fees, transaction_date, notes, created_at)
                 VALUES (:portfolio_id, :symbol, :transaction_type, :quantity, :price,
                         :total_amount, :fees, :transaction_date, :notes, :created_at)
-            """)
+            """
+            )
 
             session.execute(query, {"portfolio_id": portfolio_id, "symbol": symbol, "transaction_type": transaction_type, "quantity": quantity, "price": price, "total_amount": total_amount, "fees": fees, "transaction_date": transaction_date, "notes": notes, "created_at": datetime.now().isoformat()})
 
@@ -378,7 +392,8 @@ class PortfolioManager:
             summary = self.get_portfolio_summary(portfolio_id)
 
             session = self.db.get_session()
-            query = text("""
+            query = text(
+                """
                 INSERT INTO portfolio_snapshots
                 (portfolio_id, snapshot_date, total_value, invested_amount,
                  unrealized_pnl, unrealized_pnl_pct, positions_count,
@@ -396,7 +411,8 @@ class PortfolioManager:
                     top_holdings = EXCLUDED.top_holdings,
                     sector_allocation = EXCLUDED.sector_allocation,
                     created_at = EXCLUDED.created_at
-            """)
+            """
+            )
 
             session.execute(
                 query,

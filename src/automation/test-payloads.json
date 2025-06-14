@@ -1,0 +1,219 @@
+{
+    "simple-test": {},
+    "first-scheduled-task": {},
+    "health-check": {},
+    "system-health-monitor": {},
+    "system-health-check": {},
+    "portfolio-analysis": {
+        "portfolioId": 1,
+        "portfolioName": "Tech Growth Portfolio",
+        "analysisType": "daily",
+        "includePositions": true,
+        "includeLLMHistory": true,
+        "maxHistoryDays": 7
+    },
+    "daily-portfolio-analysis": {},
+    "stock-price-monitor": {},
+    "process-stock-alert": {
+        "symbol": "AAPL",
+        "currentPrice": 195.5,
+        "previousPrice": 190.0,
+        "percentageChange": 2.89,
+        "volume": 45000000,
+        "alertType": "percentage_up",
+        "threshold": 2.5,
+        "portfolioId": 1,
+        "marketHours": true
+    },
+    "setup-portfolio-price-alerts": {
+        "portfolioId": 1,
+        "portfolioName": "Tech Growth Portfolio",
+        "analysisType": "alert",
+        "includePositions": true,
+        "includeLLMHistory": false,
+        "maxHistoryDays": 1
+    },
+    "premarket-analysis": {},
+    "market-open-analysis": {},
+    "midday-health-check": {},
+    "market-close-analysis": {},
+    "weekly-deep-analysis": {},
+    "continuous-price-monitoring": {},
+    "multi-portfolio-comparison": {
+        "portfolioIds": [1, 2, 3],
+        "analysisType": "comparative",
+        "includeCorrelation": true,
+        "includeRebalancing": true,
+        "includeLLMInsights": true
+    },
+    "stock-analysis-basic": {
+        "symbols": ["AAPL", "GOOGL", "MSFT"],
+        "analysisType": "daily",
+        "portfolioId": 1,
+        "includeNews": true,
+        "includeTechnical": true,
+        "includeLLM": true
+    },
+    "portfolio-analysis-weekly": {
+        "portfolioId": 1,
+        "portfolioName": "Tech Growth Portfolio",
+        "analysisType": "weekly",
+        "includePositions": true,
+        "includeLLMHistory": true,
+        "maxHistoryDays": 30
+    },
+    "portfolio-analysis-rebalance": {
+        "portfolioId": 1,
+        "portfolioName": "Tech Growth Portfolio",
+        "analysisType": "rebalance",
+        "includePositions": true,
+        "includeLLMHistory": true,
+        "maxHistoryDays": 90
+    },
+    "stock-alert-percentage-down": {
+        "symbol": "TSLA",
+        "currentPrice": 180.25,
+        "previousPrice": 195.0,
+        "percentageChange": -7.56,
+        "volume": 85000000,
+        "alertType": "percentage_down",
+        "threshold": -5.0,
+        "portfolioId": 1,
+        "marketHours": true
+    },
+    "stock-alert-price-target": {
+        "symbol": "NVDA",
+        "currentPrice": 450.0,
+        "previousPrice": 440.0,
+        "percentageChange": 2.27,
+        "volume": 35000000,
+        "alertType": "price_target",
+        "threshold": 450.0,
+        "portfolioId": 2,
+        "marketHours": true
+    },
+    "multi-portfolio-daily": {
+        "portfolioIds": [1, 2],
+        "analysisType": "daily",
+        "includeCorrelation": false,
+        "includeRebalancing": false,
+        "includeLLMInsights": true
+    },
+    "multi-portfolio-weekly": {
+        "portfolioIds": [1, 2, 3, 4],
+        "analysisType": "weekly",
+        "includeCorrelation": true,
+        "includeRebalancing": true,
+        "includeLLMInsights": true
+    },
+    "price-movement-large-cap": {
+        "symbol": "AAPL",
+        "priceChange": {
+            "current": 195.5,
+            "previous": 190.0,
+            "percentage": 2.89,
+            "timeframe": "1d"
+        },
+        "volume": {
+            "current": 45000000,
+            "average": 35000000,
+            "percentageChange": 28.57
+        },
+        "portfolioContext": {
+            "portfolioId": 1,
+            "position": {
+                "symbol": "AAPL",
+                "quantity": 100,
+                "averagePrice": 180.0,
+                "currentPrice": 195.5,
+                "marketValue": 19550.0,
+                "unrealizedPnl": 1550.0,
+                "unrealizedPnlPercent": 8.61,
+                "weight": 0.15
+            },
+            "impact": 232.5
+        }
+    },
+    "price-movement-small-cap": {
+        "symbol": "PLTR",
+        "priceChange": {
+            "current": 25.8,
+            "previous": 22.5,
+            "percentage": 14.67,
+            "timeframe": "1d"
+        },
+        "volume": {
+            "current": 125000000,
+            "average": 45000000,
+            "percentageChange": 177.78
+        },
+        "portfolioContext": {
+            "portfolioId": 2,
+            "position": {
+                "symbol": "PLTR",
+                "quantity": 500,
+                "averagePrice": 20.0,
+                "currentPrice": 25.8,
+                "marketValue": 12900.0,
+                "unrealizedPnl": 2900.0,
+                "unrealizedPnlPercent": 29.0,
+                "weight": 0.08
+            },
+            "impact": 1650.0
+        }
+    },
+    "llm-conversation-context": {
+        "portfolioId": 1,
+        "recentMessages": [
+            {
+                "portfolioId": 1,
+                "role": "user",
+                "content": "How is my tech portfolio performing today?",
+                "tokensUsed": 12,
+                "costUsd": 0.0001,
+                "model": "deepseek-chat",
+                "analysisType": "daily",
+                "stockSymbols": ["AAPL", "GOOGL", "MSFT"],
+                "createdAt": "2024-06-14T10:30:00Z"
+            },
+            {
+                "portfolioId": 1,
+                "role": "assistant",
+                "content": "Your tech portfolio is up 2.1% today, led by strong performance in AAPL (+2.9%) and MSFT (+1.8%). GOOGL is slightly down (-0.5%) but this appears to be profit-taking after recent gains.",
+                "tokensUsed": 45,
+                "costUsd": 0.0005,
+                "model": "deepseek-chat",
+                "analysisType": "daily",
+                "stockSymbols": ["AAPL", "GOOGL", "MSFT"],
+                "createdAt": "2024-06-14T10:30:15Z"
+            }
+        ],
+        "analysisType": "daily",
+        "stockContext": ["AAPL", "GOOGL", "MSFT", "TSLA"],
+        "marketContext": {
+            "marketHours": true,
+            "marketTrend": "up",
+            "volatility": "medium"
+        }
+    },
+    "test-error-handling": {
+        "portfolioId": 999999,
+        "portfolioName": "Non-existent Portfolio",
+        "analysisType": "daily",
+        "includePositions": true,
+        "includeLLMHistory": true,
+        "maxHistoryDays": 7
+    },
+    "test-minimal-payload": {
+        "portfolioId": 1,
+        "analysisType": "daily"
+    },
+    "test-maximum-payload": {
+        "portfolioId": 1,
+        "portfolioName": "Complete Test Portfolio",
+        "analysisType": "monthly",
+        "includePositions": true,
+        "includeLLMHistory": true,
+        "maxHistoryDays": 365
+    }
+}

@@ -95,9 +95,7 @@ class TestPortfolioAnalyzer:
         analyzer.portfolio_manager.get_portfolio_positions.return_value = sample_positions
 
         # Mock portfolio summary for position allocation calculation
-        analyzer.portfolio_manager.get_portfolio_summary.return_value = {
-            "total_value": 46250.0  # Sum of all position market values
-        }
+        analyzer.portfolio_manager.get_portfolio_summary.return_value = {"total_value": 46250.0}  # Sum of all position market values
 
         # Mock analyst targets
         analyzer.stock_analyzer.analyze_stock.side_effect = lambda symbol: {
@@ -304,9 +302,7 @@ class TestPortfolioAnalyzer:
         position.unrealized_pnl_pct = Decimal("60.0")  # 60% gain - should trigger profit taking
 
         # Mock portfolio summary for position allocation calculation
-        analyzer.portfolio_manager.get_portfolio_summary.return_value = {
-            "total_value": 80000.0  # Make position 20% of portfolio to trigger concentration signal
-        }
+        analyzer.portfolio_manager.get_portfolio_summary.return_value = {"total_value": 80000.0}  # Make position 20% of portfolio to trigger concentration signal
 
         # Mock the portfolio summary call for each position
         def mock_get_summary(portfolio_id):

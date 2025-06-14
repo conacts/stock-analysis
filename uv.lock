@@ -2544,6 +2544,18 @@ wheels = [
 ]
 
 [[package]]
+name = "pydantic-to-typescript"
+version = "2.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/59/ac/8dc13be6720267b5edffb3b0d8c1abdcccc5743d7bda4257ab0a5dccc7b9/pydantic_to_typescript-2.0.0.tar.gz", hash = "sha256:06e92e8d10759ffebe3abdd4de14015bbf80809fa9960273be6041d8509662be", size = 35484, upload-time = "2024-11-22T03:33:59.026Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c3/9c/f51312f3063a8b6e1e09e6527a81d3b1828ad5fc8a65c14376f85cf65502/pydantic_to_typescript-2.0.0-py3-none-any.whl", hash = "sha256:5bc5e1a940c1a39e4e3a6124bd3bda1b0fc6df85c673a4781b94a1f4150cae15", size = 9693, upload-time = "2024-11-22T03:33:57.199Z" },
+]
+
+[[package]]
 name = "pyflakes"
 version = "3.3.2"
 source = { registry = "https://pypi.org/simple" }
@@ -3118,6 +3130,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "alembic" },
+    { name = "fastapi" },
     { name = "jupyter" },
     { name = "matplotlib" },
     { name = "numpy" },
@@ -3126,6 +3139,7 @@ dependencies = [
     { name = "pandas" },
     { name = "plotly" },
     { name = "psycopg2-binary" },
+    { name = "pydantic-to-typescript" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
@@ -3134,6 +3148,7 @@ dependencies = [
     { name = "requests" },
     { name = "seaborn" },
     { name = "sqlalchemy" },
+    { name = "uvicorn" },
     { name = "yfinance" },
 ]
 
@@ -3150,6 +3165,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = ">=1.16.1" },
+    { name = "fastapi", specifier = ">=0.115.0" },
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "matplotlib", specifier = ">=3.10.3" },
     { name = "numpy", specifier = ">=2.3.0" },
@@ -3158,6 +3174,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.3.0" },
     { name = "plotly", specifier = ">=6.1.2" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
+    { name = "pydantic-to-typescript", specifier = ">=2.0.0" },
     { name = "pytest", specifier = ">=8.4.0" },
     { name = "pytest-asyncio", specifier = ">=1.0.0" },
     { name = "pytest-cov", specifier = ">=6.2.1" },
@@ -3166,6 +3183,7 @@ requires-dist = [
     { name = "requests", specifier = ">=2.32.4" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "sqlalchemy", specifier = ">=2.0.41" },
+    { name = "uvicorn", specifier = ">=0.32.0" },
     { name = "yfinance", specifier = ">=0.2.63" },
 ]
 
