@@ -167,3 +167,5 @@ safety-report.json
 # Temporary files
 *.tmp
 *.temp
+
+.obsidian/
