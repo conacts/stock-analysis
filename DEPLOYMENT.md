@@ -64,6 +64,10 @@ DEEPSEEK_API_KEY=your_deepseek_key
 SLACK_BOT_TOKEN=your_slack_bot_token
 SLACK_USER_ID=your_slack_user_id
 ENVIRONMENT=production
+
+# Note: PYTHON_API_URL is NOT needed for Railway deployment
+# The API runs locally on Railway. This variable is only used by
+# Trigger.dev to call your deployed API from external tasks.
 ```
 
 ### Step 3: Create Dockerfile
