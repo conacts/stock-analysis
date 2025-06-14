@@ -10,10 +10,9 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from pydantic import BaseModel
 
-from src.api.main import verify_token
 from src.database.db_manager import DatabaseManager
 
 
@@ -93,7 +92,7 @@ class ConversationSummaryRequest(BaseModel):
     summary_type: str = "performance"  # "performance", "decisions", "risk", "full"
 
 
-async def get_conversation_context(portfolio_id: str, request: ConversationContextRequest, token: str = Depends(verify_token)) -> PortfolioConversationContext:
+async def get_conversation_context(portfolio_id: str, request: ConversationContextRequest, token: str) -> PortfolioConversationContext:
     """Get comprehensive conversation context for portfolio"""
     try:
         db = DatabaseManager()
@@ -146,7 +145,7 @@ async def get_conversation_context(portfolio_id: str, request: ConversationConte
         raise HTTPException(status_code=500, detail=f"Failed to get conversation context: {str(e)}")
 
 
-async def get_conversation_summary(portfolio_id: str, request: ConversationSummaryRequest, token: str = Depends(verify_token)) -> Dict[str, Any]:
+async def get_conversation_summary(portfolio_id: str, request: ConversationSummaryRequest, token: str) -> Dict[str, Any]:
     """Get summarized conversation insights for portfolio"""
     try:
         db = DatabaseManager()
@@ -170,7 +169,7 @@ async def get_conversation_summary(portfolio_id: str, request: ConversationSumma
         raise HTTPException(status_code=500, detail=f"Failed to generate conversation summary: {str(e)}")
 
 
-async def store_conversation_thread(portfolio_id: str, conversation: ConversationThread, token: str = Depends(verify_token)) -> Dict[str, Any]:
+async def store_conversation_thread(portfolio_id: str, conversation: ConversationThread, token: str) -> Dict[str, Any]:
     """Store conversation with portfolio-specific threading"""
     try:
         db = DatabaseManager()
