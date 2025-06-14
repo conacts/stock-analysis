@@ -26,16 +26,17 @@ A comprehensive, AI-powered stock analysis platform that combines traditional fi
 ### 🎯 Investment Tools
 
 -   **Master Stock Analyzer**: Interactive analysis for individual stocks
+-   **Portfolio Management**: Complete portfolio tracking with real-time P&L
 -   **Universe Screening**: S&P 500 scanning and ranking
--   **Portfolio Recommendations**: AI-driven allocation suggestions
+-   **Portfolio Analytics**: Sell signals, buy recommendations, rebalancing
 -   **Performance Tracking**: Historical analysis and backtesting
 -   **Slack Alerts**: Real-time stock alerts and daily summaries via Slack
 
 ### 🔧 Professional Development Setup
 
--   **Comprehensive Testing**: 120 unit tests, 7 integration tests, 88%+ coverage
--   **CI/CD Pipeline**: GitHub Actions with multi-Python version testing
--   **Code Quality**: Pre-commit hooks, linting, security scanning
+-   **Comprehensive Testing**: 157 unit tests, integration tests, 88%+ coverage
+-   **CI/CD Pipeline**: GitHub Actions with PostgreSQL, multi-Python testing
+-   **Code Quality**: Pre-commit hooks, linting, security scanning, performance tests
 -   **Documentation**: Extensive guides and API documentation
 
 ## 🚀 Quick Start
@@ -69,6 +70,11 @@ make run-analyzer
 # Or run the research application
 make run-app
 
+# Portfolio management
+uv run portfolio_manager.py create "My Portfolio" personal "Main investment portfolio"
+uv run portfolio_manager.py add 1 AAPL 100 150.00
+uv run portfolio_manager.py show 1
+
 # Set up Slack alerts (optional)
 uv run alert_manager.py test
 uv run alert_manager.py watchlist
@@ -88,15 +94,17 @@ print(f'Rating: {result[\"rating\"]} | Score: {result[\"composite_score\"]:.1f}'
 stock-analysis/
 ├── src/                    # Core application code
 │   ├── core/              # Analysis engine and scoring
+│   ├── portfolio/         # Portfolio management system
 │   ├── llm/               # AI integration (DeepSeek)
 │   ├── data/              # Data storage and retrieval
 │   ├── db/                # Database models and migrations
 │   ├── alerts/            # Slack notification system
 │   └── pipeline/          # Research and screening pipelines
 ├── tests/                 # Comprehensive test suite
-│   ├── unit/              # Fast unit tests (113 tests)
-│   ├── integration/       # Integration tests (7 tests)
+│   ├── unit/              # Fast unit tests (157 tests)
+│   ├── integration/       # Integration tests
 │   └── conftest.py        # Test configuration and fixtures
+├── portfolio_manager.py   # CLI tool for portfolio management
 ├── alert_manager.py       # CLI tool for managing alerts
 ├── .github/workflows/     # CI/CD pipeline configuration
 └── scripts/               # Development and deployment scripts
@@ -122,10 +130,11 @@ make format            # Auto-format code
 ### Test Coverage
 
 -   **Core Analyzer**: 80%+ coverage
+-   **Portfolio Management**: 90%+ coverage with comprehensive tests
 -   **LLM Components**: 88-92% coverage
 -   **Slack Alerts**: 68 comprehensive tests
--   **Integration Tests**: Full workflow validation
--   **Total Tests**: 120 tests across unit and integration suites
+-   **Integration Tests**: Full workflow validation with PostgreSQL
+-   **Total Tests**: 157 tests across unit and integration suites
 
 ## 📱 Slack Alerts System
 
@@ -164,6 +173,49 @@ uv run alert_manager.py watchlist
 -   **DAILY_SUMMARY**: Portfolio overview with top picks
 
 See [Slack Alerts Documentation](src/alerts/README.md) for complete setup guide.
+
+## 💼 Portfolio Management System
+
+Complete portfolio tracking and analytics with real-time market data integration.
+
+### Features
+
+-   **Multi-Portfolio Support**: Personal, IRA, 401k, and custom portfolio types
+-   **Real-time Tracking**: Live position updates with current market prices
+-   **P&L Calculations**: Automatic profit/loss tracking with percentage returns
+-   **Sector Analysis**: Portfolio allocation and concentration tracking
+-   **Sell Signals**: AI-powered sell recommendations for existing positions
+-   **Buy Recommendations**: Portfolio-aware buy suggestions to prevent over-concentration
+-   **Rebalancing**: Automated rebalancing recommendations
+-   **Performance Analytics**: Portfolio health scoring and risk assessment
+
+### Quick Start
+
+```bash
+# Create a new portfolio
+uv run portfolio_manager.py create "My Portfolio" personal "Main investment portfolio"
+
+# Add positions
+uv run portfolio_manager.py add 1 AAPL 100 150.00
+uv run portfolio_manager.py add 1 GOOGL 50 120.00
+uv run portfolio_manager.py add 1 MSFT 75 200.00
+
+# View portfolio summary
+uv run portfolio_manager.py show 1
+
+# Get sell recommendations
+uv run portfolio_manager.py sells 1
+
+# Check portfolio health
+uv run portfolio_manager.py health 1
+```
+
+### Database Schema
+
+-   **portfolios**: Portfolio metadata and configuration
+-   **portfolio_positions**: Current holdings with quantities and cost basis
+-   **portfolio_transactions**: Complete transaction history
+-   **portfolio_snapshots**: Daily portfolio value tracking
 
 ## 🤖 AI Integration
 

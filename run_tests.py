@@ -86,7 +86,14 @@ def main():
 
     # Add coverage if requested
     if args.coverage:
-        cmd.extend(["--cov=src", "--cov-report=term-missing", "--cov-report=html"])
+        cmd.extend(
+            [
+                "--cov=src",
+                "--cov-report=term-missing",
+                "--cov-report=html",
+                "--cov-report=xml",  # For CI/CD integration
+            ]
+        )
         description += " with coverage"
 
     # Run the tests

@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 # Test environment setup
 os.environ["TESTING"] = "1"
+# Always use in-memory SQLite for tests - fast, reliable, and sufficient
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
 

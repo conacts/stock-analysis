@@ -9,6 +9,7 @@ on:
 jobs:
     test:
         runs-on: ubuntu-latest
+
         strategy:
             matrix:
                 python-version: [3.11, 3.12, 3.13]
@@ -28,10 +29,20 @@ jobs:
               run: |
                   uv sync --all-extras --dev
 
+            - name: Create test environment file
+              run: |
+                  echo "ALPHA_VANTAGE_API_KEY=test_key" > .env.test
+                  echo "SLACK_WEBHOOK_URL=https://hooks.slack.com/test" >> .env.test
+                  echo "SLACK_USER_ID=test_user" >> .env.test
+
             - name: Lint and format check with Ruff
               run: |
                   uv run ruff check src/ tests/
                   uv run ruff format --check src/ tests/
+
+            - name: Type checking with mypy
+              run: |
+                  uv run mypy src/ --ignore-missing-imports || true
 
             - name: Security check with bandit
               run: |
@@ -41,9 +52,21 @@ jobs:
               run: |
                   uv run python run_tests.py --fast --coverage
 
+            - name: Run all unit tests (including portfolio)
+              run: |
+                  uv run python run_tests.py --unit --coverage
+
             - name: Run integration tests
               run: |
                   uv run python run_tests.py --integration
+
+            - name: Test portfolio CLI functionality
+              run: |
+                  # Test portfolio creation and basic operations
+                  uv run portfolio_manager.py create "Test Portfolio" --type personal --description "CI test portfolio"
+                  uv run portfolio_manager.py list
+                  uv run portfolio_manager.py add 1 AAPL 100 150.00
+                  uv run portfolio_manager.py show 1
 
             - name: Upload coverage reports to Codecov
               uses: codecov/codecov-action@v4
@@ -69,6 +92,11 @@ jobs:
 
             - name: Install dependencies
               run: uv sync --all-extras --dev
+
+            - name: Create test environment file
+              run: |
+                  echo "ALPHA_VANTAGE_API_KEY=test_key" > .env.test
+                  echo "SLACK_WEBHOOK_URL=https://hooks.slack.com/test" >> .env.test
 
             - name: Run LLM tests (if API key available)
               env:
@@ -107,3 +135,100 @@ jobs:
                   path: |
                       bandit-report.json
                       safety-report.json
+
+    performance:
+        runs-on: ubuntu-latest
+        needs: test
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Install uv
+              uses: astral-sh/setup-uv@v3
+
+            - name: Set up Python
+              run: uv python install 3.12
+
+            - name: Install dependencies
+              run: uv sync --all-extras --dev
+
+            - name: Run performance benchmarks
+              run: |
+                  # Test portfolio operations performance
+                  time uv run python -c "
+                  from src.portfolio.portfolio_manager import PortfolioManager
+                  pm = PortfolioManager()
+                  # Create test portfolio and measure performance
+                  portfolio_id = pm.create_portfolio('Perf Test', 'test', 'Performance test')
+                  for i in range(100):
+                      pm.add_position(portfolio_id, f'TEST{i:03d}', 100, 50.0)
+                  summary = pm.get_portfolio_summary(portfolio_id)
+                  print(f'Created portfolio with {len(pm.get_portfolio_positions(portfolio_id))} positions')
+                  "
+
+    deploy-docs:
+        runs-on: ubuntu-latest
+        needs: [test, security]
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Install uv
+              uses: astral-sh/setup-uv@v3
+
+            - name: Set up Python
+              run: uv python install 3.12
+
+            - name: Install dependencies
+              run: uv sync --all-extras --dev
+
+            - name: Generate documentation
+              run: |
+                  # Generate API documentation
+                  uv run python -c "
+                  import os
+                  import subprocess
+
+                  # Create docs directory
+                  os.makedirs('docs', exist_ok=True)
+
+                  # Generate README for portfolio system
+                  with open('docs/PORTFOLIO_SYSTEM.md', 'w') as f:
+                      f.write('''# Portfolio Management System
+
+                  ## Overview
+                  Complete portfolio management system with real-time tracking, analytics, and CLI interface.
+
+                  ## Features
+                  - Multi-portfolio support
+                  - Real-time position tracking
+                  - P&L calculations
+                  - Sector allocation analysis
+                  - Sell/buy signal generation
+                  - Portfolio health scoring
+
+                  ## CLI Usage
+                  \`\`\`bash
+                  # Create portfolio
+                  uv run portfolio_manager.py create \"My Portfolio\" personal \"Main investment portfolio\"
+
+                  # Add position
+                  uv run portfolio_manager.py add 1 AAPL 100 150.00
+
+                  # View portfolio
+                  uv run portfolio_manager.py show 1
+
+                  # Get sell recommendations
+                  uv run portfolio_manager.py sells 1
+                  \`\`\`
+                  ''')
+                  print('Documentation generated successfully')
+                  "
+
+            - name: Upload documentation
+              uses: actions/upload-artifact@v4
+              with:
+                  name: documentation
+                  path: docs/
