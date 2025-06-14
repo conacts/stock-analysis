@@ -1,1 +1,128 @@
-{"numTotalTestSuites":5,"numPassedTestSuites":5,"numFailedTestSuites":0,"numPendingTestSuites":0,"numTotalTests":12,"numPassedTests":12,"numFailedTests":0,"numPendingTests":0,"numTodoTests":0,"startTime":1749944433229,"success":true,"testResults":[{"assertionResults":[{"ancestorTitles":["","TypeScript Core Implementation (unit)","Database Models"],"fullName":" TypeScript Core Implementation (unit) Database Models should validate Portfolio schema correctly","status":"passed","title":"should validate Portfolio schema correctly","duration":1,"failureMessages":[]},{"ancestorTitles":["","TypeScript Core Implementation (unit)","Database Models"],"fullName":" TypeScript Core Implementation (unit) Database Models should apply default values for Portfolio","status":"passed","title":"should apply default values for Portfolio","duration":0,"failureMessages":[]},{"ancestorTitles":["","TypeScript Core Implementation (unit)","Database Models"],"fullName":" TypeScript Core Implementation (unit) Database Models should reject invalid Portfolio data","status":"passed","title":"should reject invalid Portfolio data","duration":1,"failureMessages":[]},{"ancestorTitles":["","TypeScript Core Implementation (unit)","Database Models"],"fullName":" TypeScript Core Implementation (unit) Database Models should validate DailyAnalysis schema correctly","status":"passed","title":"should validate DailyAnalysis schema correctly","duration":0,"failureMessages":[]},{"ancestorTitles":["","TypeScript Core Implementation (unit)","Database Models"],"fullName":" TypeScript Core Implementation (unit) Database Models should validate SwarmPortfolioConfig schema correctly","status":"passed","title":"should validate SwarmPortfolioConfig schema correctly","duration":0,"failureMessages":[]},{"ancestorTitles":["","TypeScript Core Implementation (unit)","Database Models"],"fullName":" TypeScript Core Implementation (unit) Database Models should apply default values for SwarmPortfolioConfig","status":"passed","title":"should apply default values for SwarmPortfolioConfig","duration":0,"failureMessages":[]},{"ancestorTitles":["","TypeScript Core Implementation (unit)","Type System Validation"],"fullName":" TypeScript Core Implementation (unit) Type System Validation should enforce strict typing for Portfolio fields","status":"passed","title":"should enforce strict typing for Portfolio fields","duration":1,"failureMessages":[]},{"ancestorTitles":["","TypeScript Core Implementation (unit)","Type System Validation"],"fullName":" TypeScript Core Implementation (unit) Type System Validation should handle complex nested objects in analysis_data","status":"passed","title":"should handle complex nested objects in analysis_data","duration":0,"failureMessages":[]},{"ancestorTitles":["","TypeScript Core Implementation (unit)","Type System Validation"],"fullName":" TypeScript Core Implementation (unit) Type System Validation should validate string length constraints","status":"passed","title":"should validate string length constraints","duration":0,"failureMessages":[]},{"ancestorTitles":["","TypeScript Core Implementation (unit)","Type System Validation"],"fullName":" TypeScript Core Implementation (unit) Type System Validation should validate required vs optional fields","status":"passed","title":"should validate required vs optional fields","duration":0,"failureMessages":[]},{"ancestorTitles":["","TypeScript Core Implementation (unit)","Schema Composition and Reusability"],"fullName":" TypeScript Core Implementation (unit) Schema Composition and Reusability should handle multiple schema validations consistently","status":"passed","title":"should handle multiple schema validations consistently","duration":0,"failureMessages":[]},{"ancestorTitles":["","TypeScript Core Implementation (unit)","Schema Composition and Reusability"],"fullName":" TypeScript Core Implementation (unit) Schema Composition and Reusability should maintain type safety across schema transformations","status":"passed","title":"should maintain type safety across schema transformations","duration":0,"failureMessages":[]}],"startTime":1749944433343,"endTime":1749944433346,"status":"passed","message":"","name":"/Users/connorsheehan/junction/stock-analysis/tests/unit/typescript-core.test.ts"}]}
+{
+  "numTotalTestSuites": 5,
+  "numPassedTestSuites": 5,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 12,
+  "numPassedTests": 12,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "startTime": 1749944806852,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["", "TypeScript Core Implementation (unit)", "Database Models"],
+          "fullName": " TypeScript Core Implementation (unit) Database Models should validate Portfolio schema correctly",
+          "status": "passed",
+          "title": "should validate Portfolio schema correctly",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": ["", "TypeScript Core Implementation (unit)", "Database Models"],
+          "fullName": " TypeScript Core Implementation (unit) Database Models should apply default values for Portfolio",
+          "status": "passed",
+          "title": "should apply default values for Portfolio",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": ["", "TypeScript Core Implementation (unit)", "Database Models"],
+          "fullName": " TypeScript Core Implementation (unit) Database Models should reject invalid Portfolio data",
+          "status": "passed",
+          "title": "should reject invalid Portfolio data",
+          "duration": 0,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": ["", "TypeScript Core Implementation (unit)", "Database Models"],
+          "fullName": " TypeScript Core Implementation (unit) Database Models should validate DailyAnalysis schema correctly",
+          "status": "passed",
+          "title": "should validate DailyAnalysis schema correctly",
+          "duration": 0,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": ["", "TypeScript Core Implementation (unit)", "Database Models"],
+          "fullName": " TypeScript Core Implementation (unit) Database Models should validate SwarmPortfolioConfig schema correctly",
+          "status": "passed",
+          "title": "should validate SwarmPortfolioConfig schema correctly",
+          "duration": 0,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": ["", "TypeScript Core Implementation (unit)", "Database Models"],
+          "fullName": " TypeScript Core Implementation (unit) Database Models should apply default values for SwarmPortfolioConfig",
+          "status": "passed",
+          "title": "should apply default values for SwarmPortfolioConfig",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": ["", "TypeScript Core Implementation (unit)", "Type System Validation"],
+          "fullName": " TypeScript Core Implementation (unit) Type System Validation should enforce strict typing for Portfolio fields",
+          "status": "passed",
+          "title": "should enforce strict typing for Portfolio fields",
+          "duration": 0,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": ["", "TypeScript Core Implementation (unit)", "Type System Validation"],
+          "fullName": " TypeScript Core Implementation (unit) Type System Validation should handle complex nested objects in analysis_data",
+          "status": "passed",
+          "title": "should handle complex nested objects in analysis_data",
+          "duration": 0,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": ["", "TypeScript Core Implementation (unit)", "Type System Validation"],
+          "fullName": " TypeScript Core Implementation (unit) Type System Validation should validate string length constraints",
+          "status": "passed",
+          "title": "should validate string length constraints",
+          "duration": 0,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": ["", "TypeScript Core Implementation (unit)", "Type System Validation"],
+          "fullName": " TypeScript Core Implementation (unit) Type System Validation should validate required vs optional fields",
+          "status": "passed",
+          "title": "should validate required vs optional fields",
+          "duration": 0,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "TypeScript Core Implementation (unit)",
+            "Schema Composition and Reusability"
+          ],
+          "fullName": " TypeScript Core Implementation (unit) Schema Composition and Reusability should handle multiple schema validations consistently",
+          "status": "passed",
+          "title": "should handle multiple schema validations consistently",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "ancestorTitles": [
+            "",
+            "TypeScript Core Implementation (unit)",
+            "Schema Composition and Reusability"
+          ],
+          "fullName": " TypeScript Core Implementation (unit) Schema Composition and Reusability should maintain type safety across schema transformations",
+          "status": "passed",
+          "title": "should maintain type safety across schema transformations",
+          "duration": 0,
+          "failureMessages": []
+        }
+      ],
+      "startTime": 1749944806970,
+      "endTime": 1749944806974,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/connorsheehan/junction/stock-analysis/tests/unit/typescript-core.test.ts"
+    }
+  ]
+}
