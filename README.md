@@ -29,10 +29,11 @@ A comprehensive, AI-powered stock analysis platform that combines traditional fi
 -   **Universe Screening**: S&P 500 scanning and ranking
 -   **Portfolio Recommendations**: AI-driven allocation suggestions
 -   **Performance Tracking**: Historical analysis and backtesting
+-   **Slack Alerts**: Real-time stock alerts and daily summaries via Slack
 
 ### 🔧 Professional Development Setup
 
--   **Comprehensive Testing**: 52 unit tests, 7 integration tests, 88%+ coverage
+-   **Comprehensive Testing**: 120 unit tests, 7 integration tests, 88%+ coverage
 -   **CI/CD Pipeline**: GitHub Actions with multi-Python version testing
 -   **Code Quality**: Pre-commit hooks, linting, security scanning
 -   **Documentation**: Extensive guides and API documentation
@@ -68,6 +69,10 @@ make run-analyzer
 # Or run the research application
 make run-app
 
+# Set up Slack alerts (optional)
+uv run alert_manager.py test
+uv run alert_manager.py watchlist
+
 # Analyze a specific stock
 python -c "
 from src.core.analyzer import StockAnalyzer
@@ -86,11 +91,13 @@ stock-analysis/
 │   ├── llm/               # AI integration (DeepSeek)
 │   ├── data/              # Data storage and retrieval
 │   ├── db/                # Database models and migrations
+│   ├── alerts/            # Slack notification system
 │   └── pipeline/          # Research and screening pipelines
 ├── tests/                 # Comprehensive test suite
-│   ├── unit/              # Fast unit tests (45 tests)
+│   ├── unit/              # Fast unit tests (113 tests)
 │   ├── integration/       # Integration tests (7 tests)
 │   └── conftest.py        # Test configuration and fixtures
+├── alert_manager.py       # CLI tool for managing alerts
 ├── .github/workflows/     # CI/CD pipeline configuration
 └── scripts/               # Development and deployment scripts
 ```
@@ -116,8 +123,47 @@ make format            # Auto-format code
 
 -   **Core Analyzer**: 80%+ coverage
 -   **LLM Components**: 88-92% coverage
+-   **Slack Alerts**: 68 comprehensive tests
 -   **Integration Tests**: Full workflow validation
--   **Total Tests**: 52 tests across unit and integration suites
+-   **Total Tests**: 120 tests across unit and integration suites
+
+## 📱 Slack Alerts System
+
+Get real-time stock alerts and daily summaries delivered directly to your Slack workspace - completely free!
+
+### Features
+
+-   **Real-time Alerts**: Instant notifications for Buy/Strong Buy signals
+-   **Rich Formatting**: Beautiful Slack blocks with stock data, prices, and upside potential
+-   **Smart Filtering**: Market hours awareness, rate limiting, and duplicate prevention
+-   **Daily Summaries**: End-of-day reports with top picks and portfolio statistics
+-   **Risk Warnings**: Alerts for high allocation recommendations
+-   **CLI Management**: Professional command-line tool for system control
+
+### Quick Setup
+
+```bash
+# 1. Create a free Slack app at https://api.slack.com/apps
+# 2. Add chat:write permission and install to your workspace
+# 3. Set environment variables
+export SLACK_BOT_TOKEN="xoxb-your-bot-token"
+export SLACK_USER_ID="@your-username"
+
+# 4. Test the system
+uv run alert_manager.py test
+
+# 5. Start monitoring your watchlist
+uv run alert_manager.py watchlist
+```
+
+### Alert Types
+
+-   **BUY_SIGNAL**: Score ≥75, Rating="Buy"
+-   **STRONG_BUY**: Score ≥85, Rating="Buy/Strong Buy"
+-   **RISK_WARNING**: High allocation recommendations (>10%)
+-   **DAILY_SUMMARY**: Portfolio overview with top picks
+
+See [Slack Alerts Documentation](src/alerts/README.md) for complete setup guide.
 
 ## 🤖 AI Integration
 
