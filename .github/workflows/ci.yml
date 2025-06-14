@@ -1,0 +1,117 @@
+name: CI/CD Pipeline
+
+on:
+    push:
+        branches: [main, develop]
+    pull_request:
+        branches: [main]
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                python-version: [3.11, 3.12, 3.13]
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Install uv
+              uses: astral-sh/setup-uv@v3
+              with:
+                  version: "latest"
+
+            - name: Set up Python ${{ matrix.python-version }}
+              run: uv python install ${{ matrix.python-version }}
+
+            - name: Install dependencies
+              run: |
+                  uv sync --all-extras --dev
+
+            - name: Lint with flake8
+              run: |
+                  uv run flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
+                  uv run flake8 src/ --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+
+            - name: Format check with black
+              run: |
+                  uv run black --check --diff src/ tests/
+
+            - name: Import sort check
+              run: |
+                  uv run isort --check-only --diff src/ tests/
+
+            - name: Security check with bandit
+              run: |
+                  uv run bandit -r src/ -f json
+
+            - name: Run fast unit tests
+              run: |
+                  uv run python run_tests.py --fast --coverage
+
+            - name: Run integration tests
+              run: |
+                  uv run python run_tests.py --integration
+
+            - name: Upload coverage reports to Codecov
+              uses: codecov/codecov-action@v4
+              with:
+                  file: ./coverage.xml
+                  flags: unittests
+                  name: codecov-umbrella
+                  fail_ci_if_error: false
+
+    test-llm:
+        runs-on: ubuntu-latest
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        needs: test
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Install uv
+              uses: astral-sh/setup-uv@v3
+
+            - name: Set up Python
+              run: uv python install 3.12
+
+            - name: Install dependencies
+              run: uv sync --all-extras --dev
+
+            - name: Run LLM tests (if API key available)
+              env:
+                  DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+              run: |
+                  if [ -n "$DEEPSEEK_API_KEY" ]; then
+                    echo "Running LLM tests with API key"
+                    uv run python run_tests.py --llm
+                  else
+                    echo "Skipping LLM tests - no API key available"
+                  fi
+
+    security:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Install uv
+              uses: astral-sh/setup-uv@v3
+
+            - name: Set up Python
+              run: uv python install 3.12
+
+            - name: Install dependencies
+              run: uv sync --all-extras --dev
+
+            - name: Run security checks
+              run: |
+                  uv run bandit -r src/ -f json -o bandit-report.json
+                  uv run safety check --json --output safety-report.json || true
+
+            - name: Upload security reports
+              uses: actions/upload-artifact@v4
+              with:
+                  name: security-reports
+                  path: |
+                      bandit-report.json
+                      safety-report.json

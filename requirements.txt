@@ -1,0 +1,19 @@
+# Core dependencies
+yfinance>=0.2.18
+pandas>=2.0.0
+numpy>=1.24.0
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+python-dateutil>=2.8.0
+
+# Database
+psycopg2-binary>=2.9.7
+sqlalchemy>=2.0.0
+alembic>=1.12.0
+python-dotenv>=1.0.0
+
+# Development
+pre-commit>=3.5.0
+
+# LLM Integration
+openai>=1.0.0
