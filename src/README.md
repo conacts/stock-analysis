@@ -1,223 +1,234 @@
 # 📁 Source Code Structure
 
-Overview of the Stock Analysis System codebase architecture.
+## 🎯 Simplified AI Stock Analysis System
+
+This is the **simplified TypeScript-only** codebase focused on **Trigger.dev automation** and **DeepSeek AI integration**.
 
 ## 🏗️ Module Organization
 
 ```
 src/
-├── api/                     # FastAPI server (NEW)
-│   └── main.py             # REST API endpoints for automation
-├── automation/             # Trigger.dev automation (NEW)
-│   ├── tasks/              # 18 automated monitoring tasks
-│   └── shared/             # Environment validation & utilities
-├── core/                   # Core analysis engine
-│   └── analyzer.py         # Main stock analysis logic
-├── portfolio/              # Portfolio management
-│   ├── portfolio_analyzer.py
-│   └── portfolio_manager.py
-├── llm/                    # AI integration
-│   ├── deepseek_analyzer.py
-│   └── llm_scorer.py
-├── alerts/                 # Notification system
-│   └── slack_alerts.py
-├── data/                   # Data handling
-│   ├── stock_data.py
-│   └── storage.py
-├── db/                     # Database layer
-│   ├── models.py
-│   ├── connection.py
-│   └── migrations.py
-└── pipeline/               # Research workflows
-    └── research_engine.py
+├── automation/tasks/       # Core functionality (Trigger.dev)
+│   ├── ai-trading-analysis.ts  # DeepSeek AI analysis
+│   ├── health-check.ts         # System monitoring
+│   └── index.ts                # Task exports
+├── clients/                # API clients
+│   ├── deepseek.ts        # DeepSeek AI client
+│   └── alpaca.ts          # Alpaca trading client
+├── database/              # Minimal data layer
+│   ├── models.ts          # Database models
+│   └── connection.ts      # Database connection
+├── types/                 # TypeScript types
+│   └── index.ts          # Type definitions
+└── utils/                 # Configuration utilities
+    └── config.ts         # Environment config
 ```
 
 ## 🎯 Key Components
 
-### 🤖 **API Server** (`api/`)
+### 🤖 **Automation Tasks** (`automation/tasks/`)
 
--   **FastAPI server** for automation integration
--   **Health checks** and system monitoring
--   **REST endpoints** for Trigger.dev tasks
--   **Authentication** and request validation
+**Core Value**: Direct AI analysis execution in Trigger.dev environment
 
-### 🔄 **Automation** (`automation/`)
+- **`ai-trading-analysis.ts`**: Main DeepSeek AI market analysis
+- **`health-check.ts`**: System monitoring and alerting
+- **No API layers**: Direct function execution avoids timeout issues
 
--   **18 Trigger.dev tasks** for 24/7 monitoring
--   **Environment validation** with fail-fast approach
--   **Scheduled analysis** and price alerts
--   **Health monitoring** with email notifications
+### 🔌 **API Clients** (`clients/`)
 
-### 🧠 **Core Analysis** (`core/`)
+**Purpose**: Simple, focused API integrations
 
--   **StockAnalyzer** - Main analysis engine
--   **Multi-factor scoring** (fundamental, technical, sentiment)
--   **AI-enhanced analysis** with DeepSeek integration
--   **157 comprehensive tests** with 80%+ coverage
+- **`deepseek.ts`**: DeepSeek AI client with proper error handling
+- **`alpaca.ts`**: Market data and trading client (when needed)
+- **Minimal abstraction**: Direct API calls, no complex wrappers
 
-### 💼 **Portfolio Management** (`portfolio/`)
+### 🗄️ **Database** (`database/`)
 
--   **Multi-portfolio support** (Personal, IRA, 401k)
--   **Real-time P&L tracking** with current market prices
--   **Risk assessment** and rebalancing recommendations
--   **Performance analytics** and health scoring
+**Approach**: Minimal data persistence
 
-### 🤖 **LLM Integration** (`llm/`)
+- **`models.ts`**: Essential data types only
+- **`connection.ts`**: Simple database connection
+- **No complex migrations**: Keep data handling simple
 
--   **DeepSeek AI** for sophisticated market analysis
--   **Investment thesis generation** with reasoning
--   **News impact analysis** and catalyst identification
--   **Confidence-adjusted scoring** and risk assessment
+### 📝 **Types** (`types/`)
 
-### 📱 **Alerts System** (`alerts/`)
+**Strategy**: Strong TypeScript typing
 
--   **Slack integration** for real-time notifications
--   **Smart filtering** with market hours awareness
--   **Rich formatting** with stock data and upside potential
--   **Rate limiting** and duplicate prevention
+- **Market data types**: Stock prices, analysis results
+- **Task payload types**: Trigger.dev task inputs/outputs
+- **API response types**: Client response interfaces
 
 ## 🔧 Development Patterns
 
-### Import Structure
+### Task Development
 
-```python
-# Core analysis
-from src.core.analyzer import StockAnalyzer
+```typescript
+// automation/tasks/ai-trading-analysis.ts
+export const aiTradingAnalysis = task({
+  id: 'ai-trading-analysis',
+  run: async (payload: { symbols: string[] }) => {
+    // Direct DeepSeek API call
+    const analysis = await deepseekClient.analyze(payload.symbols);
 
-# Portfolio management
-from src.portfolio.portfolio_manager import PortfolioManager
-
-# AI integration
-from src.llm.deepseek_analyzer import DeepSeekAnalyzer
-
-# Database operations
-from src.db.connection import get_db_connection
-from src.db.models import Portfolio, PortfolioPosition
-
-# Alerts
-from src.alerts.slack_alerts import SlackAlerts
+    // Return structured results
+    return {
+      recommendations: analysis.recommendations,
+      risks: analysis.risks,
+      confidence: analysis.confidence,
+    };
+  },
+});
 ```
 
-### Configuration
+### Client Usage
 
-```python
-# Environment-based configuration
-import os
-from src.automation.shared.env_validation import getValidatedEnv
+```typescript
+// clients/deepseek.ts
+export class DeepSeekClient {
+  async analyze(symbols: string[]): Promise<AnalysisResult> {
+    // Direct API integration
+    const response = await fetch(this.apiUrl, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${this.apiKey}` },
+      body: JSON.stringify({ symbols }),
+    });
 
-# API server configuration
-from src.api.main import app
+    return response.json();
+  }
+}
+```
 
-# Database configuration
-from src.db.connection import get_db_connection
+### Type Safety
+
+```typescript
+// types/index.ts
+export interface AnalysisResult {
+  symbol: string;
+  recommendation: 'buy' | 'sell' | 'hold';
+  confidence: number;
+  reasoning: string;
+  risks: string[];
+}
+
+export interface TaskPayload {
+  symbols: string[];
+  portfolioId?: string;
+}
 ```
 
 ## 🧪 Testing Strategy
 
-### Test Coverage by Module
-
--   **Core (`core/`)**: 80%+ coverage, 45+ unit tests
--   **Portfolio (`portfolio/`)**: 90%+ coverage, 35+ tests
--   **LLM (`llm/`)**: 88-92% coverage, 25+ tests
--   **Automation (`automation/`)**: Integration test coverage
--   **Alerts (`alerts/`)**: 68 comprehensive tests
-
-### Test Organization
+### Test Structure
 
 ```
 tests/
-├── unit/                   # Fast unit tests by module
-│   ├── test_stock_analyzer.py
-│   ├── test_portfolio_*.py
-│   └── test_llm_components.py
-├── integration/            # Cross-module integration tests
-└── conftest.py            # Shared test configuration
+├── unit/
+│   ├── config.test.ts          # Configuration tests
+│   └── typescript-core.test.ts # Core TypeScript tests
+└── setup.ts                    # Test configuration
 ```
+
+### Testing Focus
+
+- **Unit tests**: Core logic and utilities
+- **Integration tests**: API client functionality
+- **Type checking**: Comprehensive TypeScript validation
+- **No complex mocking**: Simple, focused tests
 
 ## 🚀 Usage Examples
 
-### Basic Stock Analysis
+### Basic Task Execution
 
-```python
-from src.core.analyzer import StockAnalyzer
-
-analyzer = StockAnalyzer()
-result = analyzer.analyze_stock('NVDA')
-print(f"Rating: {result['rating']} | Score: {result['composite_score']:.1f}")
+```typescript
+// Trigger.dev will handle task execution
+// No direct imports needed - tasks run in cloud environment
 ```
 
-### Portfolio Management
+### Local Development
 
-```python
-from src.portfolio.portfolio_manager import PortfolioManager
+```bash
+# Start development server
+npx trigger.dev@latest dev
 
-pm = PortfolioManager()
-portfolio = pm.create_portfolio("My Portfolio", "personal")
-pm.add_position(portfolio.id, "AAPL", 100, 150.00)
+# Tasks appear in dashboard for manual testing
+# Logs show in both terminal and web interface
 ```
 
-### AI-Enhanced Analysis
+### Configuration
 
-```python
-from src.llm.deepseek_analyzer import DeepSeekAnalyzer
-
-llm = DeepSeekAnalyzer()
-analysis = llm.analyze_stock_with_context("NVDA", market_data)
-print(analysis['investment_thesis'])
+```typescript
+// utils/config.ts
+export const config = {
+  deepseek: {
+    apiKey: process.env.DEEPSEEK_API_KEY!,
+    baseUrl: 'https://api.deepseek.com',
+  },
+  trigger: {
+    secretKey: process.env.TRIGGER_SECRET_KEY!,
+    accessToken: process.env.TRIGGER_ACCESS_TOKEN!,
+  },
+};
 ```
 
-### Slack Alerts
+## 🎯 Architecture Principles
 
-```python
-from src.alerts.slack_alerts import SlackAlerts
+### 🚫 What We Avoid
 
-alerts = SlackAlerts()
-alerts.send_buy_signal("AAPL", analysis_result)
-```
+- ❌ **Complex API servers**: No FastAPI, Express, etc.
+- ❌ **Multiple deployment platforms**: Trigger.dev only
+- ❌ **Heavy database systems**: Minimal data persistence
+- ❌ **Timeout-prone architectures**: Direct function execution
+- ❌ **Complex abstractions**: Simple, direct code
 
-## 📚 Module Documentation
+### ✅ What We Embrace
 
--   **[Core Analysis](core/README.md)**: Stock analysis engine details
--   **[LLM Integration](llm/README.md)**: AI-powered analysis features
--   **[Portfolio Management](portfolio/README.md)**: Portfolio tracking system
--   **[Alerts System](alerts/README.md)**: Slack notification setup
--   **[Data Layer](data/README.md)**: Data handling and storage
--   **[Automation](automation/README.md)**: Trigger.dev task system
+- ✅ **Direct AI integration**: DeepSeek calls in task functions
+- ✅ **TypeScript safety**: Strong typing throughout
+- ✅ **Simple configuration**: Environment variables only
+- ✅ **Reliable execution**: Trigger.dev handles scaling/reliability
+- ✅ **Clear logging**: Comprehensive task execution logs
 
 ## 🔄 Data Flow
 
 ```
-Market Data → Core Analyzer → LLM Enhancement → Portfolio Integration → Alerts
-     ↓              ↓              ↓                    ↓              ↓
-Stock APIs    Fundamental    AI Analysis      Position Tracking   Slack
-yfinance      Technical      DeepSeek         Real-time P&L       Notifications
-News APIs     Sentiment      Investment       Risk Assessment     Email Alerts
-              Risk           Thesis           Rebalancing         Dashboard
+Trigger.dev Scheduler → Task Execution → DeepSeek API → Results
+                            ↓              ↓           ↓
+                    Type Validation    AI Analysis    Logging
+                    Error Handling     Market Data    Monitoring
+                    Configuration      Recommendations Alerts
 ```
 
-## 🛠️ Development Guidelines
+## 🛠️ Development Workflow
 
-### Code Organization
+### 1. Local Development
 
--   **Single responsibility** - Each module has a clear purpose
--   **Dependency injection** - Easy testing and configuration
--   **Error handling** - Graceful degradation and clear error messages
--   **Type hints** - Enhanced IDE support and documentation
+```bash
+npx trigger.dev@latest dev  # Start development server
+```
 
-### Performance Considerations
+### 2. Task Development
 
--   **Caching** - Market data and analysis results
--   **Async operations** - Non-blocking API calls
--   **Database optimization** - Efficient queries and indexing
--   **Rate limiting** - Respectful API usage
+- Create new task in `src/automation/tasks/`
+- Add to `index.ts` exports
+- Test via Trigger.dev dashboard
 
-### Security Best Practices
+### 3. Deploy
 
--   **Environment variables** - No hardcoded secrets
--   **Input validation** - Sanitize all external data
--   **API authentication** - Secure token-based auth
--   **Database security** - Parameterized queries
+```bash
+npx trigger.dev@latest deploy  # Deploy to production
+```
+
+## 📈 Success Metrics
+
+- ✅ **Zero timeout failures**: Tasks run reliably
+- ✅ **Simple maintenance**: Easy to understand and modify
+- ✅ **Fast development**: Quick iterations on AI logic
+- ✅ **Cost effective**: Minimal infrastructure costs
 
 ---
 
-**💡 Pro Tip**: Start with the `core/` module for stock analysis, then add `portfolio/` management, and finally integrate `automation/` for 24/7 monitoring.
+## 💡 Key Insight
+
+_"This architecture eliminates the complexity that defeated our original purpose. AI analysis runs directly in the cloud with proper timeouts and error handling."_
+
+**Focus**: AI task logic, not infrastructure management.

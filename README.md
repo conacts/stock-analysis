@@ -12,40 +12,40 @@ A comprehensive, AI-powered stock analysis platform with automated monitoring, p
 
 ### 🤖 **AI Trading System** (NEW)
 
--   **DeepSeek AI Integration**: Advanced portfolio analysis and trading signal generation
--   **Risk Management**: Comprehensive risk assessment with position limits and emergency stops
--   **Trading Endpoints**: RESTful API for portfolio analysis, signal generation, and trade recommendations
--   **Market Data Integration**: Real-time price data with technical indicators
--   **30-Second Timeouts**: Robust timeout handling across all endpoints
+- **DeepSeek AI Integration**: Advanced portfolio analysis and trading signal generation
+- **Risk Management**: Comprehensive risk assessment with position limits and emergency stops
+- **Trading Endpoints**: RESTful API for portfolio analysis, signal generation, and trade recommendations
+- **Market Data Integration**: Real-time price data with technical indicators
+- **30-Second Timeouts**: Robust timeout handling across all endpoints
 
 ### 🔄 **Automated Stock Monitoring**
 
--   **Real-time Price Alerts**: Automated notifications for significant price movements (±5%, ±10%, ±15%)
--   **Portfolio Analysis**: Scheduled analysis with LLM-powered insights
--   **Health Monitoring**: System health checks with comprehensive status reporting
--   **Trigger.dev Integration**: Automated tasks for comprehensive monitoring
+- **Real-time Price Alerts**: Automated notifications for significant price movements (±5%, ±10%, ±15%)
+- **Portfolio Analysis**: Scheduled analysis with LLM-powered insights
+- **Health Monitoring**: System health checks with comprehensive status reporting
+- **Trigger.dev Integration**: Automated tasks for comprehensive monitoring
 
 ### 🧠 **AI-Enhanced Analysis**
 
--   **DeepSeek LLM Integration**: Sophisticated market analysis and insights with working API integration
--   **Intelligent Scoring**: AI-enhanced composite scoring system (169 passing tests)
--   **News Impact Analysis**: Real-time sentiment and catalyst identification
--   **Growth Catalyst Detection**: AI-powered identification of growth drivers
+- **DeepSeek LLM Integration**: Sophisticated market analysis and insights with working API integration
+- **Intelligent Scoring**: AI-enhanced composite scoring system (169 passing tests)
+- **News Impact Analysis**: Real-time sentiment and catalyst identification
+- **Growth Catalyst Detection**: AI-powered identification of growth drivers
 
 ### 💼 **Portfolio Management**
 
--   **Multi-Portfolio Support**: Personal, IRA, 401k tracking with real-time P&L
--   **Risk Assessment**: Volatility analysis, sector risk, market correlation
--   **AI Trading Recommendations**: Automated trade suggestions with position sizing
--   **Slack Integration**: Real-time alerts and daily summaries
+- **Multi-Portfolio Support**: Personal, IRA, 401k tracking with real-time P&L
+- **Risk Assessment**: Volatility analysis, sector risk, market correlation
+- **AI Trading Recommendations**: Automated trade suggestions with position sizing
+- **Slack Integration**: Real-time alerts and daily summaries
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
--   Python 3.11+ with [uv](https://docs.astral.sh/uv/) package manager
--   Node.js 18+ with Bun (for Trigger.dev automation)
--   DeepSeek API key (required for AI features)
+- Python 3.11+ with [uv](https://docs.astral.sh/uv/) package manager
+- Node.js 18+ with Bun (for Trigger.dev automation)
+- DeepSeek API key (required for AI features)
 
 ### Installation & Setup
 
@@ -86,7 +86,6 @@ DATABASE_URL=postgresql://user:pass@host:port/database
 API_TOKEN=your-secure-api-token
 
 # Required for automation
-PYTHON_API_URL=http://localhost:8000
 TRIGGER_SECRET_KEY=tr_prod_your-trigger-secret
 TRIGGER_ACCESS_TOKEN=tr_pat_your-trigger-token
 
@@ -103,62 +102,37 @@ ALPHA_VANTAGE_API_KEY=your-alpha-vantage-key
 ```
 stock-analysis/
 ├── src/
-│   ├── api/
-│   │   ├── main.py                    # FastAPI server with all endpoints
-│   │   ├── simple_trading_endpoints.py # AI trading API endpoints
-│   │   └── trading_endpoints.py       # Advanced trading system (Phase 2)
-│   ├── trading/                       # AI Trading System (NEW)
-│   │   ├── ai_engine.py              # DeepSeek-powered trading engine
-│   │   ├── market_data.py            # Real-time market data provider
-│   │   ├── risk_manager.py           # Risk assessment and management
-│   │   └── README.md                 # Trading system documentation
-│   ├── models/
-│   │   └── trading_models.py         # Pydantic models for trading
+│   ├── automation/                   # Trigger.dev tasks
+│   │   └── tasks/                    # AI-powered automation tasks
+│   │       ├── ai-trading-analysis.ts    # DeepSeek analysis task
+│   │       └── health-check.ts           # System monitoring
 │   ├── core/analyzer.py              # Main analysis engine
 │   ├── portfolio/                    # Portfolio management system
 │   ├── llm/deepseek_analyzer.py      # AI integration
 │   ├── alerts/slack_alerts.py        # Notification system
 │   └── db/                           # Database models & migrations
-├── tools/
-│   └── check_api_environments.py     # Comprehensive API testing
-├── tests/                            # 169 comprehensive tests
+├── tests/                            # TypeScript/JavaScript tests
 ├── run_with_env.sh                   # Environment loader script
 └── trigger.config.ts                 # Trigger.dev configuration
 ```
 
 ## 🤖 AI Trading System
 
-### Available Endpoints
+### Automated Analysis
 
-**Production API**: `https://stock-analysis-production-31e9.up.railway.app`
+The system runs automated analysis through Trigger.dev tasks:
 
--   `GET /trading/trading-config` - Get trading configuration and limits
--   `GET /trading/market-status` - Current market status and hours
--   `GET /trading/risk-status/{portfolio_id}` - Portfolio risk assessment
--   `POST /trading/emergency-stop` - Emergency trading halt
--   `GET /health` - System health with 30-second timeout
-
-### Testing the API
-
-```bash
-# Test production environment
-./run_with_env.sh uv run python tools/check_api_environments.py
-
-# Test local environment
-./run_with_env.sh bash -c "API_BASE_URL=http://localhost:8000 uv run python tools/check_api_environments.py"
-
-# Test specific endpoint
-curl -H "Authorization: Bearer your-token" \
-  https://stock-analysis-production-31e9.up.railway.app/trading/trading-config
-```
+- **AI Trading Analysis**: DeepSeek-powered market analysis and trade recommendations
+- **Health Monitoring**: System health checks and alerts
+- **Scheduled Tasks**: Automated portfolio analysis and risk monitoring
 
 ### AI Trading Features
 
--   **Portfolio Analysis**: AI-powered analysis using DeepSeek for market insights
--   **Signal Generation**: Technical and fundamental analysis with confidence scoring
--   **Risk Management**: Position limits (10%), daily loss limits (2%), emergency stops
--   **Trade Recommendations**: Position sizing and entry/exit strategies
--   **Market Data**: Real-time prices, technical indicators, sentiment analysis
+- **Portfolio Analysis**: AI-powered analysis using DeepSeek for market insights
+- **Signal Generation**: Technical and fundamental analysis with confidence scoring
+- **Risk Management**: Position limits (10%), daily loss limits (2%), emergency stops
+- **Trade Recommendations**: Position sizing and entry/exit strategies
+- **Market Data**: Real-time prices, technical indicators, sentiment analysis
 
 ## 🤖 Automation System
 
@@ -177,32 +151,26 @@ bunx trigger.dev@latest deploy
 
 ### Available Tasks
 
--   **Portfolio Analysis**: AI-powered portfolio insights with 300s timeout
--   **Daily Portfolio Analysis**: Scheduled analysis with 600s timeout
--   **Health Monitor**: System health checks
--   **Stock Price Alerts**: Real-time price movement notifications
+- **Portfolio Analysis**: AI-powered portfolio insights with 300s timeout
+- **Daily Portfolio Analysis**: Scheduled analysis with 600s timeout
+- **Health Monitor**: System health checks
+- **Stock Price Alerts**: Real-time price movement notifications
 
 ## 💼 Portfolio Management
 
 ### Quick Commands
 
 ```bash
-# Create and manage portfolios (with environment)
-./run_with_env.sh uv run scripts/portfolio_manager.py create "My Portfolio" personal "Main investment portfolio"
-./run_with_env.sh uv run scripts/portfolio_manager.py add 1 AAPL 100 150.00
-./run_with_env.sh uv run scripts/portfolio_manager.py show 1
-
-# Get AI-powered recommendations
-./run_with_env.sh uv run scripts/portfolio_manager.py sells 1    # Sell recommendations
-./run_with_env.sh uv run scripts/portfolio_manager.py health 1   # Portfolio health check
+# Portfolio management is now handled through Trigger.dev automation
+# The system automatically analyzes portfolios and provides AI-powered insights
 ```
 
 ### Features
 
--   **Real-time P&L**: Live position tracking with current market prices
--   **AI Risk Analysis**: DeepSeek-powered risk assessment and recommendations
--   **Trading Signals**: AI-generated buy/sell signals with confidence scores
--   **Performance Analytics**: Historical analysis and backtesting
+- **Real-time P&L**: Live position tracking with current market prices
+- **AI Risk Analysis**: DeepSeek-powered risk assessment and recommendations
+- **Trading Signals**: AI-generated buy/sell signals with confidence scores
+- **Performance Analytics**: Historical analysis and backtesting
 
 ## 🧪 Testing & Quality
 
@@ -218,20 +186,19 @@ We maintain high code quality with comprehensive testing:
 
 ### Test Coverage
 
--   **Core Analyzer**: 80%+ coverage
--   **Portfolio Management**: 90%+ coverage
--   **LLM Components**: 88-92% coverage
--   **AI Trading System**: Comprehensive integration tests
--   **API Endpoints**: 100% operational (7/7 tests passing)
--   **Total**: 169 tests across unit and integration suites
+- **Core Analyzer**: 80%+ coverage
+- **Portfolio Management**: 90%+ coverage
+- **LLM Components**: 88-92% coverage
+- **AI Trading System**: Comprehensive integration tests
+- **API Endpoints**: 100% operational (7/7 tests passing)
+- **Total**: 169 tests across unit and integration suites
 
-### API Status
+### System Status
 
--   **Production**: ✅ 100% success rate (7/7 endpoints)
--   **Local**: ✅ 100% success rate with proper environment setup
--   **Trading Endpoints**: ✅ Fully operational
--   **DeepSeek Integration**: ✅ Working with API key
--   **30-Second Timeouts**: ✅ Implemented across all endpoints
+- **TypeScript Tests**: ✅ All tests passing
+- **Trigger.dev Tasks**: ✅ Fully operational
+- **DeepSeek Integration**: ✅ Working with API key
+- **Automation System**: ✅ Running scheduled analysis
 
 ## 📊 AI Trading Analysis Example
 
@@ -272,11 +239,11 @@ We maintain high code quality with comprehensive testing:
 ./run_with_env.sh make pre-commit        # Full pre-commit checks
 ```
 
-### API Development
+### Trigger.dev Development
 
 ```bash
-# Start API server with environment
-./run_with_env.sh bash -c "cd src/api && uv run python main.py"
+# Start Trigger.dev development server
+npx trigger.dev@latest dev
 
 # Test endpoints
 curl http://localhost:8000/health  # Test API health
@@ -296,35 +263,35 @@ bunx trigger.dev@latest deploy     # Deploy to production
 
 ## 📚 Documentation Structure
 
--   **[AI_TRADING_PLAN.md](AI_TRADING_PLAN.md)**: Complete AI trading system roadmap
--   **[API_TESTING_GUIDE.md](API_TESTING_GUIDE.md)**: API testing and validation guide
--   **[DEVELOPMENT.md](DEVELOPMENT.md)**: Complete development setup and workflow
--   **[DEPLOYMENT.md](DEPLOYMENT.md)**: GitHub Actions and Railway deployment guide
--   **[CONFIGURATION.md](CONFIGURATION.md)**: Environment and configuration guide
--   **[CONTRIBUTING.md](CONTRIBUTING.md)**: Contribution guidelines and standards
+- **[AI_TRADING_PLAN.md](AI_TRADING_PLAN.md)**: Complete AI trading system roadmap
+- **[API_TESTING_GUIDE.md](API_TESTING_GUIDE.md)**: API testing and validation guide
+- **[DEVELOPMENT.md](DEVELOPMENT.md)**: Complete development setup and workflow
+- **[DEPLOYMENT.md](DEPLOYMENT.md)**: GitHub Actions and Railway deployment guide
+- **[CONFIGURATION.md](CONFIGURATION.md)**: Environment and configuration guide
+- **[CONTRIBUTING.md](CONTRIBUTING.md)**: Contribution guidelines and standards
 
 ## 🚨 Important Notes
 
 ### Environment Setup
 
--   **Always use `./run_with_env.sh`** for commands that need environment variables
--   **DeepSeek API key is required** for AI features to work properly
--   **Database URL is required** for portfolio and trading functionality
--   **API token is required** for authentication
+- **Always use `./run_with_env.sh`** for commands that need environment variables
+- **DeepSeek API key is required** for AI features to work properly
+- **Database URL is required** for portfolio and trading functionality
+- **API token is required** for authentication
 
 ### Production Deployment
 
--   **Railway**: Automatic deployment from main branch
--   **Environment Variables**: Set in Railway dashboard
--   **Health Monitoring**: Available at `/health` endpoint
--   **API Documentation**: Available at `/docs` endpoint
+- **Railway**: Automatic deployment from main branch
+- **Environment Variables**: Set in Railway dashboard
+- **Health Monitoring**: Available at `/health` endpoint
+- **API Documentation**: Available at `/docs` endpoint
 
 ### AI Trading System Status
 
--   **Phase 1**: ✅ Complete - AI Analysis Engine with DeepSeek integration
--   **Phase 2**: 🚧 In Development - Trade execution and broker integration
--   **Phase 3**: 📋 Planned - Live broker integration
--   **Phase 4**: 📋 Planned - Advanced monitoring and control
+- **Phase 1**: ✅ Complete - AI Analysis Engine with DeepSeek integration
+- **Phase 2**: 🚧 In Development - Trade execution and broker integration
+- **Phase 3**: 📋 Planned - Live broker integration
+- **Phase 4**: 📋 Planned - Advanced monitoring and control
 
 ## 🤝 Contributing
 

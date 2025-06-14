@@ -1,365 +1,133 @@
 name: CI/CD Pipeline
 
 on:
-    push:
-        branches: [main, develop]
-    pull_request:
-        branches: [main]
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
 
 jobs:
-    test:
-        runs-on: ubuntu-latest
-
-        strategy:
-            matrix:
-                python-version: [3.11, 3.12, 3.13]
-
-        steps:
-            - uses: actions/checkout@v4
-
-            - name: Install uv
-              uses: astral-sh/setup-uv@v3
-              with:
-                  version: "latest"
-
-            - name: Set up Python ${{ matrix.python-version }}
-              run: uv python install ${{ matrix.python-version }}
-
-            - name: Install dependencies
-              run: |
-                  uv sync --all-extras --dev
-
-            - name: Create test environment file
-              run: |
-                  echo "ALPHA_VANTAGE_API_KEY=test_key" > .env.test
-                  echo "SLACK_WEBHOOK_URL=https://hooks.slack.com/test" >> .env.test
-                  echo "SLACK_USER_ID=test_user" >> .env.test
-
-            - name: Lint and format check with Ruff
-              run: |
-                  uv run ruff check src/ tests/
-                  uv run ruff format --check src/ tests/
-
-            - name: Type checking with mypy
-              run: |
-                  uv run mypy src/ --ignore-missing-imports || true
-
-            - name: Security check with bandit
-              run: |
-                  uv run bandit -r src/ -f json
-
-            - name: Run fast unit tests
-              run: |
-                  uv run python run_tests.py --fast --coverage
-
-            - name: Run all unit tests (including portfolio)
-              run: |
-                  uv run python run_tests.py --unit --coverage
-
-            - name: Run integration tests
-              run: |
-                  uv run python run_tests.py --integration
-
-            - name: Test portfolio CLI functionality
-              env:
-                  TESTING: "1"
-              run: |
-                  # Test portfolio creation and basic operations
-                  uv run scripts/portfolio_manager.py create "Test Portfolio" --type personal --description "CI test portfolio"
-                  uv run scripts/portfolio_manager.py list
-                  uv run scripts/portfolio_manager.py add 1 AAPL 100 150.00
-                  uv run scripts/portfolio_manager.py show 1
-
-            - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v4
-              with:
-                  file: ./coverage.xml
-                  flags: unittests
-                  name: codecov-umbrella
-                  fail_ci_if_error: false
-
-    test-llm:
-        runs-on: ubuntu-latest
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        needs: test
-
-        steps:
-            - uses: actions/checkout@v4
-
-            - name: Install uv
-              uses: astral-sh/setup-uv@v3
-
-            - name: Set up Python
-              run: uv python install 3.12
-
-            - name: Install dependencies
-              run: uv sync --all-extras --dev
-
-            - name: Create test environment file
-              run: |
-                  echo "ALPHA_VANTAGE_API_KEY=test_key" > .env.test
-                  echo "SLACK_WEBHOOK_URL=https://hooks.slack.com/test" >> .env.test
-
-            - name: Run LLM tests (if API key available)
-              env:
-                  DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-              run: |
-                  if [ -n "$DEEPSEEK_API_KEY" ]; then
-                    echo "Running LLM tests with API key"
-                    uv run python run_tests.py --llm
-                  else
-                    echo "Skipping LLM tests - no API key available"
-                  fi
-
-    security:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-
-            - name: Install uv
-              uses: astral-sh/setup-uv@v3
-
-            - name: Set up Python
-              run: uv python install 3.12
-
-            - name: Install dependencies
-              run: uv sync --all-extras --dev
-
-            - name: Run security checks
-              run: |
-                  uv run bandit -r src/ -f json -o bandit-report.json
-                  uv run safety check --json --output safety-report.json || true
-
-            - name: Upload security reports
-              uses: actions/upload-artifact@v4
-              with:
-                  name: security-reports
-                  path: |
-                      bandit-report.json
-                      safety-report.json
-
-    performance:
-        runs-on: ubuntu-latest
-        needs: test
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-        steps:
-            - uses: actions/checkout@v4
-
-            - name: Install uv
-              uses: astral-sh/setup-uv@v3
-
-            - name: Set up Python
-              run: uv python install 3.12
-
-            - name: Install dependencies
-              run: uv sync --all-extras --dev
-
-            - name: Run performance benchmarks
-              env:
-                  TESTING: "1"
-              run: |
-                  # Test portfolio operations performance
-                  time uv run python -c "
-                  import os
-                  os.environ['TESTING'] = '1'
-                  from src.portfolio.portfolio_manager import PortfolioManager
-                  pm = PortfolioManager()
-                  # Create test portfolio and measure performance
-                  portfolio_id = pm.create_portfolio('Perf Test', 'test', 'Performance test')
-                  for i in range(100):
-                      pm.add_position(portfolio_id, f'TEST{i:03d}', 100, 50.0)
-                  summary = pm.get_portfolio_summary(portfolio_id)
-                  print(f'Created portfolio with {len(pm.get_portfolio_positions(portfolio_id))} positions')
-                  "
-
-    deploy-docs:
-        runs-on: ubuntu-latest
-        needs: [test, security]
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-        steps:
-            - uses: actions/checkout@v4
-
-            - name: Install uv
-              uses: astral-sh/setup-uv@v3
-
-            - name: Set up Python
-              run: uv python install 3.12
-
-            - name: Install dependencies
-              run: uv sync --all-extras --dev
-
-            - name: Generate documentation
-              run: |
-                  # Generate API documentation
-                  uv run python -c "
-                  import os
-                  import subprocess
-
-                  # Create docs directory
-                  os.makedirs('docs', exist_ok=True)
-
-                  # Generate README for portfolio system
-                  with open('docs/PORTFOLIO_SYSTEM.md', 'w') as f:
-                      f.write('''# Portfolio Management System
-
-                  ## Overview
-                  Complete portfolio management system with real-time tracking, analytics, and CLI interface.
-
-                  ## Features
-                  - Multi-portfolio support
-                  - Real-time position tracking
-                  - P&L calculations
-                  - Sector allocation analysis
-                  - Sell/buy signal generation
-                  - Portfolio health scoring
-
-                  ## CLI Usage
-                  \`\`\`bash
-                  # Create portfolio
-                  uv run scripts/portfolio_manager.py create \"My Portfolio\" personal \"Main investment portfolio\"
-
-                  # Add position
-                  uv run scripts/portfolio_manager.py add 1 AAPL 100 150.00
-
-                  # View portfolio
-                  uv run scripts/portfolio_manager.py show 1
-
-                  # Get sell recommendations
-                  uv run scripts/portfolio_manager.py sells 1
-                  \`\`\`
-                  ''')
-                  print('Documentation generated successfully')
-                  "
-
-            - name: Upload documentation
-              uses: actions/upload-artifact@v4
-              with:
-                  name: documentation
-                  path: docs/
-
-    deploy-trigger-dev:
-        runs-on: ubuntu-latest
-        needs: [test]
-        if: github.event_name == 'push'
-
-        steps:
-            - uses: actions/checkout@v4
-
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: "20"
-                  cache: "npm"
-
-            - name: Install Node.js dependencies
-              run: npm install
-
-            - name: Install uv
-              uses: astral-sh/setup-uv@v3
-
-            - name: Set up Python
-              run: uv python install 3.12
-
-            - name: Install Python dependencies
-              run: uv sync --all-extras --dev
-
-            - name: Validate Python API URL
-              run: |
-                  # Test that the Python API server is accessible
-                  if [ -z "$PYTHON_API_URL" ]; then
-                      echo "⚠️  PYTHON_API_URL not set - skipping API validation"
-                      echo "This is expected for initial deployments or when API is not yet deployed"
-                      exit 0
-                  fi
-
-                  echo "Testing Python API at: $PYTHON_API_URL"
-                  if curl -f "$PYTHON_API_URL/health" -H "Authorization: Bearer $API_TOKEN" --max-time 10; then
-                      echo "✅ Python API server is accessible"
-                  else
-                      echo "❌ Python API server is not accessible at $PYTHON_API_URL"
-                      echo "This might be expected if the API is still deploying"
-                      exit 1
-                  fi
-              env:
-                  PYTHON_API_URL: ${{ secrets.PYTHON_API_URL }}
-                  API_TOKEN: ${{ secrets.API_TOKEN }}
-
-            - name: Login to Trigger.dev
-              run: |
-                  # Force login using access token
-                  npx trigger.dev@latest login
-              env:
-                  TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
-
-            - name: Verify Authentication
-              run: |
-                  # Verify authentication works
-                  npx trigger.dev@latest whoami
-
-            - name: Deploy to Trigger.dev Development
-              run: |
-                  npx trigger.dev@latest deploy
-              env:
-                  TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
-                  DATABASE_URL: ${{ secrets.DATABASE_URL }}
-                  DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-                  SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-                  SLACK_USER_ID: ${{ secrets.SLACK_USER_ID }}
-                  PYTHON_API_URL: ${{ secrets.PYTHON_API_URL }}
-                  API_TOKEN: ${{ secrets.API_TOKEN }}
-
-            - name: Test Development Deployment
-              run: |
-                  echo "🧪 Testing development deployment..."
-                  # Give deployment time to complete
-                  sleep 10
-                  # Test that tasks are deployed (this will depend on your Trigger.dev setup)
-                  echo "✅ Development deployment completed successfully"
-
-    deploy-trigger-prod:
-        runs-on: ubuntu-latest
-        needs: [test, security, deploy-trigger-dev]
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-        steps:
-            - uses: actions/checkout@v4
-
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: "20"
-                  cache: "npm"
-
-            - name: Install Node.js dependencies
-              run: npm install
-
-            - name: Login to Trigger.dev
-              run: |
-                  # Force login using access token
-                  npx trigger.dev@latest login
-              env:
-                  TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
-
-            - name: Verify Authentication
-              run: |
-                  # Verify authentication works
-                  npx trigger.dev@latest whoami
-
-            - name: Deploy to Trigger.dev Production
-              run: |
-                  npx trigger.dev@latest deploy
-              env:
-                  TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
-                  DATABASE_URL: ${{ secrets.DATABASE_URL }}
-                  DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-                  SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-                  SLACK_USER_ID: ${{ secrets.SLACK_USER_ID }}
-                  PYTHON_API_URL: ${{ secrets.PYTHON_API_URL }}
-                  API_TOKEN: ${{ secrets.API_TOKEN }}
-
-            - name: Verify Production Deployment
-              run: |
-                  echo "✅ Production deployment completed successfully"
-                  npx trigger.dev@latest whoami
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node.js dependencies
+        run: npm install
+
+      - name: Lint TypeScript code
+        run: npm run lint
+
+      - name: Type check TypeScript
+        run: npm run type-check
+
+      - name: Run TypeScript tests
+        run: npm run test
+
+      - name: Build TypeScript project
+        run: npm run build
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run security audit
+        run: npm audit --audit-level moderate
+
+  deploy-trigger-dev:
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node.js dependencies
+        run: npm install
+
+      - name: Login to Trigger.dev
+        run: |
+          npx trigger.dev@latest login
+        env:
+          TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
+
+      - name: Verify Authentication
+        run: |
+          npx trigger.dev@latest whoami
+
+      - name: Deploy to Trigger.dev Development
+        run: |
+          npx trigger.dev@latest deploy
+        env:
+          TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+      - name: Test Development Deployment
+        run: |
+          echo "🧪 Testing development deployment..."
+          sleep 10
+          echo "✅ Development deployment completed successfully"
+
+  deploy-trigger-prod:
+    runs-on: ubuntu-latest
+    needs: [test, security, deploy-trigger-dev]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node.js dependencies
+        run: npm install
+
+      - name: Login to Trigger.dev
+        run: |
+          npx trigger.dev@latest login
+        env:
+          TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
+
+      - name: Verify Authentication
+        run: |
+          npx trigger.dev@latest whoami
+
+      - name: Deploy to Trigger.dev Production
+        run: |
+          npx trigger.dev@latest deploy
+        env:
+          TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+      - name: Verify Production Deployment
+        run: |
+          echo "✅ Production deployment completed successfully"
+          npx trigger.dev@latest whoami
