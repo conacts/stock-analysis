@@ -26,6 +26,16 @@ from llm.deepseek_analyzer import DeepSeekAnalyzer
 from models.pydantic_models import HealthCheckResult
 from pipeline.research_engine import ResearchEngine
 
+# Import conversation endpoints
+from src.api.conversation_endpoints import (
+    ConversationContextRequest,
+    ConversationSummaryRequest,
+    ConversationThread,
+    get_conversation_context,
+    get_conversation_summary,
+    store_conversation_thread,
+)
+
 # Import trading endpoints
 try:
     try:
@@ -789,6 +799,29 @@ async def get_available_agents(token: str = Depends(verify_token)):
             },
         ]
     }
+
+
+# ============================================================================
+# 🧠 ENHANCED CONVERSATION HISTORY ENDPOINTS
+# ============================================================================
+
+
+@app.post("/trading/swarm/conversation-context/{portfolio_id}")
+async def get_portfolio_conversation_context(portfolio_id: str, request: ConversationContextRequest, token: str = Depends(verify_token)):
+    """Get comprehensive conversation context for portfolio"""
+    return await get_conversation_context(portfolio_id, request, token)
+
+
+@app.post("/trading/swarm/conversation-summary/{portfolio_id}")
+async def get_portfolio_conversation_summary(portfolio_id: str, request: ConversationSummaryRequest, token: str = Depends(verify_token)):
+    """Get summarized conversation insights for portfolio"""
+    return await get_conversation_summary(portfolio_id, request, token)
+
+
+@app.post("/trading/swarm/store-conversation-thread/{portfolio_id}")
+async def store_portfolio_conversation_thread(portfolio_id: str, conversation: ConversationThread, token: str = Depends(verify_token)):
+    """Store conversation with portfolio-specific threading"""
+    return await store_conversation_thread(portfolio_id, conversation, token)
 
 
 # ============================================================================
