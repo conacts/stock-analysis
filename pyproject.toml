@@ -42,3 +42,10 @@ target-version = "py313"
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]  # Enable import sorting (I) along with basic linting
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+force-single-line = false

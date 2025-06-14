@@ -33,10 +33,6 @@ jobs:
                   uv run ruff check src/ tests/
                   uv run ruff format --check src/ tests/
 
-            - name: Import sort check
-              run: |
-                  uv run isort --check-only --diff src/ tests/
-
             - name: Security check with bandit
               run: |
                   uv run bandit -r src/ -f json
