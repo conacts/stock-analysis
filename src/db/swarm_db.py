@@ -5,6 +5,7 @@ Database service for Swarm AI Trading System
 import json
 import logging
 import os
+import sqlite3
 from typing import List, Optional
 
 from dotenv import load_dotenv
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class SwarmDatabase:
-    """Database service for Swarm AI Trading System"""
+    """Database interface for Swarm AI trading system"""
 
     def __init__(self, database_url: Optional[str] = None):
         """Initialize database connection and create tables"""
@@ -28,19 +29,33 @@ class SwarmDatabase:
         if not self.database_url:
             raise ValueError("DATABASE_URL environment variable is required")
 
-        # Create connection pool for better performance
-        self.pool = SimpleConnectionPool(minconn=1, maxconn=10, dsn=self.database_url)
+        # Check if we're using SQLite (for testing) or PostgreSQL (for production)
+        self.is_sqlite = self.database_url.startswith("sqlite")
+
+        if self.is_sqlite:
+            # For SQLite, use direct connection
+            self.sqlite_conn = sqlite3.connect(self.database_url.replace("sqlite:///", ""))
+            self.sqlite_conn.row_factory = sqlite3.Row
+            self.pool = None
+        else:
+            # For PostgreSQL, use connection pool
+            self.pool = SimpleConnectionPool(minconn=1, maxconn=10, dsn=self.database_url)
+            self.sqlite_conn = None
 
         self._create_tables()
         self._initialize_default_prompts()
 
     def get_connection(self):
-        """Get a connection from the pool"""
-        return self.pool.getconn()
+        """Get a connection from the pool or return SQLite connection"""
+        if self.is_sqlite:
+            return self.sqlite_conn
+        else:
+            return self.pool.getconn()
 
     def return_connection(self, conn):
-        """Return a connection to the pool"""
-        self.pool.putconn(conn)
+        """Return a connection to the pool (no-op for SQLite)"""
+        if not self.is_sqlite and self.pool:
+            self.pool.putconn(conn)
 
     def _create_tables(self):
         """Create database tables if they don't exist"""
