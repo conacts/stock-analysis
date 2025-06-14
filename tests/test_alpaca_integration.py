@@ -1,0 +1,450 @@
+"""
+Comprehensive tests for Alpaca Paper Trading integration
+"""
+
+import asyncio
+import os
+
+# Import the main app and client
+import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+from fastapi.testclient import TestClient
+
+sys.path.append(str(Path(__file__).parent.parent / "src"))
+
+from api.main import app
+from trading.alpaca_client import AlpacaPaperTradingClient
+
+
+class TestAlpacaPaperTradingClient:
+    """Unit tests for AlpacaPaperTradingClient"""
+
+    @pytest.fixture
+    def client(self):
+        """Create a test client instance"""
+        return AlpacaPaperTradingClient()
+
+    @pytest.fixture
+    def mock_account_data(self):
+        """Mock account data"""
+        return {
+            "id": "0525b117-f706-474a-bce2-cebbfa797973",
+            "account_number": "PA3XXXXXXX",
+            "status": "ACTIVE",
+            "currency": "USD",
+            "buying_power": "200000.00",
+            "cash": "100000.00",
+            "portfolio_value": "100000.00",
+            "day_trade_buying_power": "400000.00",
+            "regt_buying_power": "200000.00",
+            "daytrading_buying_power": "400000.00",
+            "non_marginable_buying_power": "100000.00",
+            "equity": "100000.00",
+            "last_equity": "100000.00",
+            "multiplier": "4",
+            "created_at": "2024-01-01T00:00:00Z",
+            "trading_blocked": False,
+            "transfers_blocked": False,
+            "account_blocked": False,
+            "pattern_day_trader": False,
+        }
+
+    @pytest.fixture
+    def mock_position_data(self):
+        """Mock position data"""
+        return [
+            {
+                "asset_id": "b0b6dd9d-8b9b-48a9-ba46-b9d54906e415",
+                "symbol": "AAPL",
+                "exchange": "NASDAQ",
+                "asset_class": "us_equity",
+                "qty": "10",
+                "side": "long",
+                "market_value": "1500.00",
+                "cost_basis": "1450.00",
+                "unrealized_pl": "50.00",
+                "unrealized_plpc": "0.0345",
+                "unrealized_intraday_pl": "25.00",
+                "unrealized_intraday_plpc": "0.0172",
+                "current_price": "150.00",
+                "lastday_price": "148.00",
+                "change_today": "2.00",
+            }
+        ]
+
+    @pytest.fixture
+    def mock_order_data(self):
+        """Mock order data"""
+        return [
+            {
+                "id": "order-123",
+                "client_order_id": "client-order-123",
+                "created_at": "2024-01-01T10:00:00Z",
+                "updated_at": "2024-01-01T10:00:01Z",
+                "submitted_at": "2024-01-01T10:00:00Z",
+                "filled_at": "2024-01-01T10:00:01Z",
+                "expired_at": None,
+                "canceled_at": None,
+                "failed_at": None,
+                "replaced_at": None,
+                "replaced_by": None,
+                "replaces": None,
+                "asset_id": "b0b6dd9d-8b9b-48a9-ba46-b9d54906e415",
+                "symbol": "AAPL",
+                "asset_class": "us_equity",
+                "notional": None,
+                "qty": "10",
+                "filled_qty": "10",
+                "filled_avg_price": "150.00",
+                "order_class": "simple",
+                "order_type": "market",
+                "type": "market",
+                "side": "buy",
+                "time_in_force": "day",
+                "limit_price": None,
+                "stop_price": None,
+                "status": "filled",
+                "extended_hours": False,
+                "legs": None,
+                "trail_percent": None,
+                "trail_price": None,
+                "hwm": None,
+            }
+        ]
+
+    @patch("trading.alpaca_client.TradingClient")
+    def test_client_initialization(self, mock_trading_client, client):
+        """Test client initialization"""
+        assert client is not None
+        mock_trading_client.assert_called_once()
+
+    @patch("trading.alpaca_client.TradingClient")
+    async def test_get_account_info(self, mock_trading_client, client, mock_account_data):
+        """Test getting account information"""
+        # Mock the trading client
+        mock_instance = Mock()
+        mock_trading_client.return_value = mock_instance
+        mock_instance.get_account.return_value = Mock(**mock_account_data)
+
+        # Test the method
+        result = await client.get_account_info()
+
+        # Verify results
+        assert result["buying_power"] == "200000.00"
+        assert result["cash"] == "100000.00"
+        assert result["portfolio_value"] == "100000.00"
+        assert result["status"] == "ACTIVE"
+
+    @patch("trading.alpaca_client.TradingClient")
+    async def test_get_positions(self, mock_trading_client, client, mock_position_data):
+        """Test getting positions"""
+        # Mock the trading client
+        mock_instance = Mock()
+        mock_trading_client.return_value = mock_instance
+        mock_positions = [Mock(**pos) for pos in mock_position_data]
+        mock_instance.get_all_positions.return_value = mock_positions
+
+        # Test the method
+        result = await client.get_positions()
+
+        # Verify results
+        assert len(result) == 1
+        assert result[0]["symbol"] == "AAPL"
+        assert result[0]["qty"] == "10"
+        assert result[0]["market_value"] == "1500.00"
+
+    @patch("trading.alpaca_client.TradingClient")
+    async def test_place_market_order(self, mock_trading_client, client, mock_order_data):
+        """Test placing a market order"""
+        # Mock the trading client
+        mock_instance = Mock()
+        mock_trading_client.return_value = mock_instance
+        mock_instance.submit_order.return_value = Mock(**mock_order_data[0])
+
+        # Test the method
+        result = await client.place_market_order("AAPL", 10, "buy")
+
+        # Verify results
+        assert result["symbol"] == "AAPL"
+        assert result["qty"] == "10"
+        assert result["side"] == "buy"
+        assert result["status"] == "filled"
+
+    @patch("trading.alpaca_client.TradingClient")
+    async def test_place_limit_order(self, mock_trading_client, client, mock_order_data):
+        """Test placing a limit order"""
+        # Mock the trading client
+        mock_instance = Mock()
+        mock_trading_client.return_value = mock_instance
+        mock_order = mock_order_data[0].copy()
+        mock_order["order_type"] = "limit"
+        mock_order["limit_price"] = "149.50"
+        mock_instance.submit_order.return_value = Mock(**mock_order)
+
+        # Test the method
+        result = await client.place_limit_order("AAPL", 10, "buy", 149.50)
+
+        # Verify results
+        assert result["symbol"] == "AAPL"
+        assert result["order_type"] == "limit"
+        assert result["limit_price"] == "149.50"
+
+    @patch("trading.alpaca_client.TradingClient")
+    async def test_get_orders(self, mock_trading_client, client, mock_order_data):
+        """Test getting orders"""
+        # Mock the trading client
+        mock_instance = Mock()
+        mock_trading_client.return_value = mock_instance
+        mock_orders = [Mock(**order) for order in mock_order_data]
+        mock_instance.get_orders.return_value = mock_orders
+
+        # Test the method
+        result = await client.get_orders()
+
+        # Verify results
+        assert len(result) == 1
+        assert result[0]["symbol"] == "AAPL"
+        assert result[0]["status"] == "filled"
+
+    @patch("trading.alpaca_client.StockHistoricalDataClient")
+    async def test_get_market_data(self, mock_data_client, client):
+        """Test getting market data"""
+        # Mock the data client
+        mock_instance = Mock()
+        mock_data_client.return_value = mock_instance
+
+        # Mock bars data
+        mock_bars = Mock()
+        mock_bars.df = Mock()
+        mock_bars.df.to_dict.return_value = {"open": {0: 148.0}, "high": {0: 152.0}, "low": {0: 147.0}, "close": {0: 150.0}, "volume": {0: 1000000}}
+        mock_instance.get_stock_bars.return_value = mock_bars
+
+        # Test the method
+        result = await client.get_market_data("AAPL")
+
+        # Verify results
+        assert "bars" in result
+        assert "symbol" in result
+        assert result["symbol"] == "AAPL"
+
+    @patch("trading.alpaca_client.TradingClient")
+    async def test_get_market_status(self, mock_trading_client, client):
+        """Test getting market status"""
+        # Mock the trading client
+        mock_instance = Mock()
+        mock_trading_client.return_value = mock_instance
+
+        # Mock clock data
+        mock_clock = Mock()
+        mock_clock.is_open = False
+        mock_clock.next_open = datetime.now() + timedelta(hours=16)
+        mock_clock.next_close = datetime.now() + timedelta(hours=22)
+        mock_instance.get_clock.return_value = mock_clock
+
+        # Test the method
+        result = await client.get_market_status()
+
+        # Verify results
+        assert "is_open" in result
+        assert "next_open" in result
+        assert "next_close" in result
+        assert result["is_open"] is False
+
+
+class TestAlpacaAPIEndpoints:
+    """Integration tests for Alpaca API endpoints"""
+
+    @pytest.fixture
+    def test_client(self):
+        """Create a test client for the FastAPI app"""
+        return TestClient(app)
+
+    @pytest.fixture
+    def auth_headers(self):
+        """Create auth headers for testing"""
+        return {"Authorization": f"Bearer {os.getenv('API_TOKEN', 'test-token')}"}
+
+    @patch("trading.alpaca_client.AlpacaPaperTradingClient")
+    def test_get_account_endpoint(self, mock_client_class, test_client, auth_headers):
+        """Test the /trading/account endpoint"""
+        # Mock the client
+        mock_client = Mock()
+        mock_client_class.return_value = mock_client
+        mock_client.get_account_info = AsyncMock(return_value={"buying_power": "200000.00", "cash": "100000.00", "portfolio_value": "100000.00"})
+
+        # Make request
+        response = test_client.get("/trading/account", headers=auth_headers)
+
+        # Verify response
+        assert response.status_code == 200
+        data = response.json()
+        assert data["buying_power"] == "200000.00"
+        assert data["cash"] == "100000.00"
+
+    @patch("trading.alpaca_client.AlpacaPaperTradingClient")
+    def test_get_positions_endpoint(self, mock_client_class, test_client, auth_headers):
+        """Test the /trading/positions endpoint"""
+        # Mock the client
+        mock_client = Mock()
+        mock_client_class.return_value = mock_client
+        mock_client.get_positions = AsyncMock(return_value=[{"symbol": "AAPL", "qty": "10", "market_value": "1500.00"}])
+
+        # Make request
+        response = test_client.get("/trading/positions", headers=auth_headers)
+
+        # Verify response
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total_positions"] == 1
+        assert data["positions"][0]["symbol"] == "AAPL"
+
+    @patch("trading.alpaca_client.AlpacaPaperTradingClient")
+    def test_place_market_order_endpoint(self, mock_client_class, test_client, auth_headers):
+        """Test the /trading/orders/market endpoint"""
+        # Mock the client
+        mock_client = Mock()
+        mock_client_class.return_value = mock_client
+        mock_client.place_market_order = AsyncMock(return_value={"id": "order-123", "symbol": "AAPL", "qty": "10", "side": "buy", "status": "submitted"})
+
+        # Make request
+        order_data = {"symbol": "AAPL", "qty": 10, "side": "buy", "time_in_force": "day"}
+        response = test_client.post("/trading/orders/market", json=order_data, headers=auth_headers)
+
+        # Verify response
+        assert response.status_code == 200
+        data = response.json()
+        assert data["symbol"] == "AAPL"
+        assert data["qty"] == "10"
+        assert data["side"] == "buy"
+
+    @patch("trading.alpaca_client.AlpacaPaperTradingClient")
+    def test_place_limit_order_endpoint(self, mock_client_class, test_client, auth_headers):
+        """Test the /trading/orders/limit endpoint"""
+        # Mock the client
+        mock_client = Mock()
+        mock_client_class.return_value = mock_client
+        mock_client.place_limit_order = AsyncMock(return_value={"id": "order-124", "symbol": "AAPL", "qty": "10", "side": "buy", "limit_price": "149.50", "status": "submitted"})
+
+        # Make request
+        order_data = {"symbol": "AAPL", "qty": 10, "side": "buy", "limit_price": 149.50, "time_in_force": "day"}
+        response = test_client.post("/trading/orders/limit", json=order_data, headers=auth_headers)
+
+        # Verify response
+        assert response.status_code == 200
+        data = response.json()
+        assert data["symbol"] == "AAPL"
+        assert data["limit_price"] == "149.50"
+
+    @patch("trading.alpaca_client.AlpacaPaperTradingClient")
+    def test_get_portfolio_summary_endpoint(self, mock_client_class, test_client, auth_headers):
+        """Test the /trading/portfolio-summary endpoint"""
+        # Mock the client
+        mock_client = Mock()
+        mock_client_class.return_value = mock_client
+
+        # Mock all the async methods
+        mock_client.get_account_info = AsyncMock(return_value={"buying_power": "200000.00", "portfolio_value": "100000.00", "cash": "100000.00"})
+        mock_client.get_positions = AsyncMock(return_value=[{"symbol": "AAPL", "market_value": "1500.00", "unrealized_pl": "50.00"}])
+        mock_client.get_orders = AsyncMock(return_value=[{"id": "order-123", "symbol": "AAPL", "status": "filled"}])
+        mock_client.get_market_status = AsyncMock(return_value={"is_open": False, "next_open": "2024-01-02T09:30:00Z"})
+
+        # Make request
+        response = test_client.get("/trading/portfolio-summary", headers=auth_headers)
+
+        # Verify response
+        assert response.status_code == 200
+        data = response.json()
+        assert "account" in data
+        assert "positions" in data
+        assert "recent_orders" in data
+        assert "market_status" in data
+        assert "summary" in data
+        assert data["positions"]["total_positions"] == 1
+
+    def test_unauthorized_access(self, test_client):
+        """Test that endpoints require authentication"""
+        response = test_client.get("/trading/account")
+        assert response.status_code == 403  # Forbidden without auth
+
+
+class TestAlpacaIntegrationScenarios:
+    """End-to-end integration test scenarios"""
+
+    @pytest.fixture
+    def client(self):
+        """Create a real client for integration tests"""
+        return AlpacaPaperTradingClient()
+
+    @pytest.mark.integration
+    async def test_full_trading_workflow(self, client):
+        """Test a complete trading workflow (requires real API keys)"""
+        # Skip if no API keys
+        if not os.getenv("ALPACA_API_KEY"):
+            pytest.skip("No Alpaca API keys configured")
+
+        try:
+            # 1. Get account info
+            account = await client.get_account_info()
+            assert "buying_power" in account
+
+            # 2. Check current positions
+            positions = await client.get_positions()
+            initial_position_count = len(positions)
+
+            # 3. Check market status
+            market_status = await client.get_market_status()
+
+            # 4. Get market data for a test symbol
+            market_data = await client.get_market_data("AAPL")
+            assert "symbol" in market_data
+
+            # 5. Get recent orders
+            orders = await client.get_orders(limit=5)
+
+            print("✅ Integration test passed:")
+            print(f"   - Account buying power: ${account.get('buying_power')}")
+            print(f"   - Current positions: {initial_position_count}")
+            print(f"   - Market open: {market_status.get('is_open')}")
+            print(f"   - Recent orders: {len(orders)}")
+
+        except Exception as e:
+            pytest.fail(f"Integration test failed: {str(e)}")
+
+    @pytest.mark.integration
+    async def test_error_handling(self, client):
+        """Test error handling with invalid requests"""
+        # Skip if no API keys
+        if not os.getenv("ALPACA_API_KEY"):
+            pytest.skip("No Alpaca API keys configured")
+
+        try:
+            # Test getting position for non-existent symbol
+            with pytest.raises(Exception):
+                await client.get_position("INVALID_SYMBOL_12345")
+
+            # Test getting invalid order
+            with pytest.raises(Exception):
+                await client.get_order("invalid-order-id")
+
+            print("✅ Error handling test passed")
+
+        except Exception as e:
+            pytest.fail(f"Error handling test failed: {str(e)}")
+
+
+# Test configuration and fixtures
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create an instance of the default event loop for the test session."""
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
+
+
+if __name__ == "__main__":
+    # Run tests
+    pytest.main([__file__, "-v", "--tb=short"])

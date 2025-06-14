@@ -39,6 +39,8 @@ except ImportError as e:
     print(f"Trading endpoints not available: {e}")
     TRADING_ENABLED = False
 
+# Import Alpaca client
+
 # Initialize FastAPI app
 app = FastAPI(title="Stock Analysis API", description="REST API for stock analysis and portfolio management", version="1.0.0")
 
@@ -311,6 +313,253 @@ async def send_premarket_summary(data: Dict, token: str = Depends(verify_token))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# ============================================================================
+# 🚀 ALPACA PAPER TRADING ENDPOINTS
+# ============================================================================
+
+
+@app.get("/trading/account")
+async def get_account_info(token: str = Depends(verify_token)):
+    """Get Alpaca account information"""
+    try:
+        from src.trading.alpaca_client import AlpacaPaperTradingClient
+
+        client = AlpacaPaperTradingClient()
+        account_info = await client.get_account_info()
+        return account_info
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get account info: {str(e)}")
+
+
+@app.get("/trading/positions")
+async def get_positions(token: str = Depends(verify_token)):
+    """Get all current positions"""
+    try:
+        from src.trading.alpaca_client import AlpacaPaperTradingClient
+
+        client = AlpacaPaperTradingClient()
+        positions = await client.get_positions()
+        return {"positions": positions, "total_positions": len(positions)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get positions: {str(e)}")
+
+
+@app.get("/trading/positions/{symbol}")
+async def get_position(symbol: str, token: str = Depends(verify_token)):
+    """Get position for specific symbol"""
+    try:
+        from src.trading.alpaca_client import AlpacaPaperTradingClient
+
+        client = AlpacaPaperTradingClient()
+        position = await client.get_position(symbol.upper())
+        return position
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Position not found for {symbol}: {str(e)}")
+
+
+@app.delete("/trading/positions/{symbol}")
+async def close_position(symbol: str, token: str = Depends(verify_token)):
+    """Close position for specific symbol"""
+    try:
+        from src.trading.alpaca_client import AlpacaPaperTradingClient
+
+        client = AlpacaPaperTradingClient()
+        result = await client.close_position(symbol.upper())
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to close position for {symbol}: {str(e)}")
+
+
+@app.delete("/trading/positions")
+async def close_all_positions(token: str = Depends(verify_token)):
+    """Close all positions"""
+    try:
+        from src.trading.alpaca_client import AlpacaPaperTradingClient
+
+        client = AlpacaPaperTradingClient()
+        result = await client.close_all_positions()
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to close all positions: {str(e)}")
+
+
+class MarketOrderRequest(BaseModel):
+    symbol: str
+    qty: float
+    side: str  # "buy" or "sell"
+    time_in_force: str = "day"  # "day", "gtc", "ioc", "fok"
+
+
+class LimitOrderRequest(BaseModel):
+    symbol: str
+    qty: float
+    side: str  # "buy" or "sell"
+    limit_price: float
+    time_in_force: str = "day"  # "day", "gtc", "ioc", "fok"
+
+
+@app.post("/trading/orders/market")
+async def place_market_order(order: MarketOrderRequest, token: str = Depends(verify_token)):
+    """Place a market order"""
+    try:
+        from src.trading.alpaca_client import AlpacaPaperTradingClient
+
+        client = AlpacaPaperTradingClient()
+        result = await client.place_market_order(symbol=order.symbol.upper(), qty=order.qty, side=order.side, time_in_force=order.time_in_force)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to place market order: {str(e)}")
+
+
+@app.post("/trading/orders/limit")
+async def place_limit_order(order: LimitOrderRequest, token: str = Depends(verify_token)):
+    """Place a limit order"""
+    try:
+        from src.trading.alpaca_client import AlpacaPaperTradingClient
+
+        client = AlpacaPaperTradingClient()
+        result = await client.place_limit_order(symbol=order.symbol.upper(), qty=order.qty, side=order.side, limit_price=order.limit_price, time_in_force=order.time_in_force)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to place limit order: {str(e)}")
+
+
+@app.get("/trading/orders")
+async def get_orders(status: str = "all", limit: int = 50, token: str = Depends(verify_token)):
+    """Get orders with optional status filter"""
+    try:
+        from src.trading.alpaca_client import AlpacaPaperTradingClient
+
+        client = AlpacaPaperTradingClient()
+        orders = await client.get_orders(status=status, limit=limit)
+        return {"orders": orders, "total_orders": len(orders)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get orders: {str(e)}")
+
+
+@app.get("/trading/orders/{order_id}")
+async def get_order(order_id: str, token: str = Depends(verify_token)):
+    """Get specific order by ID"""
+    try:
+        from src.trading.alpaca_client import AlpacaPaperTradingClient
+
+        client = AlpacaPaperTradingClient()
+        order = await client.get_order(order_id)
+        return order
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Order not found: {str(e)}")
+
+
+@app.delete("/trading/orders/{order_id}")
+async def cancel_order(order_id: str, token: str = Depends(verify_token)):
+    """Cancel specific order"""
+    try:
+        from src.trading.alpaca_client import AlpacaPaperTradingClient
+
+        client = AlpacaPaperTradingClient()
+        result = await client.cancel_order(order_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to cancel order: {str(e)}")
+
+
+@app.delete("/trading/orders")
+async def cancel_all_orders(token: str = Depends(verify_token)):
+    """Cancel all open orders"""
+    try:
+        from src.trading.alpaca_client import AlpacaPaperTradingClient
+
+        client = AlpacaPaperTradingClient()
+        result = await client.cancel_all_orders()
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to cancel all orders: {str(e)}")
+
+
+@app.get("/trading/market-data/{symbol}")
+async def get_market_data(symbol: str, timeframe: str = "1Day", start: str = None, end: str = None, token: str = Depends(verify_token)):
+    """Get market data for symbol"""
+    try:
+        from src.trading.alpaca_client import AlpacaPaperTradingClient
+
+        client = AlpacaPaperTradingClient()
+        data = await client.get_market_data(symbol=symbol.upper(), timeframe=timeframe, start=start, end=end)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get market data: {str(e)}")
+
+
+@app.get("/trading/market-status")
+async def get_market_status(token: str = Depends(verify_token)):
+    """Get current market status"""
+    try:
+        from src.trading.alpaca_client import AlpacaPaperTradingClient
+
+        client = AlpacaPaperTradingClient()
+        status = await client.get_market_status()
+        return status
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get market status: {str(e)}")
+
+
+@app.get("/trading/portfolio-summary")
+async def get_trading_portfolio_summary(token: str = Depends(verify_token)):
+    """Get comprehensive portfolio summary from Alpaca"""
+    try:
+        from src.trading.alpaca_client import AlpacaPaperTradingClient
+
+        client = AlpacaPaperTradingClient()
+
+        # Get account info and positions
+        account_info = await client.get_account_info()
+        positions = await client.get_positions()
+        recent_orders = await client.get_orders(status="all", limit=10)
+        market_status = await client.get_market_status()
+
+        # Calculate portfolio metrics
+        total_positions = len(positions)
+        total_market_value = sum(float(pos.get("market_value", 0)) for pos in positions)
+        total_unrealized_pnl = sum(float(pos.get("unrealized_pl", 0)) for pos in positions)
+
+        return {
+            "account": account_info,
+            "positions": {"total_positions": total_positions, "positions": positions, "total_market_value": total_market_value, "total_unrealized_pnl": total_unrealized_pnl},
+            "recent_orders": {
+                "total_orders": len(recent_orders),
+                "orders": recent_orders[:5],  # Last 5 orders
+            },
+            "market_status": market_status,
+            "summary": {
+                "buying_power": account_info.get("buying_power"),
+                "portfolio_value": account_info.get("portfolio_value"),
+                "cash": account_info.get("cash"),
+                "day_trade_buying_power": account_info.get("day_trade_buying_power"),
+                "positions_count": total_positions,
+                "market_open": market_status.get("is_open", False),
+            },
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get portfolio summary: {str(e)}")
+
+
+# ============================================================================
+# 🤖 AI TRADING ENDPOINTS (Future Enhancement)
+# ============================================================================
+
+
+@app.post("/trading/ai-analysis")
+async def analyze_for_trading(symbols: List[str], token: str = Depends(verify_token)):
+    """Analyze symbols using AI for trading decisions"""
+    try:
+        # This will integrate with your DeepSeek analyzer
+        # For now, return a placeholder
+        return {"symbols_analyzed": symbols, "analysis_timestamp": datetime.now().isoformat(), "recommendations": [], "risk_assessment": "pending_implementation", "suggested_actions": []}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to analyze for trading: {str(e)}")
+
+
+# ============================================================================
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
