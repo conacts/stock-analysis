@@ -71,9 +71,7 @@ def mock_yfinance_ticker():
     prices = 100 + np.cumsum(np.random.randn(len(dates)) * 0.02)
     volumes = np.random.randint(1000000, 10000000, len(dates))
 
-    mock_ticker.history.return_value = pd.DataFrame(
-        {"Close": prices, "Volume": volumes}, index=dates
-    )
+    mock_ticker.history.return_value = pd.DataFrame({"Close": prices, "Volume": volumes}, index=dates)
 
     # Sample news
     mock_ticker.news = [
@@ -249,10 +247,7 @@ def pytest_collection_modifyitems(config, items):
     """Modify test collection to add markers based on test names"""
     for item in items:
         # Add unit marker to all tests by default
-        if not any(
-            marker.name in ["integration", "llm", "slow", "database"]
-            for marker in item.iter_markers()
-        ):
+        if not any(marker.name in ["integration", "llm", "slow", "database"] for marker in item.iter_markers()):
             item.add_marker(pytest.mark.unit)
 
         # Add markers based on test file names

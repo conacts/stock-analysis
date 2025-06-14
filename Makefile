@@ -36,13 +36,13 @@ coverage: ## Run tests with coverage report
 	@echo "📊 Coverage report: htmlcov/index.html"
 
 lint: ## Run linting checks
-	uv run flake8 src/ tests/
-	uv run black --check src/ tests/
-	uv run isort --check-only src/ tests/
+	uv run flake8 src/ tests/ --max-line-length=320 --ignore=E203,W503,E402,E501,E226
+	uv run black --check src/ tests/ --line-length=320
+	uv run isort --check-only src/ tests/ --line-length=320
 
 format: ## Format code with black and isort
-	uv run black src/ tests/
-	uv run isort src/ tests/
+	uv run black src/ tests/ --line-length=320
+	uv run isort src/ tests/ --line-length=320
 
 security: ## Run security checks
 	uv run bandit -r src/

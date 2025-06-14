@@ -415,19 +415,13 @@ class AnalysisStorage:
 
             with sqlite3.connect(self.db_path) as conn:
                 # Clean up old analysis data
-                conn.execute(
-                    "DELETE FROM daily_analysis WHERE date < ?", (cutoff_date,)
-                )
+                conn.execute("DELETE FROM daily_analysis WHERE date < ?", (cutoff_date,))
 
                 # Clean up old decisions
-                conn.execute(
-                    "DELETE FROM daily_decisions WHERE date < ?", (cutoff_date,)
-                )
+                conn.execute("DELETE FROM daily_decisions WHERE date < ?", (cutoff_date,))
 
                 # Clean up old market context
-                conn.execute(
-                    "DELETE FROM market_context WHERE date < ?", (cutoff_date,)
-                )
+                conn.execute("DELETE FROM market_context WHERE date < ?", (cutoff_date,))
 
                 conn.commit()
 
@@ -473,12 +467,8 @@ class DecisionTracker:
                         sector = stock_data.get("sector", "Unknown")
                         rating = stock_data.get("rating", "Unknown")
 
-                        sector_preferences[sector] = (
-                            sector_preferences.get(sector, 0) + 1
-                        )
-                        rating_distribution[rating] = (
-                            rating_distribution.get(rating, 0) + 1
-                        )
+                        sector_preferences[sector] = sector_preferences.get(sector, 0) + 1
+                        rating_distribution[rating] = rating_distribution.get(rating, 0) + 1
 
             return {
                 "total_decisions": len(decisions),
@@ -492,9 +482,7 @@ class DecisionTracker:
             self.logger.error(f"Error analyzing decision patterns: {e}")
             return {}
 
-    def generate_decision_summary(
-        self, selected_stocks: List[Dict], reasoning: str
-    ) -> Dict:
+    def generate_decision_summary(self, selected_stocks: List[Dict], reasoning: str) -> Dict:
         """Generate a comprehensive decision summary"""
         try:
             summary = {
@@ -507,18 +495,9 @@ class DecisionTracker:
                     "selection_criteria": "Composite score + risk assessment",
                 },
                 "decision_metadata": {
-                    "avg_score": (
-                        sum(s.get("score", 0) for s in selected_stocks)
-                        / len(selected_stocks)
-                        if selected_stocks
-                        else 0
-                    ),
-                    "sectors_represented": list(
-                        set(s.get("sector", "Unknown") for s in selected_stocks)
-                    ),
-                    "risk_levels": list(
-                        set(s.get("risk_level", "Unknown") for s in selected_stocks)
-                    ),
+                    "avg_score": (sum(s.get("score", 0) for s in selected_stocks) / len(selected_stocks) if selected_stocks else 0),
+                    "sectors_represented": list(set(s.get("sector", "Unknown") for s in selected_stocks)),
+                    "risk_levels": list(set(s.get("risk_level", "Unknown") for s in selected_stocks)),
                 },
             }
 

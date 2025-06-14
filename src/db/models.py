@@ -2,8 +2,7 @@
 SQLAlchemy models for stock analysis database
 """
 
-from sqlalchemy import (Column, Date, DateTime, Integer, Numeric, String, Text,
-                        UniqueConstraint)
+from sqlalchemy import Column, Date, DateTime, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
@@ -25,9 +24,7 @@ class DailyAnalysis(Base):
     confidence = Column(String(20))
     created_at = Column(DateTime, default=func.now())
 
-    __table_args__ = (
-        UniqueConstraint("date", "symbol", name="uq_daily_analysis_date_symbol"),
-    )
+    __table_args__ = (UniqueConstraint("date", "symbol", name="uq_daily_analysis_date_symbol"),)
 
     def __repr__(self):
         return f"<DailyAnalysis(symbol='{self.symbol}', date='{self.date}', score={self.composite_score})>"
@@ -68,9 +65,7 @@ class PerformanceTracking(Base):
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     def __repr__(self):
-        return (
-            f"<PerformanceTracking(symbol='{self.symbol}', return={self.return_pct}%)>"
-        )
+        return f"<PerformanceTracking(symbol='{self.symbol}', return={self.return_pct}%)>"
 
 
 class MarketContext(Base):
@@ -88,9 +83,7 @@ class MarketContext(Base):
     created_at = Column(DateTime, default=func.now())
 
     def __repr__(self):
-        return (
-            f"<MarketContext(date='{self.date}', sentiment='{self.market_sentiment}')>"
-        )
+        return f"<MarketContext(date='{self.date}', sentiment='{self.market_sentiment}')>"
 
 
 # Migration tracking table
@@ -105,6 +98,4 @@ class MigrationHistory(Base):
     applied_at = Column(DateTime, default=func.now())
 
     def __repr__(self):
-        return (
-            f"<MigrationHistory(version='{self.version}', applied='{self.applied_at}')>"
-        )
+        return f"<MigrationHistory(version='{self.version}', applied='{self.applied_at}')>"

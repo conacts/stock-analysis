@@ -102,9 +102,7 @@ class LLMScorer:
                 market_context,
             )
         else:
-            return self._calculate_traditional_score(
-                symbol, fundamental_score, technical_score, sentiment_score, risk_score
-            )
+            return self._calculate_traditional_score(symbol, fundamental_score, technical_score, sentiment_score, risk_score)
 
     def _calculate_llm_enhanced_score(
         self,
@@ -122,34 +120,23 @@ class LLMScorer:
 
         try:
             # Get comprehensive LLM analysis
-            llm_analysis = self.llm_analyzer.analyze_stock_comprehensive(
-                symbol, financial_data, news_data, technical_data, market_context
-            )
+            llm_analysis = self.llm_analyzer.analyze_stock_comprehensive(symbol, financial_data, news_data, technical_data, market_context)
 
             # Get news impact analysis
             news_analysis = self.llm_analyzer.analyze_news_impact(symbol, news_data)
 
             # Get growth catalyst analysis
-            catalyst_analysis = self.llm_analyzer.identify_growth_catalysts(
-                symbol, financial_data, news_data
-            )
+            catalyst_analysis = self.llm_analyzer.identify_growth_catalysts(symbol, financial_data, news_data)
 
             # Extract LLM score (0-100)
             llm_score = llm_analysis.get("overall_score", 50)
             llm_confidence = llm_analysis.get("confidence", 50)
 
             # Calculate weighted composite score
-            composite_score = (
-                fundamental_score * self.weights["fundamentals"]
-                + technical_score * self.weights["technical"]
-                + llm_score * self.weights["llm_analysis"]
-                + risk_score * self.weights["risk"]
-            )
+            composite_score = fundamental_score * self.weights["fundamentals"] + technical_score * self.weights["technical"] + llm_score * self.weights["llm_analysis"] + risk_score * self.weights["risk"]
 
             # Risk-adjusted score from LLM
-            risk_adjusted_score = llm_analysis.get(
-                "risk_adjusted_score", composite_score
-            )
+            risk_adjusted_score = llm_analysis.get("risk_adjusted_score", composite_score)
 
             # Determine investment rating
             rating = self._get_investment_rating(composite_score, llm_confidence)
@@ -172,9 +159,7 @@ class LLMScorer:
                     "key_risks": llm_analysis.get("key_risks", []),
                     "time_horizon": llm_analysis.get("time_horizon", "medium"),
                     "position_size": llm_analysis.get("position_size", 3.0),
-                    "catalyst_timeline": llm_analysis.get(
-                        "catalyst_timeline", "medium-term"
-                    ),
+                    "catalyst_timeline": llm_analysis.get("catalyst_timeline", "medium-term"),
                 },
                 "news_impact": {
                     "impact_score": news_analysis.get("impact_score", 50),
@@ -193,9 +178,7 @@ class LLMScorer:
         except Exception as e:
             logger.error(f"Error in LLM analysis for {symbol}: {e}")
             # Fallback to traditional scoring
-            return self._calculate_traditional_score(
-                symbol, fundamental_score, technical_score, sentiment_score, risk_score
-            )
+            return self._calculate_traditional_score(symbol, fundamental_score, technical_score, sentiment_score, risk_score)
 
     def _calculate_traditional_score(
         self,
@@ -208,17 +191,10 @@ class LLMScorer:
         """Calculate traditional composite score without LLM."""
 
         # Use fallback weights
-        composite_score = (
-            fundamental_score * self.fallback_weights["fundamentals"]
-            + technical_score * self.fallback_weights["technical"]
-            + sentiment_score * self.fallback_weights["sentiment"]
-            + risk_score * self.fallback_weights["risk"]
-        )
+        composite_score = fundamental_score * self.fallback_weights["fundamentals"] + technical_score * self.fallback_weights["technical"] + sentiment_score * self.fallback_weights["sentiment"] + risk_score * self.fallback_weights["risk"]
 
         # Estimate confidence based on score consistency
-        score_variance = self._calculate_score_variance(
-            [fundamental_score, technical_score, sentiment_score, risk_score]
-        )
+        score_variance = self._calculate_score_variance([fundamental_score, technical_score, sentiment_score, risk_score])
         confidence = max(30, 100 - score_variance * 2)
 
         rating = self._get_investment_rating(composite_score, confidence)

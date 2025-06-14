@@ -21,9 +21,7 @@ class TestDeepSeekAnalyzer:
 
             assert analyzer.api_key == "test_key"
             assert analyzer.model == "deepseek-chat"
-            mock_openai.assert_called_once_with(
-                api_key="test_key", base_url="https://api.deepseek.com"
-            )
+            mock_openai.assert_called_once_with(api_key="test_key", base_url="https://api.deepseek.com")
 
     def test_init_without_api_key(self):
         """Test initialization without API key raises error"""
@@ -77,9 +75,7 @@ class TestDeepSeekAnalyzer:
 
         assert result["overall_score"] == 78
         assert result["confidence"] == 85
-        assert (
-            result["investment_thesis"] == "Strong fundamentals with growth potential"
-        )
+        assert result["investment_thesis"] == "Strong fundamentals with growth potential"
         assert len(result["key_strengths"]) == 2
         assert len(result["key_risks"]) == 2
 
@@ -162,9 +158,7 @@ class TestDeepSeekAnalyzer:
         assert result["risk_factors"] == []
 
     @patch("llm.deepseek_analyzer.OpenAI")
-    def test_identify_growth_catalysts_success(
-        self, mock_openai, sample_financial_data, sample_news_data
-    ):
+    def test_identify_growth_catalysts_success(self, mock_openai, sample_financial_data, sample_news_data):
         """Test successful growth catalyst identification"""
         mock_response = Mock()
         mock_choice = Mock()
@@ -193,9 +187,7 @@ class TestDeepSeekAnalyzer:
 
         analyzer = DeepSeekAnalyzer(api_key="test_key")
 
-        result = analyzer.identify_growth_catalysts(
-            "TEST", sample_financial_data, sample_news_data
-        )
+        result = analyzer.identify_growth_catalysts("TEST", sample_financial_data, sample_news_data)
 
         assert len(result["catalysts"]) == 1
         assert result["catalysts"][0]["catalyst"] == "AI market expansion"
@@ -350,10 +342,7 @@ class TestLLMScorer:
         assert result["analysis_method"] == "traditional"
         assert "composite_score" in result
         assert result["weights_used"] == scorer.fallback_weights
-        assert (
-            result["llm_analysis"]["investment_thesis"]
-            == "Traditional analysis without AI enhancement"
-        )
+        assert result["llm_analysis"]["investment_thesis"] == "Traditional analysis without AI enhancement"
 
     def test_get_investment_rating_high_confidence(self):
         """Test investment rating with high confidence"""
@@ -527,10 +516,7 @@ class TestLLMComponentsIntegration:
         # Verify the complete analysis
         assert result["analysis_method"] == "llm_enhanced"
         assert result["composite_score"] > 0
-        assert (
-            result["llm_analysis"]["investment_thesis"]
-            == "Strong fundamentals with AI growth catalysts"
-        )
+        assert result["llm_analysis"]["investment_thesis"] == "Strong fundamentals with AI growth catalysts"
         assert result["news_impact"]["sentiment"] == "positive"
         assert len(result["growth_catalysts"]["catalysts"]) == 1
 

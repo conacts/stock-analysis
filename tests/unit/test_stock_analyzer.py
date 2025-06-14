@@ -89,9 +89,7 @@ class TestStockAnalyzer:
     def test_analyze_sentiment(self, mock_yfinance_ticker):
         """Test sentiment analysis"""
         analyzer = StockAnalyzer(enable_llm=False)
-        result = analyzer._analyze_sentiment(
-            mock_yfinance_ticker, mock_yfinance_ticker.info, "TEST"
-        )
+        result = analyzer._analyze_sentiment(mock_yfinance_ticker, mock_yfinance_ticker.info, "TEST")
 
         assert "sentiment_score" in result
         assert "overall_sentiment" in result
@@ -176,9 +174,7 @@ class TestStockAnalyzer:
         sentiment = {"sentiment_score": 2}  # Positive
         risk = {"risk_score": 3}  # Medium risk
 
-        result = analyzer._calculate_composite_score(
-            fundamentals, technical, sentiment, risk
-        )
+        result = analyzer._calculate_composite_score(fundamentals, technical, sentiment, risk)
 
         assert "composite_score" in result
         assert "fundamental_score" in result
@@ -210,9 +206,7 @@ class TestStockAnalyzer:
         risk = {"risk_score": 2, "identified_risks": ["Market volatility"]}
         score = {"composite_score": 85}
 
-        result = analyzer._generate_recommendation(
-            fundamentals, technical, sentiment, risk, score
-        )
+        result = analyzer._generate_recommendation(fundamentals, technical, sentiment, risk, score)
 
         assert result["rating"] == "Strong Buy"
         assert result["confidence"] == "High"
@@ -234,9 +228,7 @@ class TestStockAnalyzer:
         risk = {"risk_score": 8, "identified_risks": ["High debt", "Declining margins"]}
         score = {"composite_score": 25}
 
-        result = analyzer._generate_recommendation(
-            fundamentals, technical, sentiment, risk, score
-        )
+        result = analyzer._generate_recommendation(fundamentals, technical, sentiment, risk, score)
 
         assert result["rating"] == "Sell"
         assert "0%" in result["suggested_allocation"]

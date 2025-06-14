@@ -109,18 +109,12 @@ class StockAnalyzer:
 
             # Calculate enhanced composite score with LLM if available
             if self.llm_scorer:
-                score = self._calculate_enhanced_score(
-                    symbol, fundamentals, technical, sentiment, risk, info, ticker
-                )
+                score = self._calculate_enhanced_score(symbol, fundamentals, technical, sentiment, risk, info, ticker)
             else:
-                score = self._calculate_composite_score(
-                    fundamentals, technical, sentiment, risk
-                )
+                score = self._calculate_composite_score(fundamentals, technical, sentiment, risk)
 
             # Generate recommendation
-            recommendation = self._generate_recommendation(
-                fundamentals, technical, sentiment, risk, score
-            )
+            recommendation = self._generate_recommendation(fundamentals, technical, sentiment, risk, score)
 
             return {
                 "symbol": symbol,
@@ -140,9 +134,7 @@ class StockAnalyzer:
     def _analyze_fundamentals(self, info: Dict, symbol: str) -> Dict:
         """Analyze fundamental metrics"""
         sector = info.get("sector", "Unknown")
-        benchmarks = self.sector_benchmarks.get(
-            sector, self.sector_benchmarks["Technology"]
-        )
+        benchmarks = self.sector_benchmarks.get(sector, self.sector_benchmarks["Technology"])
 
         # Extract key metrics
         metrics = {
@@ -198,16 +190,8 @@ class StockAnalyzer:
             ma_50 = hist["Close"].rolling(50).mean().iloc[-1]
 
             # Price momentum
-            momentum_1m = (
-                (current_price - hist["Close"].iloc[-21]) / hist["Close"].iloc[-21]
-                if len(hist) > 21
-                else 0
-            )
-            momentum_3m = (
-                (current_price - hist["Close"].iloc[-63]) / hist["Close"].iloc[-63]
-                if len(hist) > 63
-                else 0
-            )
+            momentum_1m = (current_price - hist["Close"].iloc[-21]) / hist["Close"].iloc[-21] if len(hist) > 21 else 0
+            momentum_3m = (current_price - hist["Close"].iloc[-63]) / hist["Close"].iloc[-63] if len(hist) > 63 else 0
 
             # Volume analysis
             avg_volume = hist["Volume"].mean()
@@ -281,11 +265,7 @@ class StockAnalyzer:
 
             # Analyst sentiment
             recommendation = info.get("recommendationMean", 3)
-            analyst_sentiment = (
-                "Buy"
-                if recommendation < 2.5
-                else "Hold" if recommendation < 3.5 else "Sell"
-            )
+            analyst_sentiment = "Buy" if recommendation < 2.5 else "Hold" if recommendation < 3.5 else "Sell"
 
             # Overall sentiment
             if sentiment_score > 2:
@@ -350,9 +330,7 @@ class StockAnalyzer:
             risks.append("High valuation risk")
             risk_score += 1
 
-        risk_level = (
-            "Low" if risk_score <= 3 else "Moderate" if risk_score <= 6 else "High"
-        )
+        risk_level = "Low" if risk_score <= 3 else "Moderate" if risk_score <= 6 else "High"
 
         return {
             "risk_level": risk_level,
@@ -531,13 +509,9 @@ class StockAnalyzer:
         except Exception as e:
             logger.error(f"Error in enhanced scoring for {symbol}: {e}")
             # Fallback to traditional scoring
-            return self._calculate_composite_score(
-                fundamentals, technical, sentiment, risk
-            )
+            return self._calculate_composite_score(fundamentals, technical, sentiment, risk)
 
-    def _calculate_composite_score(
-        self, fundamentals: Dict, technical: Dict, sentiment: Dict, risk: Dict
-    ) -> Dict:
+    def _calculate_composite_score(self, fundamentals: Dict, technical: Dict, sentiment: Dict, risk: Dict) -> Dict:
         """Calculate weighted composite score"""
         # Weights
         fundamental_weight = 0.50
@@ -557,12 +531,7 @@ class StockAnalyzer:
         risk_score = max(0, 100 - (risk.get("risk_score", 5) * 10))
 
         # Weighted composite
-        composite = (
-            fund_score * fundamental_weight
-            + tech_score * technical_weight
-            + sent_score * sentiment_weight
-            + risk_score * risk_weight
-        )
+        composite = fund_score * fundamental_weight + tech_score * technical_weight + sent_score * sentiment_weight + risk_score * risk_weight
 
         return {
             "composite_score": round(composite, 1),
@@ -662,27 +631,21 @@ class StockAnalyzer:
                 time_horizon = "3-5 years"
 
             # Confidence based on data quality
-            confidence = (
-                "High" if fundamentals.get("num_analysts", 0) > 10 else "Moderate"
-            )
+            confidence = "High" if fundamentals.get("num_analysts", 0) > 10 else "Moderate"
 
             return {
                 "rating": rating,
                 "confidence": confidence,
                 "suggested_allocation": allocation,
                 "time_horizon": time_horizon,
-                "key_strengths": self._identify_strengths(
-                    fundamentals, technical, sentiment
-                ),
+                "key_strengths": self._identify_strengths(fundamentals, technical, sentiment),
                 "key_risks": risk.get("identified_risks", []),
                 "price_target": fundamentals.get("analyst_target", 0),
                 "current_price": fundamentals.get("current_price", 0),
                 "analysis_method": "traditional",
             }
 
-    def _identify_strengths(
-        self, fundamentals: Dict, technical: Dict, sentiment: Dict
-    ) -> List[str]:
+    def _identify_strengths(self, fundamentals: Dict, technical: Dict, sentiment: Dict) -> List[str]:
         """Identify key investment strengths"""
         strengths = []
 
@@ -691,14 +654,10 @@ class StockAnalyzer:
             strengths.append(f"Excellent ROE ({fundamentals['roe']*100:.1f}%)")
 
         if fundamentals.get("profit_margin", 0) > 0.15:
-            strengths.append(
-                f"High profit margins ({fundamentals['profit_margin']*100:.1f}%)"
-            )
+            strengths.append(f"High profit margins ({fundamentals['profit_margin']*100:.1f}%)")
 
         if fundamentals.get("revenue_growth", 0) > 0.15:
-            strengths.append(
-                f"Strong revenue growth ({fundamentals['revenue_growth']*100:.1f}%)"
-            )
+            strengths.append(f"Strong revenue growth ({fundamentals['revenue_growth']*100:.1f}%)")
 
         # Technical strengths
         indicators = technical.get("indicators", {})

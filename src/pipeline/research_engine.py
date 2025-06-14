@@ -281,11 +281,7 @@ class StockScreener:
 
         # Revenue growth filter
         revenue_growth = info.get("revenueGrowth", 0)
-        if (
-            filters.get("min_revenue_growth")
-            and revenue_growth
-            and revenue_growth < filters["min_revenue_growth"]
-        ):
+        if filters.get("min_revenue_growth") and revenue_growth and revenue_growth < filters["min_revenue_growth"]:
             return False
 
         # Sector filter
@@ -315,9 +311,7 @@ class ResearchEngine:
         )
         self.logger = logging.getLogger(__name__)
 
-    async def run_daily_research(
-        self, strategy: str = "growth", max_stocks: int = 50
-    ) -> Dict:
+    async def run_daily_research(self, strategy: str = "growth", max_stocks: int = 50) -> Dict:
         """
         Run complete daily research pipeline
 
@@ -361,9 +355,7 @@ class ResearchEngine:
             await self._store_results(analysis_results, decision_summary)
 
             # Step 8: Generate final report
-            report = self._generate_research_report(
-                top_picks, decision_summary, strategy
-            )
+            report = self._generate_research_report(top_picks, decision_summary, strategy)
 
             self.logger.info("🎯 Daily research pipeline completed successfully")
             return report
@@ -393,26 +385,18 @@ class ResearchEngine:
 
         return results
 
-    def _select_top_picks(
-        self, analysis_results: List[Dict], top_n: int = 5
-    ) -> List[Dict]:
+    def _select_top_picks(self, analysis_results: List[Dict], top_n: int = 5) -> List[Dict]:
         """Select top stock picks based on composite scores"""
         # Sort by composite score
-        sorted_results = sorted(
-            analysis_results, key=lambda x: x["score"]["composite_score"], reverse=True
-        )
+        sorted_results = sorted(analysis_results, key=lambda x: x["score"]["composite_score"], reverse=True)
 
         # Filter for quality picks (score >= 60)
-        quality_picks = [
-            r for r in sorted_results if r["score"]["composite_score"] >= 60
-        ]
+        quality_picks = [r for r in sorted_results if r["score"]["composite_score"] >= 60]
 
         # Return top N or all quality picks if fewer than N
         return quality_picks[:top_n]
 
-    def _generate_decision_reasoning(
-        self, top_picks: List[Dict], strategy: str
-    ) -> Dict:
+    def _generate_decision_reasoning(self, top_picks: List[Dict], strategy: str) -> Dict:
         """Generate comprehensive reasoning for stock selections"""
         if not top_picks:
             return {
@@ -423,9 +407,7 @@ class ResearchEngine:
             }
 
         # Analyze the selections
-        avg_score = sum(pick["score"]["composite_score"] for pick in top_picks) / len(
-            top_picks
-        )
+        avg_score = sum(pick["score"]["composite_score"] for pick in top_picks) / len(top_picks)
         sectors = list(set(pick["fundamentals"]["sector"] for pick in top_picks))
         ratings = [pick["recommendation"]["rating"] for pick in top_picks]
 
@@ -439,22 +421,14 @@ class ResearchEngine:
 
         # Add specific insights
         if avg_score >= 75:
-            reasoning_parts.append(
-                "Exceptionally strong fundamentals across selections."
-            )
+            reasoning_parts.append("Exceptionally strong fundamentals across selections.")
         elif avg_score >= 65:
-            reasoning_parts.append(
-                "Solid fundamental strength with good upside potential."
-            )
+            reasoning_parts.append("Solid fundamental strength with good upside potential.")
 
         # Check for common themes
-        high_growth_count = sum(
-            1 for pick in top_picks if pick["fundamentals"]["revenue_growth"] > 0.15
-        )
+        high_growth_count = sum(1 for pick in top_picks if pick["fundamentals"]["revenue_growth"] > 0.15)
         if high_growth_count >= len(top_picks) * 0.6:
-            reasoning_parts.append(
-                f"{high_growth_count} stocks show strong revenue growth (>15%)."
-            )
+            reasoning_parts.append(f"{high_growth_count} stocks show strong revenue growth (>15%).")
 
         reasoning = " ".join(reasoning_parts)
 
@@ -474,13 +448,9 @@ class ResearchEngine:
                 }
             )
 
-        return self.decision_tracker.generate_decision_summary(
-            selected_stocks, reasoning
-        )
+        return self.decision_tracker.generate_decision_summary(selected_stocks, reasoning)
 
-    async def _store_results(
-        self, analysis_results: List[Dict], decision_summary: Dict
-    ):
+    async def _store_results(self, analysis_results: List[Dict], decision_summary: Dict):
         """Store analysis results and decision"""
         # Store individual analyses
         for analysis in analysis_results:
@@ -489,13 +459,9 @@ class ResearchEngine:
         # Store decision summary
         self.storage.store_daily_decision(decision_summary)
 
-        self.logger.info(
-            f"💾 Stored {len(analysis_results)} analyses and decision summary"
-        )
+        self.logger.info(f"💾 Stored {len(analysis_results)} analyses and decision summary")
 
-    def _generate_research_report(
-        self, top_picks: List[Dict], decision_summary: Dict, strategy: str
-    ) -> Dict:
+    def _generate_research_report(self, top_picks: List[Dict], decision_summary: Dict, strategy: str) -> Dict:
         """Generate comprehensive research report"""
         report = {
             "date": date.today().isoformat(),
@@ -560,20 +526,14 @@ class ResearchEngine:
 
         # Risk analysis
         risk_levels = [pick["risk"]["risk_level"] for pick in top_picks]
-        avg_risk = (
-            "Low" if risk_levels.count("Low") > len(risk_levels) / 2 else "Moderate"
-        )
+        avg_risk = "Low" if risk_levels.count("Low") > len(risk_levels) / 2 else "Moderate"
 
         # Growth analysis
-        high_growth = sum(
-            1 for pick in top_picks if pick["fundamentals"]["revenue_growth"] > 0.15
-        )
+        high_growth = sum(1 for pick in top_picks if pick["fundamentals"]["revenue_growth"] > 0.15)
         growth_focus = high_growth >= len(top_picks) * 0.5
 
         return {
-            "dominant_sectors": sorted(
-                sector_counts.items(), key=lambda x: x[1], reverse=True
-            ),
+            "dominant_sectors": sorted(sector_counts.items(), key=lambda x: x[1], reverse=True),
             "overall_risk_level": avg_risk,
             "growth_focused": growth_focus,
             "market_sentiment": "Positive" if len(top_picks) >= 3 else "Cautious",
@@ -584,19 +544,13 @@ class ResearchEngine:
         actions = []
 
         if not top_picks:
-            actions.append(
-                "Consider expanding screening criteria or different strategy"
-            )
+            actions.append("Consider expanding screening criteria or different strategy")
             return actions
 
         # Portfolio actions
-        strong_buys = [
-            p for p in top_picks if p["recommendation"]["rating"] == "Strong Buy"
-        ]
+        strong_buys = [p for p in top_picks if p["recommendation"]["rating"] == "Strong Buy"]
         if strong_buys:
-            actions.append(
-                f"Consider immediate positions in {len(strong_buys)} Strong Buy stocks"
-            )
+            actions.append(f"Consider immediate positions in {len(strong_buys)} Strong Buy stocks")
 
         # Monitoring actions
         actions.append("Set price alerts for target prices")
@@ -605,9 +559,7 @@ class ResearchEngine:
         # Risk management
         high_risk = [p for p in top_picks if p["risk"]["risk_level"] == "High"]
         if high_risk:
-            actions.append(
-                f"Use smaller position sizes for {len(high_risk)} higher-risk stocks"
-            )
+            actions.append(f"Use smaller position sizes for {len(high_risk)} higher-risk stocks")
 
         return actions
 

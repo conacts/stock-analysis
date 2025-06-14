@@ -16,9 +16,7 @@ class TestStockAnalyzerIntegration:
     """Integration tests for complete analysis workflow"""
 
     @patch("yfinance.Ticker")
-    def test_full_analysis_workflow_traditional(
-        self, mock_ticker_class, mock_yfinance_ticker
-    ):
+    def test_full_analysis_workflow_traditional(self, mock_ticker_class, mock_yfinance_ticker):
         """Test complete analysis workflow in traditional mode"""
         mock_ticker_class.return_value = mock_yfinance_ticker
 
@@ -86,9 +84,7 @@ class TestStockAnalyzerIntegration:
         ]
 
     @patch("yfinance.Ticker")
-    def test_full_analysis_workflow_llm_enhanced(
-        self, mock_ticker_class, mock_yfinance_ticker, mock_llm_scorer
-    ):
+    def test_full_analysis_workflow_llm_enhanced(self, mock_ticker_class, mock_yfinance_ticker, mock_llm_scorer):
         """Test complete analysis workflow with LLM enhancement"""
         mock_ticker_class.return_value = mock_yfinance_ticker
 
@@ -175,16 +171,10 @@ class TestStockAnalyzerIntegration:
 
             # Check that appropriate benchmarks were used
             if sector in analyzer.sector_benchmarks:
-                assert (
-                    fundamentals["sector_benchmarks"]
-                    == analyzer.sector_benchmarks[sector]
-                )
+                assert fundamentals["sector_benchmarks"] == analyzer.sector_benchmarks[sector]
             else:
                 # Should fallback to Technology
-                assert (
-                    fundamentals["sector_benchmarks"]
-                    == analyzer.sector_benchmarks["Technology"]
-                )
+                assert fundamentals["sector_benchmarks"] == analyzer.sector_benchmarks["Technology"]
 
     @patch("yfinance.Ticker")
     def test_analysis_with_extreme_values(self, mock_ticker_class):

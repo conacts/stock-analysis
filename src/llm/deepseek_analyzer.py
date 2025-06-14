@@ -35,9 +35,7 @@ class DeepSeekAnalyzer:
         """
         self.api_key = api_key or os.getenv("DEEPSEEK_API_KEY")
         if not self.api_key:
-            raise ValueError(
-                "DeepSeek API key required. Set DEEPSEEK_API_KEY environment variable."
-            )
+            raise ValueError("DeepSeek API key required. Set DEEPSEEK_API_KEY environment variable.")
 
         # Initialize OpenAI client with DeepSeek endpoint
         self.client = OpenAI(api_key=self.api_key, base_url="https://api.deepseek.com")
@@ -67,9 +65,7 @@ class DeepSeekAnalyzer:
         """
         try:
             # Prepare comprehensive prompt
-            prompt = self._build_comprehensive_prompt(
-                symbol, financial_data, news_data, technical_data, market_context
-            )
+            prompt = self._build_comprehensive_prompt(symbol, financial_data, news_data, technical_data, market_context)
 
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -138,9 +134,7 @@ class DeepSeekAnalyzer:
                 "risk_factors": [],
             }
 
-    def identify_growth_catalysts(
-        self, symbol: str, financial_data: Dict, news_data: List[Dict]
-    ) -> Dict:
+    def identify_growth_catalysts(self, symbol: str, financial_data: Dict, news_data: List[Dict]) -> Dict:
         """
         Identify potential growth catalysts and investment thesis.
 
@@ -255,12 +249,7 @@ class DeepSeekAnalyzer:
 
     def _build_news_analysis_prompt(self, symbol: str, news_data: List[Dict]) -> str:
         """Build news analysis prompt."""
-        news_text = "\n".join(
-            [
-                f"- {article.get('title', 'No title')}: {article.get('summary', 'No summary')[:200]}..."
-                for article in news_data[:10]  # Limit to recent 10 articles
-            ]
-        )
+        news_text = "\n".join([f"- {article.get('title', 'No title')}: {article.get('summary', 'No summary')[:200]}..." for article in news_data[:10]])  # Limit to recent 10 articles
 
         return f"""
         Analyze the news impact for {symbol} based on these recent articles:
@@ -278,9 +267,7 @@ class DeepSeekAnalyzer:
         }}
         """
 
-    def _build_catalyst_prompt(
-        self, symbol: str, financial_data: Dict, news_data: List[Dict]
-    ) -> str:
+    def _build_catalyst_prompt(self, symbol: str, financial_data: Dict, news_data: List[Dict]) -> str:
         """Build growth catalyst identification prompt."""
         return f"""
         Identify growth catalysts for {symbol} based on:
@@ -437,20 +424,13 @@ class DeepSeekAnalyzer:
         score = 50  # Default neutral score
 
         # Look for score indicators in text
-        if any(
-            word in response_text.lower()
-            for word in ["strong buy", "excellent", "outstanding"]
-        ):
+        if any(word in response_text.lower() for word in ["strong buy", "excellent", "outstanding"]):
             score = 85
         elif any(word in response_text.lower() for word in ["buy", "positive", "good"]):
             score = 70
-        elif any(
-            word in response_text.lower() for word in ["hold", "neutral", "mixed"]
-        ):
+        elif any(word in response_text.lower() for word in ["hold", "neutral", "mixed"]):
             score = 50
-        elif any(
-            word in response_text.lower() for word in ["sell", "negative", "poor"]
-        ):
+        elif any(word in response_text.lower() for word in ["sell", "negative", "poor"]):
             score = 30
 
         return {

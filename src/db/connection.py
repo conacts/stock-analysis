@@ -32,9 +32,7 @@ class DatabaseConnection:
         )
 
         # Create session factory
-        self.SessionLocal = sessionmaker(
-            autocommit=False, autoflush=False, bind=self.engine
-        )
+        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
 
     def get_session(self) -> Session:
         """Get a database session"""

@@ -7,9 +7,7 @@ A comprehensive stock analysis system with AI-powered insights,
 professional-grade testing, and institutional-quality research capabilities.
 """
 
-import os
 import sys
-import yfinance as yf
 from pathlib import Path
 
 # Add src to path for imports
@@ -30,11 +28,7 @@ class MasterStockAnalyzer:
         self.storage = AnalysisStorage()
 
         # Check if LLM is available
-        self.llm_available = (
-            self.analyzer.llm_scorer.llm_enabled
-            if hasattr(self.analyzer, "llm_scorer")
-            else False
-        )
+        self.llm_available = self.analyzer.llm_scorer.llm_enabled if hasattr(self.analyzer, "llm_scorer") else False
 
     def display_header(self):
         """Display the application header"""
@@ -140,7 +134,7 @@ class MasterStockAnalyzer:
             results.sort(key=lambda x: x.get("composite_score", 0), reverse=True)
 
             # Display top picks
-            print(f"\n🏆 TOP PICKS FROM UNIVERSE SCAN")
+            print("\n🏆 TOP PICKS FROM UNIVERSE SCAN")
             print("=" * 60)
 
             for i, result in enumerate(results[:5], 1):
@@ -149,10 +143,7 @@ class MasterStockAnalyzer:
                 rating = result.get("rating", "N/A")
                 confidence = result.get("confidence", "N/A")
 
-                print(
-                    f"{i}. {symbol} - Score: {score:.1f} | "
-                    f"Rating: {rating} | Confidence: {confidence}"
-                )
+                print(f"{i}. {symbol} - Score: {score:.1f} | " f"Rating: {rating} | Confidence: {confidence}")
 
         except Exception as e:
             print(f"❌ Error in universe scan: {str(e)}")
@@ -165,12 +156,10 @@ class MasterStockAnalyzer:
 
         try:
             # Use research engine for comprehensive analysis
-            results = self.research_engine.run_daily_research(
-                strategy="growth", max_stocks=20, store_results=True
-            )
+            results = self.research_engine.run_daily_research(strategy="growth", max_stocks=20, store_results=True)
 
             if results and "selected_stocks" in results:
-                print(f"\n📊 DEEP ANALYSIS COMPLETE")
+                print("\n📊 DEEP ANALYSIS COMPLETE")
                 print("=" * 60)
                 print(f"✅ Analyzed: {len(results['selected_stocks'])} stocks")
                 print(f"📈 Average Score: {results.get('average_score', 0):.1f}")
@@ -225,7 +214,7 @@ class MasterStockAnalyzer:
         if "llm_analysis" in result and result["llm_analysis"]:
             llm_data = result["llm_analysis"]
             if "investment_thesis" in llm_data:
-                print(f"\n🤖 AI Investment Thesis:")
+                print("\n🤖 AI Investment Thesis:")
                 print(f"   {llm_data['investment_thesis']}")
 
         # Recommendations

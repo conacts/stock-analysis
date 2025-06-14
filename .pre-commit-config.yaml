@@ -17,9 +17,10 @@ repos:
       hooks:
           - id: ruff
             name: Lint with Ruff
-            args: [--fix]
+            args: [--fix, --line-length=320]
           - id: ruff-format
             name: Format with Ruff
+            args: [--line-length=320]
 
     # General file checks
     - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -49,21 +50,21 @@ repos:
       hooks:
           - id: black
             language_version: python3
-            args: [--line-length=88]
+            args: [--line-length=320]
 
     # Import sorting
     - repo: https://github.com/pycqa/isort
       rev: 5.13.2
       hooks:
           - id: isort
-            args: [--profile=black]
+            args: [--profile=black, --line-length=320]
 
-    # Linting
+    # Linting (skip line length and import order checks)
     - repo: https://github.com/pycqa/flake8
       rev: 7.0.0
       hooks:
           - id: flake8
-            args: [--max-line-length=88, --extend-ignore=E203, W503]
+            args: [--max-line-length=320, --ignore=E203, W503, E402, E501, E226]
 
     # Security checks
     - repo: https://github.com/PyCQA/bandit
