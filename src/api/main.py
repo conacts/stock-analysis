@@ -41,7 +41,7 @@ app.add_middleware(
 security = HTTPBearer()
 
 # Initialize components
-analyzer = StockAnalyzer()
+analyzer = StockAnalyzer(deepseek_api_key=os.getenv("DEEPSEEK_API_KEY"))
 storage = AnalysisStorage()
 research_engine = ResearchEngine()
 
