@@ -44,10 +44,7 @@ class SwarmTradingSystem:
         self.db = get_swarm_db()
 
         # Initialize OpenAI client with DeepSeek API
-        self.openai_client = OpenAI(
-            api_key=self.deepseek_api_key, 
-            base_url="https://api.deepseek.com"
-        )
+        self.openai_client = OpenAI(api_key=self.deepseek_api_key, base_url="https://api.deepseek.com")
 
         # Create agents
         self.market_analyst = self._create_market_analyst()
@@ -56,15 +53,7 @@ class SwarmTradingSystem:
         self.portfolio_manager = self._create_portfolio_manager()
 
         # Create agent orchestrator
-        self.agent_rearrange = AgentRearrange(
-            agents=[
-                self.market_analyst,
-                self.risk_manager,
-                self.trader,
-                self.portfolio_manager
-            ],
-            flow="Market Analyst -> Risk Manager -> Trader -> Portfolio Manager"
-        )
+        self.agent_rearrange = AgentRearrange(agents=[self.market_analyst, self.risk_manager, self.trader, self.portfolio_manager], flow="Market Analyst -> Risk Manager -> Trader -> Portfolio Manager")
 
     def _create_market_analyst(self) -> Agent:
         """Create the Market Analysis Agent"""
@@ -86,11 +75,7 @@ class SwarmTradingSystem:
             """,
             llm=self.openai_client,
             max_loops=1,
-            tools=[
-                self.get_market_data,
-                self.get_market_status,
-                self.analyze_portfolio_performance
-            ]
+            tools=[self.get_market_data, self.get_market_status, self.analyze_portfolio_performance],
         )
 
     def _create_risk_manager(self) -> Agent:
@@ -118,11 +103,7 @@ class SwarmTradingSystem:
             """,
             llm=self.openai_client,
             max_loops=1,
-            tools=[
-                self.get_account_info,
-                self.get_positions,
-                self.calculate_position_size
-            ]
+            tools=[self.get_account_info, self.get_positions, self.calculate_position_size],
         )
 
     def _create_trader(self) -> Agent:
@@ -149,12 +130,7 @@ class SwarmTradingSystem:
             """,
             llm=self.openai_client,
             max_loops=1,
-            tools=[
-                self.place_market_order,
-                self.place_limit_order,
-                self.get_orders,
-                self.get_market_status
-            ]
+            tools=[self.place_market_order, self.place_limit_order, self.get_orders, self.get_market_status],
         )
 
     def _create_portfolio_manager(self) -> Agent:
@@ -184,12 +160,7 @@ class SwarmTradingSystem:
             """,
             llm=self.openai_client,
             max_loops=1,
-            tools=[
-                self.get_account_info,
-                self.get_positions,
-                self.analyze_portfolio_performance,
-                self.get_orders
-            ]
+            tools=[self.get_account_info, self.get_positions, self.analyze_portfolio_performance, self.get_orders],
         )
 
     # Trading Functions (async wrappers for Swarm)
@@ -353,12 +324,7 @@ class SwarmTradingSystem:
             logger.info(f"🤖 Starting Swarms conversation with {starting_agent}")
 
             # Select starting agent
-            agent_map = {
-                "market_analyst": self.market_analyst,
-                "risk_manager": self.risk_manager,
-                "trader": self.trader,
-                "portfolio_manager": self.portfolio_manager
-            }
+            agent_map = {"market_analyst": self.market_analyst, "risk_manager": self.risk_manager, "trader": self.trader, "portfolio_manager": self.portfolio_manager}
 
             starting_agent_obj = agent_map.get(starting_agent, self.market_analyst)
 
@@ -367,44 +333,30 @@ class SwarmTradingSystem:
 
             # Store conversation in database
             from src.models.swarm_models import SwarmConversation
-            
+
             conversation = SwarmConversation(
                 portfolio_id=portfolio_id,
                 conversation_id=f"{portfolio_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                 user_message=message,
-                agent_responses=[{
-                    "agent": starting_agent_obj.agent_name,
-                    "response": response,
-                    "timestamp": datetime.now().isoformat()
-                }],
+                agent_responses=[{"agent": starting_agent_obj.agent_name, "response": response, "timestamp": datetime.now().isoformat()}],
                 final_agent=starting_agent_obj.agent_name,
                 turns_used=1,
                 success=True,
                 error_message=None,
-                conversation_metadata={
-                    "starting_agent": starting_agent,
-                    "max_turns": max_turns
-                }
+                conversation_metadata={"starting_agent": starting_agent, "max_turns": max_turns},
             )
 
             # Save to database
             conversation_id = self.db.save_conversation(conversation)
 
-            return {
-                "success": True,
-                "response": response,
-                "final_agent": starting_agent_obj.agent_name,
-                "conversation_id": conversation_id,
-                "portfolio_id": portfolio_id,
-                "turns_used": 1
-            }
+            return {"success": True, "response": response, "final_agent": starting_agent_obj.agent_name, "conversation_id": conversation_id, "portfolio_id": portfolio_id, "turns_used": 1}
 
         except Exception as e:
             logger.error(f"❌ Error in Swarms conversation: {e}")
-            
+
             # Store failed conversation
             from src.models.swarm_models import SwarmConversation
-            
+
             failed_conversation = SwarmConversation(
                 portfolio_id=portfolio_id,
                 conversation_id=f"{portfolio_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_failed",
@@ -414,26 +366,16 @@ class SwarmTradingSystem:
                 turns_used=0,
                 success=False,
                 error_message=str(e),
-                conversation_metadata={
-                    "starting_agent": starting_agent,
-                    "max_turns": max_turns,
-                    "error": str(e)
-                }
+                conversation_metadata={"starting_agent": starting_agent, "max_turns": max_turns, "error": str(e)},
             )
-            
+
             try:
                 conversation_id = self.db.save_conversation(failed_conversation)
             except Exception as db_error:
                 logger.error(f"Failed to save error conversation: {db_error}")
                 conversation_id = None
 
-            return {
-                "success": False,
-                "error": str(e),
-                "response": f"Error processing conversation: {str(e)}",
-                "conversation_id": conversation_id,
-                "portfolio_id": portfolio_id
-            }
+            return {"success": False, "error": str(e), "response": f"Error processing conversation: {str(e)}", "conversation_id": conversation_id, "portfolio_id": portfolio_id}
 
     def get_conversation_history(self, portfolio_id: str = "default") -> List[Dict]:
         """Get conversation history for a portfolio"""
