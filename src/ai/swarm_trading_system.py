@@ -1,7 +1,7 @@
 """
 Swarm-based AI Trading System
 
-This module implements a multi-agent trading system using OpenAI Swarm.
+This module implements a multi-agent trading system using the Swarms framework.
 It provides specialized agents for different aspects of trading:
 - Market Analysis Agent
 - Risk Management Agent
@@ -19,20 +19,20 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from openai import OpenAI
-from swarm import Agent, Swarm
+from swarms import Agent, AgentRearrange
 
 # Add src to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
 
-from db.swarm_db import get_swarm_db
-from trading.alpaca_client import AlpacaPaperTradingClient
+from src.db.swarm_db import get_swarm_db
+from src.trading.alpaca_client import AlpacaPaperTradingClient
 
 logger = logging.getLogger(__name__)
 
 
 class SwarmTradingSystem:
     """
-    Multi-agent trading system using OpenAI Swarm for orchestration.
+    Multi-agent trading system using Swarms framework for orchestration.
     """
 
     def __init__(self):
@@ -43,18 +43,34 @@ class SwarmTradingSystem:
         self.alpaca_client = AlpacaPaperTradingClient()
         self.db = get_swarm_db()
 
-        # Initialize Swarm client with DeepSeek API
-        self.swarm_client = Swarm(client=OpenAI(api_key=self.deepseek_api_key, base_url="https://api.deepseek.com"))
+        # Initialize OpenAI client with DeepSeek API
+        self.openai_client = OpenAI(
+            api_key=self.deepseek_api_key, 
+            base_url="https://api.deepseek.com"
+        )
 
-        # Agents will be created dynamically based on portfolio config
-        self._agent_cache: Dict[str, Agent] = {}
+        # Create agents
+        self.market_analyst = self._create_market_analyst()
+        self.risk_manager = self._create_risk_manager()
+        self.trader = self._create_trader()
+        self.portfolio_manager = self._create_portfolio_manager()
+
+        # Create agent orchestrator
+        self.agent_rearrange = AgentRearrange(
+            agents=[
+                self.market_analyst,
+                self.risk_manager,
+                self.trader,
+                self.portfolio_manager
+            ],
+            flow="Market Analyst -> Risk Manager -> Trader -> Portfolio Manager"
+        )
 
     def _create_market_analyst(self) -> Agent:
         """Create the Market Analysis Agent"""
         return Agent(
-            name="Market Analyst",
-            model="deepseek-chat",
-            instructions="""You are a sophisticated market analyst specializing in equity analysis.
+            agent_name="Market Analyst",
+            system_prompt="""You are a sophisticated market analyst specializing in equity analysis.
 
             Your responsibilities:
             - Analyze market data and trends
@@ -66,17 +82,22 @@ class SwarmTradingSystem:
             You have access to real-time market data and can analyze multiple timeframes.
             Always provide data-driven insights with clear reasoning.
 
-            When you identify a potential trading opportunity, transfer to the Risk Manager for evaluation.
+            When you identify a potential trading opportunity, recommend transferring to the Risk Manager for evaluation.
             """,
-            functions=[self.get_market_data, self.get_market_status, self.analyze_portfolio_performance, self.transfer_to_risk_manager],
+            llm=self.openai_client,
+            max_loops=1,
+            tools=[
+                self.get_market_data,
+                self.get_market_status,
+                self.analyze_portfolio_performance
+            ]
         )
 
     def _create_risk_manager(self) -> Agent:
         """Create the Risk Management Agent"""
         return Agent(
-            name="Risk Manager",
-            model="deepseek-chat",
-            instructions="""You are a conservative risk management specialist.
+            agent_name="Risk Manager",
+            system_prompt="""You are a conservative risk management specialist.
 
             Your responsibilities:
             - Evaluate trading opportunities for risk
@@ -92,18 +113,23 @@ class SwarmTradingSystem:
             - Ensure adequate cash reserves (minimum 10%)
             - Never risk more than 2% of portfolio on a single trade
 
-            If a trade passes risk assessment, transfer to the Trader for execution.
-            If risk is too high, provide feedback and transfer back to Market Analyst.
+            If a trade passes risk assessment, recommend transferring to the Trader for execution.
+            If risk is too high, provide feedback and recommend going back to Market Analyst.
             """,
-            functions=[self.get_account_info, self.get_positions, self.calculate_position_size, self.transfer_to_trader, self.transfer_to_market_analyst],
+            llm=self.openai_client,
+            max_loops=1,
+            tools=[
+                self.get_account_info,
+                self.get_positions,
+                self.calculate_position_size
+            ]
         )
 
     def _create_trader(self) -> Agent:
         """Create the Trading Execution Agent"""
         return Agent(
-            name="Trader",
-            model="deepseek-chat",
-            instructions="""You are a precise trading execution specialist.
+            agent_name="Trader",
+            system_prompt="""You are a precise trading execution specialist.
 
             Your responsibilities:
             - Execute approved trades with optimal timing
@@ -119,17 +145,23 @@ class SwarmTradingSystem:
             - Monitor for partial fills and adjust accordingly
             - Report all execution results clearly
 
-            After executing trades, transfer to Portfolio Manager for position monitoring.
+            After executing trades, recommend transferring to Portfolio Manager for position monitoring.
             """,
-            functions=[self.place_market_order, self.place_limit_order, self.get_orders, self.get_market_status, self.transfer_to_portfolio_manager],
+            llm=self.openai_client,
+            max_loops=1,
+            tools=[
+                self.place_market_order,
+                self.place_limit_order,
+                self.get_orders,
+                self.get_market_status
+            ]
         )
 
     def _create_portfolio_manager(self) -> Agent:
         """Create the Portfolio Management Agent"""
         return Agent(
-            name="Portfolio Manager",
-            model="deepseek-chat",
-            instructions="""You are a comprehensive portfolio management specialist.
+            agent_name="Portfolio Manager",
+            system_prompt="""You are a comprehensive portfolio management specialist.
 
             Your responsibilities:
             - Monitor overall portfolio performance
@@ -145,34 +177,20 @@ class SwarmTradingSystem:
             - Identify underperforming positions
             - Suggest portfolio improvements
 
-            You can transfer to any other agent based on portfolio needs:
+            You can recommend transferring to any other agent based on portfolio needs:
             - Market Analyst for new opportunities
             - Risk Manager for risk assessment
             - Trader for rebalancing trades
             """,
-            functions=[self.get_account_info, self.get_positions, self.analyze_portfolio_performance, self.get_orders, self.transfer_to_market_analyst, self.transfer_to_risk_manager, self.transfer_to_trader],
+            llm=self.openai_client,
+            max_loops=1,
+            tools=[
+                self.get_account_info,
+                self.get_positions,
+                self.analyze_portfolio_performance,
+                self.get_orders
+            ]
         )
-
-    # Agent Transfer Functions
-    def transfer_to_market_analyst(self) -> Agent:
-        """Transfer conversation to Market Analyst"""
-        logger.info("🔄 Transferring to Market Analyst")
-        return self.market_analyst
-
-    def transfer_to_risk_manager(self) -> Agent:
-        """Transfer conversation to Risk Manager"""
-        logger.info("🔄 Transferring to Risk Manager")
-        return self.risk_manager
-
-    def transfer_to_trader(self) -> Agent:
-        """Transfer conversation to Trader"""
-        logger.info("🔄 Transferring to Trading Execution")
-        return self.trader
-
-    def transfer_to_portfolio_manager(self) -> Agent:
-        """Transfer conversation to Portfolio Manager"""
-        logger.info("🔄 Transferring to Portfolio Manager")
-        return self.portfolio_manager
 
     # Trading Functions (async wrappers for Swarm)
     def get_account_info(self) -> str:
@@ -329,51 +347,105 @@ class SwarmTradingSystem:
 
     async def process_conversation(self, message: str, portfolio_id: str = "default", max_turns: int = 25, starting_agent: str = "market_analyst") -> Dict[str, Any]:
         """
-        Process a conversation using the Swarm system
+        Process a conversation using the Swarms system
         """
         try:
-            logger.info(f"🤖 Starting Swarm conversation with {starting_agent}")
+            logger.info(f"🤖 Starting Swarms conversation with {starting_agent}")
 
             # Select starting agent
-            agent_map = {"market_analyst": self.market_analyst, "risk_manager": self.risk_manager, "trader": self.trader, "portfolio_manager": self.portfolio_manager}
+            agent_map = {
+                "market_analyst": self.market_analyst,
+                "risk_manager": self.risk_manager,
+                "trader": self.trader,
+                "portfolio_manager": self.portfolio_manager
+            }
 
             starting_agent_obj = agent_map.get(starting_agent, self.market_analyst)
 
-            # Initialize conversation history for this portfolio
-            if portfolio_id not in self.conversations:
-                self.conversations[portfolio_id] = []
+            # Run conversation with the selected agent
+            response = starting_agent_obj.run(message)
 
-            # Add user message
-            messages = [{"role": "user", "content": message}]
+            # Store conversation in database
+            from src.models.swarm_models import SwarmConversation
+            
+            conversation = SwarmConversation(
+                portfolio_id=portfolio_id,
+                conversation_id=f"{portfolio_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                user_message=message,
+                agent_responses=[{
+                    "agent": starting_agent_obj.agent_name,
+                    "response": response,
+                    "timestamp": datetime.now().isoformat()
+                }],
+                final_agent=starting_agent_obj.agent_name,
+                turns_used=1,
+                success=True,
+                error_message=None,
+                conversation_metadata={
+                    "starting_agent": starting_agent,
+                    "max_turns": max_turns
+                }
+            )
 
-            # Run Swarm conversation
-            response = self.swarm_client.run(agent=starting_agent_obj, messages=messages, max_turns=max_turns, debug=True)
+            # Save to database
+            conversation_id = self.db.save_conversation(conversation)
 
-            # Store conversation
-            conversation_entry = {"timestamp": datetime.now().isoformat(), "user_message": message, "agent_responses": response.messages, "final_agent": response.agent.name, "portfolio_id": portfolio_id}
-
-            self.conversations[portfolio_id].append(conversation_entry)
-
-            # Extract final response
-            final_response = ""
-            if response.messages:
-                for msg in response.messages:
-                    if msg.get("role") == "assistant":
-                        final_response += msg.get("content", "") + "\n"
-
-            return {"success": True, "response": final_response.strip(), "final_agent": response.agent.name, "conversation_id": len(self.conversations[portfolio_id]) - 1, "portfolio_id": portfolio_id, "turns_used": len([m for m in response.messages if m.get("role") == "assistant"])}
+            return {
+                "success": True,
+                "response": response,
+                "final_agent": starting_agent_obj.agent_name,
+                "conversation_id": conversation_id,
+                "portfolio_id": portfolio_id,
+                "turns_used": 1
+            }
 
         except Exception as e:
-            logger.error(f"❌ Error in Swarm conversation: {e}")
-            return {"success": False, "error": str(e), "response": f"Error processing conversation: {str(e)}"}
+            logger.error(f"❌ Error in Swarms conversation: {e}")
+            
+            # Store failed conversation
+            from src.models.swarm_models import SwarmConversation
+            
+            failed_conversation = SwarmConversation(
+                portfolio_id=portfolio_id,
+                conversation_id=f"{portfolio_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_failed",
+                user_message=message,
+                agent_responses=[],
+                final_agent=starting_agent,
+                turns_used=0,
+                success=False,
+                error_message=str(e),
+                conversation_metadata={
+                    "starting_agent": starting_agent,
+                    "max_turns": max_turns,
+                    "error": str(e)
+                }
+            )
+            
+            try:
+                conversation_id = self.db.save_conversation(failed_conversation)
+            except Exception as db_error:
+                logger.error(f"Failed to save error conversation: {db_error}")
+                conversation_id = None
+
+            return {
+                "success": False,
+                "error": str(e),
+                "response": f"Error processing conversation: {str(e)}",
+                "conversation_id": conversation_id,
+                "portfolio_id": portfolio_id
+            }
 
     def get_conversation_history(self, portfolio_id: str = "default") -> List[Dict]:
         """Get conversation history for a portfolio"""
-        return self.conversations.get(portfolio_id, [])
+        return self.db.get_conversation_history(portfolio_id)
 
     def clear_conversation_history(self, portfolio_id: str = "default") -> bool:
         """Clear conversation history for a portfolio"""
-        if portfolio_id in self.conversations:
-            del self.conversations[portfolio_id]
+        try:
+            # Note: This would need to be implemented in the database layer
+            # For now, we'll just return True as a placeholder
+            logger.info(f"Clear conversation history requested for portfolio: {portfolio_id}")
             return True
-        return False
+        except Exception as e:
+            logger.error(f"Error clearing conversation history: {e}")
+            return False

@@ -26,7 +26,7 @@ dependencies = [
     "requests>=2.32.4",
     "seaborn>=0.13.2",
     "sqlalchemy>=2.0.41",
-    "swarm",
+    "swarms>=7.8.4",
     "uvicorn>=0.32.0",
     "yfinance>=0.2.63",
 ]
@@ -55,6 +55,3 @@ select = ["E", "F", "I"]  # Enable import sorting (I) along with basic linting
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
 force-single-line = false
-
-[tool.uv.sources]
-swarm = { git = "https://github.com/openai/swarm.git" }
