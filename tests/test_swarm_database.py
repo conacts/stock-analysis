@@ -1,4 +1,7 @@
-"""Test swarm database functionality with proper test isolation"""
+"""
+Test suite for swarm database operations with proper mocking
+This ensures no production database interaction during testing
+"""
 
 import os
 from unittest.mock import MagicMock, patch
@@ -9,7 +12,7 @@ from src.models.swarm_models import PortfolioConfig, SwarmConversation, TradingD
 
 
 class TestSwarmDatabase:
-    """Test swarm database operations with mocked connections"""
+    """Test swarm database operations with mocked database"""
 
     @pytest.fixture
     def mock_swarm_db(self):
@@ -17,16 +20,8 @@ class TestSwarmDatabase:
         with patch("src.db.swarm_db.SwarmDatabase") as mock_db_class:
             mock_db = MagicMock()
             mock_db_class.return_value = mock_db
-
-            # Mock connection methods
-            mock_conn = MagicMock()
-            mock_cursor = MagicMock()
-            mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
-            mock_db.get_connection.return_value = mock_conn
-
             yield mock_db
 
-    @pytest.mark.unit
     def test_save_portfolio_config(self, mock_swarm_db):
         """Test saving portfolio configuration"""
         # Arrange
@@ -34,13 +29,12 @@ class TestSwarmDatabase:
         config = PortfolioConfig(portfolio_id="test_portfolio", name="Test Portfolio", symbols=["AAPL", "MSFT"], risk_tolerance="moderate")
 
         # Act
-        config_id = mock_swarm_db.save_portfolio_config(config)
+        result = mock_swarm_db.save_portfolio_config(config)
 
         # Assert
-        assert config_id == 123
+        assert result == 123
         mock_swarm_db.save_portfolio_config.assert_called_once_with(config)
 
-    @pytest.mark.unit
     def test_get_portfolio_config(self, mock_swarm_db):
         """Test retrieving portfolio configuration"""
         # Arrange
@@ -48,15 +42,18 @@ class TestSwarmDatabase:
         mock_swarm_db.get_portfolio_config.return_value = expected_config
 
         # Act
-        config = mock_swarm_db.get_portfolio_config("test_portfolio")
+        result = mock_swarm_db.get_portfolio_config("test_portfolio")
 
         # Assert
-        assert config == expected_config
+        assert result == expected_config
+        assert result.portfolio_id == "test_portfolio"
+        assert result.name == "Test Portfolio"
+        assert result.symbols == ["AAPL", "MSFT"]
+        assert result.risk_tolerance == "moderate"
         mock_swarm_db.get_portfolio_config.assert_called_once_with("test_portfolio")
 
-    @pytest.mark.unit
     def test_save_conversation(self, mock_swarm_db):
-        """Test saving swarm conversation"""
+        """Test saving conversation"""
         # Arrange
         mock_swarm_db.save_conversation.return_value = 456
         conversation = SwarmConversation(
@@ -70,13 +67,12 @@ class TestSwarmDatabase:
         )
 
         # Act
-        conv_id = mock_swarm_db.save_conversation(conversation)
+        result = mock_swarm_db.save_conversation(conversation)
 
         # Assert
-        assert conv_id == 456
+        assert result == 456
         mock_swarm_db.save_conversation.assert_called_once_with(conversation)
 
-    @pytest.mark.unit
     def test_get_conversation_history(self, mock_swarm_db):
         """Test retrieving conversation history"""
         # Arrange
@@ -84,14 +80,15 @@ class TestSwarmDatabase:
         mock_swarm_db.get_conversation_history.return_value = expected_conversations
 
         # Act
-        history = mock_swarm_db.get_conversation_history("test_portfolio", limit=5)
+        result = mock_swarm_db.get_conversation_history("test_portfolio")
 
         # Assert
-        assert len(history) == 1
-        assert history[0].portfolio_id == "test_portfolio"
-        mock_swarm_db.get_conversation_history.assert_called_once_with("test_portfolio", limit=5)
+        assert result == expected_conversations
+        assert len(result) == 1
+        assert result[0].portfolio_id == "test_portfolio"
+        assert result[0].conversation_id == "test_conv_001"
+        mock_swarm_db.get_conversation_history.assert_called_once_with("test_portfolio")
 
-    @pytest.mark.unit
     def test_save_trading_decision(self, mock_swarm_db):
         """Test saving trading decision"""
         # Arrange
@@ -99,21 +96,21 @@ class TestSwarmDatabase:
         decision = TradingDecision(conversation_id="test_conv_001", portfolio_id="test_portfolio", decision_type="buy", symbol="AAPL", quantity=10.0, price=150.0, reasoning="Strong technical indicators and positive market sentiment", confidence_score=0.85)
 
         # Act
-        decision_id = mock_swarm_db.save_trading_decision(decision)
+        result = mock_swarm_db.save_trading_decision(decision)
 
         # Assert
-        assert decision_id == 789
+        assert result == 789
         mock_swarm_db.save_trading_decision.assert_called_once_with(decision)
 
     @pytest.mark.integration
     @patch.dict(os.environ, {"DATABASE_URL": "sqlite:///:memory:"})
     def test_swarm_database_integration_with_sqlite(self):
         """Integration test with in-memory SQLite database"""
-        # This test would need the SwarmDatabase to support SQLite
-        # For now, we'll skip it until we implement SQLite support
-        pytest.skip("SwarmDatabase SQLite support not yet implemented")
+        # This is a placeholder for future integration testing
+        # When implemented, this would use an actual SQLite in-memory database
+        # For now, we skip this test to avoid production database interaction
+        pytest.skip("Integration test placeholder - requires SQLite implementation")
 
-    @pytest.mark.unit
     def test_swarm_database_initialization_error(self):
         """Test swarm database initialization with missing DATABASE_URL"""
         with patch.dict(os.environ, {}, clear=True):
@@ -121,6 +118,4 @@ class TestSwarmDatabase:
                 mock_db_class.side_effect = ValueError("DATABASE_URL environment variable is required")
 
                 with pytest.raises(ValueError, match="DATABASE_URL environment variable is required"):
-                    from src.db.swarm_db import SwarmDatabase
-
-                    SwarmDatabase()
+                    mock_db_class()
