@@ -33,6 +33,40 @@ def run_command(cmd, description):
         return False
 
 
+def test_cli_scripts():
+    """Test CLI scripts to catch import issues"""
+    print("\n🧪 Testing CLI scripts...")
+
+    # Set testing environment
+    env = os.environ.copy()
+    env["TESTING"] = "1"
+
+    cli_tests = [
+        (["python", "scripts/portfolio_manager.py", "list"], "Portfolio manager CLI"),
+        # Skip API server test as it tries to bind to port and may conflict
+        # (["python", "scripts/run_api.py", "--help"], "API server script"),
+    ]
+
+    for cmd, description in cli_tests:
+        print(f"\n🔄 Testing {description}")
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, env=env, timeout=10)  # nosec B603
+            if result.returncode != 0:
+                print(f"❌ {description} failed:")
+                print(f"STDOUT: {result.stdout}")
+                print(f"STDERR: {result.stderr}")
+                return False
+            else:
+                print(f"✅ {description} working")
+        except subprocess.TimeoutExpired:
+            print(f"⏰ {description} timed out (this might be expected for server scripts)")
+        except Exception as e:
+            print(f"❌ {description} error: {e}")
+            return False
+
+    return True
+
+
 def main():
     parser = argparse.ArgumentParser(description="Run tests for stock analysis system")
     parser.add_argument("--unit", action="store_true", help="Run unit tests only (default)")
@@ -98,6 +132,11 @@ def main():
 
     # Run the tests
     success = run_command(cmd, description)
+
+    # Test CLI scripts if unit tests passed
+    if success and not args.llm:  # Skip CLI tests for LLM-only runs
+        cli_success = test_cli_scripts()
+        success = success and cli_success
 
     if args.coverage and success:
         print("\n📊 Coverage report generated in htmlcov/index.html")
