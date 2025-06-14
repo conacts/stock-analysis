@@ -10,15 +10,17 @@ import os
 import sys
 from datetime import datetime
 
-# Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+# Add project root to path for imports
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(script_dir)
+sys.path.insert(0, project_root)
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # noqa: E402
 
-from src.core.analyzer import StockAnalyzer
-from src.db.migrations import MigrationRunner
-from src.portfolio.portfolio_analyzer import PortfolioAnalyzer
-from src.portfolio.portfolio_manager import PortfolioManager
+from src.core.analyzer import StockAnalyzer  # noqa: E402
+from src.db.migrations import MigrationRunner  # noqa: E402
+from src.portfolio.portfolio_analyzer import PortfolioAnalyzer  # noqa: E402
+from src.portfolio.portfolio_manager import PortfolioManager  # noqa: E402
 
 
 def setup_environment():
