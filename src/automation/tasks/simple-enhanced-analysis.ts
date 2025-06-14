@@ -1,4 +1,4 @@
-import { schedules, task } from "@trigger.dev/sdk/v3";
+import { schedules } from "@trigger.dev/sdk/v3";
 import { getValidatedEnv, createApiClient } from "../shared/env-validation";
 
 // Simplified conversation memory for portfolio analysis
@@ -28,7 +28,7 @@ export const simplifiedEnhancedAnalysis = schedules.task({
 			const activePortfolios = await getActivePortfolios(apiClient);
 			console.log(`📋 Found ${activePortfolios.length} active portfolios`);
 
-			const results = [];
+			const results: any[] = [];
 
 			for (const portfolio of activePortfolios) {
 				try {
@@ -193,7 +193,7 @@ async function storeSimpleConversationMemory(apiClient: any, portfolioId: string
 }
 
 function extractDecisions(analysisResult: any): string[] {
-	const decisions = [];
+	const decisions: string[] = [];
 
 	if (analysisResult.recommendations) {
 		for (const rec of analysisResult.recommendations) {
@@ -215,7 +215,7 @@ function calculatePerformanceTrend(portfolioData: any): string {
 }
 
 function extractRiskAlerts(analysisResult: any): string[] {
-	const alerts = [];
+	const alerts: string[] = [];
 
 	if (analysisResult.risk_analysis) {
 		if (analysisResult.risk_analysis.high_risk_positions) {

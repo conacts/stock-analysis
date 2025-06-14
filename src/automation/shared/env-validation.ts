@@ -17,11 +17,11 @@ export class EnvironmentValidationError extends Error {
 
 /**
  * Get the appropriate API URL based on environment
- * Uses Railway production URL when deployed, localhost for local development
+ * Uses Railway production URL when deployed, localhost for development
  */
 function getApiUrl(): string {
-	// Check if we're in Trigger.dev cloud environment
-	const isProduction = process.env.TRIGGER_ENV === 'production' ||
+	// Check if we're in production environment
+	const isProduction = process.env.ENVIRONMENT === 'production' ||
 		process.env.NODE_ENV === 'production' ||
 		process.env.RAILWAY_ENVIRONMENT === 'production';
 

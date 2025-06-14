@@ -374,6 +374,9 @@ TRIGGER_ACCESS_TOKEN=tr_pat_your-token
 ALPHA_VANTAGE_API_KEY=your-alpha-key
 SLACK_BOT_TOKEN=xoxb-your-slack-token
 SLACK_CHANNEL=#dev-alerts
+
+# Environment identifier
+ENVIRONMENT=development
 ```
 
 ### **Production Environment (Railway Dashboard)**
@@ -386,6 +389,7 @@ Set these in your Railway project dashboard:
 -   `PYTHON_API_URL` - Production API URL
 -   `TRIGGER_SECRET_KEY` - Trigger.dev production secret
 -   `TRIGGER_ACCESS_TOKEN` - Trigger.dev access token
+-   `ENVIRONMENT` - Set to "production"
 
 ## 🐛 Debugging & Troubleshooting
 

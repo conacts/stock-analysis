@@ -165,7 +165,7 @@ curl -H 'Authorization: Bearer default-dev-token' \
 
 ## 🔧 Environment Management
 
-### **Local Development**
+### **Development Environment (.env.local)**
 
 ```bash
 # .env.local (never commit this file)
@@ -178,9 +178,10 @@ TRIGGER_ACCESS_TOKEN=tr_pat_your-token
 ALPHA_VANTAGE_API_KEY=your-alpha-key
 SLACK_BOT_TOKEN=xoxb-your-slack-token
 SLACK_CHANNEL=#dev-alerts
+ENVIRONMENT=development
 ```
 
-### **Production (Railway Dashboard)**
+### **Production Environment (Railway Dashboard)**
 
 Set these in your Railway project dashboard:
 
