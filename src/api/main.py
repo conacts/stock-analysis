@@ -104,35 +104,22 @@ class AlertRequest(BaseModel):
 # Health Check Endpoint
 @app.get("/health", response_model=HealthCheckResult)
 async def health_check():
-    """Simple health check that always returns healthy for basic service availability"""
+    """Ultra-simple health check for Railway deployment"""
     try:
-        # Basic health check - just verify the service is running
-        checks = {"service": {"status": "healthy"}, "environment": {"status": "healthy", "python_version": sys.version, "api_token_configured": bool(os.getenv("API_TOKEN")), "deepseek_key_configured": bool(os.getenv("DEEPSEEK_API_KEY")), "database_url_configured": bool(os.getenv("DATABASE_URL"))}}
-
-        # Optional database check (non-blocking)
-        try:
-            db = get_db_connection()
-            db_healthy = db.test_connection()
-            checks["database"] = {"status": "healthy" if db_healthy else "degraded"}
-        except Exception as e:
-            checks["database"] = {"status": "degraded", "error": str(e)}
-
-        # Optional DeepSeek check (non-blocking)
-        try:
-            if os.getenv("DEEPSEEK_API_KEY"):
-                DeepSeekAnalyzer()  # Just test initialization
-                checks["deepseek"] = {"status": "healthy"}
-            else:
-                checks["deepseek"] = {"status": "not_configured"}
-        except Exception as e:
-            checks["deepseek"] = {"status": "degraded", "error": str(e)}
-
-        # Always return healthy for basic service availability
-        return HealthCheckResult(status="healthy", timestamp=datetime.now(), checks=checks)
-
+        # Minimal health check - just return healthy immediately
+        return HealthCheckResult(
+            status="healthy", timestamp=datetime.now(), checks={"service": {"status": "healthy"}, "environment": {"status": "healthy", "api_token_configured": bool(os.getenv("API_TOKEN")), "deepseek_key_configured": bool(os.getenv("DEEPSEEK_API_KEY")), "database_url_configured": bool(os.getenv("DATABASE_URL"))}}
+        )
     except Exception as e:
-        # Even if there are errors, return a basic healthy status
+        # Fallback - always return healthy for Railway
         return HealthCheckResult(status="healthy", timestamp=datetime.now(), checks={"service": {"status": "healthy"}, "error": str(e)})
+
+
+# Simple health endpoint for Railway (backup)
+@app.get("/healthz")
+async def simple_health():
+    """Ultra-minimal health check for Railway"""
+    return {"status": "ok", "timestamp": datetime.now().isoformat()}
 
 
 async def _perform_health_checks():
