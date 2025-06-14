@@ -4,8 +4,9 @@ A comprehensive, AI-powered stock analysis platform with automated monitoring, p
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests: 169 Passing](https://img.shields.io/badge/tests-169%20passing-green.svg)](#testing)
+[![Tests: 175 Passing](https://img.shields.io/badge/tests-175%20passing-green.svg)](#testing)
 [![API Status](https://img.shields.io/badge/API-100%25%20operational-brightgreen.svg)](https://stock-analysis-production-31e9.up.railway.app/health)
+[![Production](https://img.shields.io/badge/production-deployed-success.svg)](https://stock-analysis-production-31e9.up.railway.app)
 
 ## ✨ Key Features
 

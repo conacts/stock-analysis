@@ -61,8 +61,10 @@ def test_portfolio_summary(portfolio_id=1):
         if response.status_code == 200:
             data = response.json()
             print(f"✅ Portfolio: {data.get('name')}")
-            print(f"💰 Total Value: ${data.get('total_value'):,.2f}")
-            print(f"📈 Day Change: {data.get('performance', {}).get('day_change_pct', 0):.2f}%")
+            total_value = data.get("totalValue") or data.get("total_value") or 0
+            print(f"💰 Total Value: ${total_value:,.2f}")
+            day_change_pct = data.get("performance", {}).get("dayChangePct") or data.get("performance", {}).get("day_change_pct") or 0
+            print(f"📈 Day Change: {day_change_pct:.2f}%")
         else:
             print(f"❌ Request failed: {response.text}")
 
