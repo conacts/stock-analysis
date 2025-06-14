@@ -3,9 +3,11 @@ Database migration system for moving from SQLite to PostgreSQL
 """
 
 import json
+import logging
 import os
+import shutil
 import sqlite3
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for Alembic migration commands
 from datetime import datetime
 
 from sqlalchemy import text
@@ -19,8 +21,17 @@ class MigrationRunner:
     """Handles database migrations and data transfer"""
 
     def __init__(self):
+        self.db_connection = get_db_connection()
         self.engine = get_engine()
-        self.session = get_db_connection().get_session()
+        self.session = self.db_connection.get_session()
+        self.logger = logging.getLogger(__name__)
+
+    def _get_uv_path(self) -> str:
+        """Get full path to uv executable for security"""
+        uv_path = shutil.which("uv")
+        if not uv_path:
+            raise RuntimeError("uv executable not found in PATH")
+        return uv_path
 
     def create_tables(self) -> bool:
         """Create all database tables"""
@@ -515,7 +526,13 @@ class MigrationRunner:
                 return True
 
             # Initialize Alembic
-            result = subprocess.run(["uv", "run", "alembic", "init", "src/db/alembic"], capture_output=True, text=True)
+            uv_path = self._get_uv_path()
+            result = subprocess.run(  # nosec B603 - trusted command with validated arguments
+                [uv_path, "run", "alembic", "init", "src/db/alembic"],
+                capture_output=True,
+                text=True,
+                timeout=60,  # Add timeout for security
+            )
 
             if result.returncode != 0:
                 print(f"   ❌ Failed to initialize Alembic: {result.stderr}")
@@ -534,7 +551,17 @@ class MigrationRunner:
             print(f"🔄 Generating migration: {message}")
 
             # Run alembic revision --autogenerate
-            result = subprocess.run(["uv", "run", "alembic", "revision", "--autogenerate", "-m", message], capture_output=True, text=True)
+            # Validate message input to prevent injection
+            if not isinstance(message, str) or len(message) > 200:
+                raise ValueError("Invalid migration message")
+
+            uv_path = self._get_uv_path()
+            result = subprocess.run(  # nosec B603 - trusted command with validated arguments
+                [uv_path, "run", "alembic", "revision", "--autogenerate", "-m", message],
+                capture_output=True,
+                text=True,
+                timeout=120,  # Add timeout for security
+            )
 
             if result.returncode != 0:
                 print(f"   ❌ Failed to generate migration: {result.stderr}")
@@ -554,7 +581,13 @@ class MigrationRunner:
             print("🚀 Applying pending migrations...")
 
             # Run alembic upgrade head
-            result = subprocess.run(["uv", "run", "alembic", "upgrade", "head"], capture_output=True, text=True)
+            uv_path = self._get_uv_path()
+            result = subprocess.run(  # nosec B603 - trusted command with validated arguments
+                [uv_path, "run", "alembic", "upgrade", "head"],
+                capture_output=True,
+                text=True,
+                timeout=300,  # Add timeout for security
+            )
 
             if result.returncode != 0:
                 print(f"   ❌ Failed to apply migrations: {result.stderr}")
@@ -574,7 +607,13 @@ class MigrationRunner:
             print("📋 Current migration history:")
 
             # Run alembic history
-            result = subprocess.run(["uv", "run", "alembic", "history"], capture_output=True, text=True)
+            uv_path = self._get_uv_path()
+            result = subprocess.run(  # nosec B603 - trusted command with validated arguments
+                [uv_path, "run", "alembic", "history"],
+                capture_output=True,
+                text=True,
+                timeout=60,  # Add timeout for security
+            )
 
             if result.returncode != 0:
                 print(f"   ❌ Failed to get migration history: {result.stderr}")
