@@ -28,7 +28,11 @@ from pipeline.research_engine import ResearchEngine
 
 # Import trading endpoints
 try:
-    from .trading_endpoints import router as trading_router
+    try:
+        from .simple_trading_endpoints import router as trading_router
+    except ImportError:
+        # Fallback for direct script execution
+        from simple_trading_endpoints import router as trading_router
 
     TRADING_ENABLED = True
 except ImportError as e:

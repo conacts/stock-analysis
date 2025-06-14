@@ -22,7 +22,7 @@ from src.models.trading_models import (
     TradingAnalysis,
     TradingSignal,
 )
-from src.services.portfolio_service import PortfolioService
+from src.portfolio.portfolio_manager import PortfolioManager as PortfolioService
 from src.trading.market_data import MarketDataProvider
 from src.trading.risk_manager import RiskManager
 

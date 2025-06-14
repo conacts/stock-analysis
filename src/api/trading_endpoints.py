@@ -6,23 +6,28 @@ portfolio analysis, signal generation, and trade recommendations.
 """
 
 import logging
+import sys
+from pathlib import Path
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from src.llm.deepseek_analyzer import DeepSeekAnalyzer as DeepSeekClient
-from src.models.trading_models import (
+# Add src to path for imports
+sys.path.append(str(Path(__file__).parent.parent))
+
+from llm.deepseek_analyzer import DeepSeekAnalyzer as DeepSeekClient
+from models.trading_models import (
     RiskStatus,
     StopResult,
     TradeRecommendation,
     TradingAnalysis,
     TradingSignal,
 )
-from src.services.portfolio_service import PortfolioService
-from src.trading.ai_engine import AITradingEngine
-from src.trading.market_data import MarketDataProvider
-from src.trading.risk_manager import RiskManager
+from portfolio.portfolio_manager import PortfolioManager as PortfolioService
+from trading.ai_engine import AITradingEngine
+from trading.market_data import MarketDataProvider
+from trading.risk_manager import RiskManager
 
 logger = logging.getLogger(__name__)
 

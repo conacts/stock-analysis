@@ -2,57 +2,57 @@
   "passed": 6,
   "failed": 1,
   "errors": [
-    "Trading Config: Trading endpoints not deployed (404)"
+    "LLM Analysis: HTTP 500"
   ],
   "details": [
     {
       "name": "Health Check",
       "success": true,
-      "details": "Status: healthy, DB: healthy, DeepSeek: healthy, Env: healthy",
+      "details": "Status: degraded, DB: unhealthy, DeepSeek: healthy, Env: healthy",
       "error": "",
-      "timestamp": "2025-06-14T03:02:07.611239"
+      "timestamp": "2025-06-14T03:10:45.326045"
     },
     {
       "name": "Active Portfolios",
       "success": true,
       "details": "Found 3 portfolios",
       "error": "",
-      "timestamp": "2025-06-14T03:02:07.618169"
+      "timestamp": "2025-06-14T03:10:45.330372"
     },
     {
       "name": "Portfolio Summary",
       "success": true,
       "details": "Value: $100,000.00, Positions: 3",
       "error": "",
-      "timestamp": "2025-06-14T03:02:07.619252"
+      "timestamp": "2025-06-14T03:10:45.331257"
     },
     {
       "name": "LLM Analysis",
-      "success": true,
-      "details": "ID: analysis_2025-06-14T..., Recommendations: 3, Risk: 0.65",
-      "error": "",
-      "timestamp": "2025-06-14T03:02:07.629035"
+      "success": false,
+      "details": "",
+      "error": "HTTP 500",
+      "timestamp": "2025-06-14T03:10:45.332676"
     },
     {
       "name": "Trading Config",
-      "success": false,
-      "details": "",
-      "error": "Trading endpoints not deployed (404)",
-      "timestamp": "2025-06-14T03:02:07.631307"
+      "success": true,
+      "details": "Max Position: 10.0%, Daily Limit: 2.0%",
+      "error": "",
+      "timestamp": "2025-06-14T03:10:45.334174"
     },
     {
       "name": "Market Gaps Analysis",
       "success": true,
       "details": "Gaps found: 0",
       "error": "",
-      "timestamp": "2025-06-14T03:02:07.633354"
+      "timestamp": "2025-06-14T03:10:45.335548"
     },
     {
       "name": "Daily Performance",
       "success": true,
       "details": "Portfolios analyzed: 3",
       "error": "",
-      "timestamp": "2025-06-14T03:02:07.634013"
+      "timestamp": "2025-06-14T03:10:45.336022"
     }
   ]
 }

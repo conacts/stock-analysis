@@ -10,49 +10,49 @@
       "success": true,
       "details": "Status: healthy, DB: healthy, DeepSeek: healthy, Env: healthy",
       "error": "",
-      "timestamp": "2025-06-14T03:01:52.997361"
+      "timestamp": "2025-06-14T03:03:46.202204"
     },
     {
       "name": "Active Portfolios",
       "success": true,
       "details": "Found 3 portfolios",
       "error": "",
-      "timestamp": "2025-06-14T03:01:53.167912"
+      "timestamp": "2025-06-14T03:03:46.321449"
     },
     {
       "name": "Portfolio Summary",
       "success": true,
       "details": "Value: $100,000.00, Positions: 3",
       "error": "",
-      "timestamp": "2025-06-14T03:01:53.213504"
+      "timestamp": "2025-06-14T03:03:46.353252"
     },
     {
       "name": "LLM Analysis",
       "success": true,
       "details": "ID: analysis_2025-06-14T..., Recommendations: 3, Risk: 0.65",
       "error": "",
-      "timestamp": "2025-06-14T03:01:53.302034"
+      "timestamp": "2025-06-14T03:03:46.420231"
     },
     {
       "name": "Trading Config",
       "success": false,
       "details": "",
       "error": "Trading endpoints not deployed (404)",
-      "timestamp": "2025-06-14T03:01:53.418186"
+      "timestamp": "2025-06-14T03:03:46.527662"
     },
     {
       "name": "Market Gaps Analysis",
       "success": true,
       "details": "Gaps found: 0",
       "error": "",
-      "timestamp": "2025-06-14T03:01:53.537841"
+      "timestamp": "2025-06-14T03:03:46.630232"
     },
     {
       "name": "Daily Performance",
       "success": true,
       "details": "Portfolios analyzed: 3",
       "error": "",
-      "timestamp": "2025-06-14T03:01:53.568472"
+      "timestamp": "2025-06-14T03:03:46.660965"
     }
   ]
 }
