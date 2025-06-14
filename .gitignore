@@ -200,3 +200,4 @@ output/
 
 # Test results files
 test_results*.json
+test_api_validation.py

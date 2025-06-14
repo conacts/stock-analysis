@@ -588,24 +588,28 @@ class AIConversationRequest(BaseModel):
     portfolio_id: Optional[int] = None
 
 
+class AIAnalysisRequest(BaseModel):
+    symbols: List[str]
+
+
 @app.post("/trading/ai-analysis")
-async def analyze_for_trading(symbols: List[str], token: str = Depends(verify_token)):
+async def analyze_for_trading(request: AIAnalysisRequest, token: str = Depends(verify_token)):
     """Analyze symbols using AI Swarm for trading decisions"""
     try:
-        from ai.swarm_trading_system import SwarmTradingSystem
-        from db.swarm_db import get_swarm_db
+        from src.ai.swarm_trading_system import SwarmTradingSystem
+        from src.db.swarm_db import get_swarm_db
 
         # Initialize with our new lightweight system
         db = get_swarm_db()
         swarm_system = SwarmTradingSystem(db=db)
 
-        context = f"Analyze these symbols for trading opportunities: {', '.join(symbols)}. Provide detailed market analysis and identify potential trades."
+        context = f"Analyze these symbols for trading opportunities: {', '.join(request.symbols)}. Provide detailed market analysis and identify potential trades."
 
         # Use the new API
         result = await swarm_system.analyze_portfolio("default", context)
 
         return {
-            "symbols_analyzed": symbols,
+            "symbols_analyzed": request.symbols,
             "analysis_timestamp": datetime.now().isoformat(),
             "ai_response": result.get("analysis", {}).get("agent_responses", []),
             "final_agent": result.get("analysis", {}).get("final_agent", ""),
@@ -622,8 +626,8 @@ async def analyze_for_trading(symbols: List[str], token: str = Depends(verify_to
 async def ai_trading_decision(request: AITradingRequest, token: str = Depends(verify_token)):
     """Let AI Swarm make trading decisions based on context"""
     try:
-        from ai.swarm_trading_system import SwarmTradingSystem
-        from db.swarm_db import get_swarm_db
+        from src.ai.swarm_trading_system import SwarmTradingSystem
+        from src.db.swarm_db import get_swarm_db
 
         # Initialize with our new lightweight system
         db = get_swarm_db()
@@ -659,8 +663,8 @@ async def ai_trading_decision(request: AITradingRequest, token: str = Depends(ve
 async def ai_conversation(request: AIConversationRequest, token: str = Depends(verify_token)):
     """Have a full conversation with the AI Swarm trading system"""
     try:
-        from ai.swarm_trading_system import SwarmTradingSystem
-        from db.swarm_db import get_swarm_db
+        from src.ai.swarm_trading_system import SwarmTradingSystem
+        from src.db.swarm_db import get_swarm_db
 
         # Initialize with our new lightweight system
         db = get_swarm_db()
@@ -714,8 +718,8 @@ class SwarmAgentRequest(BaseModel):
 async def talk_to_specific_agent(request: SwarmAgentRequest, token: str = Depends(verify_token)):
     """Talk directly to a specific Swarm agent"""
     try:
-        from ai.swarm_trading_system import SwarmTradingSystem
-        from db.swarm_db import get_swarm_db
+        from src.ai.swarm_trading_system import SwarmTradingSystem
+        from src.db.swarm_db import get_swarm_db
 
         # Initialize with our new lightweight system
         db = get_swarm_db()
@@ -739,7 +743,7 @@ async def talk_to_specific_agent(request: SwarmAgentRequest, token: str = Depend
 async def get_swarm_conversation_history(portfolio_id: str, token: str = Depends(verify_token)):
     """Get conversation history for a specific portfolio"""
     try:
-        from db.swarm_db import get_swarm_db
+        from src.db.swarm_db import get_swarm_db
 
         db = get_swarm_db()
         # Use asyncio to run the sync method

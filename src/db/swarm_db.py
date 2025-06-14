@@ -61,102 +61,197 @@ class SwarmDatabase:
         """Create database tables if they don't exist"""
         conn = self.get_connection()
         try:
-            with conn.cursor() as cursor:
-                # Agent prompts table
-                cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS agent_prompts (
-                        id SERIAL PRIMARY KEY,
-                        agent_name VARCHAR(100) NOT NULL,
-                        prompt_version VARCHAR(50) NOT NULL,
-                        system_prompt TEXT NOT NULL,
-                        is_active BOOLEAN DEFAULT TRUE,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        created_by VARCHAR(100),
-                        description TEXT,
-                        UNIQUE(agent_name, prompt_version)
-                    )
-                """)
+            if self.is_sqlite:
+                # SQLite doesn't support context manager for cursors
+                cursor = conn.cursor()
+                try:
+                    # SQLite-compatible table creation
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS agent_prompts (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            agent_name VARCHAR(100) NOT NULL,
+                            prompt_version VARCHAR(50) NOT NULL,
+                            system_prompt TEXT NOT NULL,
+                            is_active BOOLEAN DEFAULT TRUE,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            created_by VARCHAR(100),
+                            description TEXT,
+                            UNIQUE(agent_name, prompt_version)
+                        )
+                    """)
 
-                # Portfolio configurations table
-                cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS portfolio_configs (
-                        id SERIAL PRIMARY KEY,
-                        portfolio_id VARCHAR(100) UNIQUE NOT NULL,
-                        name VARCHAR(200) NOT NULL,
-                        symbols JSONB NOT NULL,
-                        risk_tolerance VARCHAR(50) NOT NULL,
-                        max_position_size_pct DECIMAL(5,2) DEFAULT 5.0,
-                        max_sector_exposure_pct DECIMAL(5,2) DEFAULT 20.0,
-                        cash_reserve_pct DECIMAL(5,2) DEFAULT 10.0,
-                        trading_enabled BOOLEAN DEFAULT TRUE,
-                        rebalance_frequency VARCHAR(50) DEFAULT 'weekly',
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        is_active BOOLEAN DEFAULT TRUE
-                    )
-                """)
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS portfolio_configs (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            portfolio_id VARCHAR(100) UNIQUE NOT NULL,
+                            name VARCHAR(200) NOT NULL,
+                            symbols TEXT NOT NULL,
+                            risk_tolerance VARCHAR(50) NOT NULL,
+                            max_position_size_pct DECIMAL(5,2) DEFAULT 5.0,
+                            max_sector_exposure_pct DECIMAL(5,2) DEFAULT 20.0,
+                            cash_reserve_pct DECIMAL(5,2) DEFAULT 10.0,
+                            trading_enabled BOOLEAN DEFAULT TRUE,
+                            rebalance_frequency VARCHAR(50) DEFAULT 'weekly',
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            is_active BOOLEAN DEFAULT TRUE
+                        )
+                    """)
 
-                # Swarm conversations table
-                cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS swarm_conversations (
-                        id SERIAL PRIMARY KEY,
-                        portfolio_id VARCHAR(100) NOT NULL,
-                        conversation_id VARCHAR(100) UNIQUE NOT NULL,
-                        user_message TEXT NOT NULL,
-                        agent_responses JSONB NOT NULL,
-                        final_agent VARCHAR(100) NOT NULL,
-                        turns_used INTEGER NOT NULL,
-                        success BOOLEAN NOT NULL,
-                        error_message TEXT,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        conversation_metadata JSONB
-                    )
-                """)
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS swarm_conversations (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            portfolio_id VARCHAR(100) NOT NULL,
+                            conversation_id VARCHAR(100) UNIQUE NOT NULL,
+                            user_message TEXT NOT NULL,
+                            agent_responses TEXT NOT NULL,
+                            final_agent VARCHAR(100) NOT NULL,
+                            turns_used INTEGER NOT NULL,
+                            success BOOLEAN NOT NULL,
+                            error_message TEXT,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            conversation_metadata TEXT
+                        )
+                    """)
 
-                # Trading decisions table
-                cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS trading_decisions (
-                        id SERIAL PRIMARY KEY,
-                        conversation_id VARCHAR(100) NOT NULL,
-                        portfolio_id VARCHAR(100) NOT NULL,
-                        decision_type VARCHAR(50) NOT NULL,
-                        symbol VARCHAR(20),
-                        quantity DECIMAL(15,6),
-                        price DECIMAL(15,6),
-                        reasoning TEXT NOT NULL,
-                        confidence_score DECIMAL(3,2),
-                        risk_assessment TEXT,
-                        executed BOOLEAN DEFAULT FALSE,
-                        execution_result JSONB,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        executed_at TIMESTAMP
-                    )
-                """)
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS trading_decisions (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            conversation_id VARCHAR(100) NOT NULL,
+                            portfolio_id VARCHAR(100) NOT NULL,
+                            decision_type VARCHAR(50) NOT NULL,
+                            symbol VARCHAR(20),
+                            quantity DECIMAL(15,6),
+                            price DECIMAL(15,6),
+                            reasoning TEXT NOT NULL,
+                            confidence_score DECIMAL(3,2),
+                            risk_assessment TEXT,
+                            executed BOOLEAN DEFAULT FALSE,
+                            execution_result TEXT,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            executed_at TIMESTAMP
+                        )
+                    """)
 
-                # Market context table
-                cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS swarm_market_context (
-                        id SERIAL PRIMARY KEY,
-                        portfolio_id VARCHAR(100) NOT NULL,
-                        context_type VARCHAR(100) NOT NULL,
-                        symbol VARCHAR(20),
-                        data JSONB NOT NULL,
-                        relevance_score DECIMAL(3,2),
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        expires_at TIMESTAMP
-                    )
-                """)
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS swarm_market_context (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            portfolio_id VARCHAR(100) NOT NULL,
+                            context_type VARCHAR(100) NOT NULL,
+                            symbol VARCHAR(20),
+                            data TEXT NOT NULL,
+                            relevance_score DECIMAL(3,2),
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            expires_at TIMESTAMP
+                        )
+                    """)
 
-                # Create indexes for better performance
-                cursor.execute("CREATE INDEX IF NOT EXISTS idx_agent_prompts_active ON agent_prompts(agent_name, is_active)")
-                cursor.execute("CREATE INDEX IF NOT EXISTS idx_portfolio_configs_active ON portfolio_configs(portfolio_id, is_active)")
-                cursor.execute("CREATE INDEX IF NOT EXISTS idx_conversations_portfolio ON swarm_conversations(portfolio_id, created_at)")
-                cursor.execute("CREATE INDEX IF NOT EXISTS idx_decisions_portfolio ON trading_decisions(portfolio_id, created_at)")
-                cursor.execute("CREATE INDEX IF NOT EXISTS idx_context_portfolio ON swarm_market_context(portfolio_id, context_type, created_at)")
+                    # Create indexes for SQLite
+                    cursor.execute("CREATE INDEX IF NOT EXISTS idx_agent_prompts_active ON agent_prompts(agent_name, is_active)")
+                    cursor.execute("CREATE INDEX IF NOT EXISTS idx_portfolio_configs_active ON portfolio_configs(portfolio_id, is_active)")
+                    cursor.execute("CREATE INDEX IF NOT EXISTS idx_conversations_portfolio ON swarm_conversations(portfolio_id, created_at)")
+                    cursor.execute("CREATE INDEX IF NOT EXISTS idx_decisions_portfolio ON trading_decisions(portfolio_id, created_at)")
+                    cursor.execute("CREATE INDEX IF NOT EXISTS idx_context_portfolio ON swarm_market_context(portfolio_id, context_type, created_at)")
 
-                conn.commit()
-                logger.info("✅ Swarm database tables created/verified")
+                    conn.commit()
+                    logger.info("✅ Swarm database tables created/verified (SQLite)")
+                finally:
+                    cursor.close()
+            else:
+                # PostgreSQL with context manager
+                with conn.cursor() as cursor:
+                    # PostgreSQL table creation (original code)
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS agent_prompts (
+                            id SERIAL PRIMARY KEY,
+                            agent_name VARCHAR(100) NOT NULL,
+                            prompt_version VARCHAR(50) NOT NULL,
+                            system_prompt TEXT NOT NULL,
+                            is_active BOOLEAN DEFAULT TRUE,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            created_by VARCHAR(100),
+                            description TEXT,
+                            UNIQUE(agent_name, prompt_version)
+                        )
+                    """)
+
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS portfolio_configs (
+                            id SERIAL PRIMARY KEY,
+                            portfolio_id VARCHAR(100) UNIQUE NOT NULL,
+                            name VARCHAR(200) NOT NULL,
+                            symbols JSONB NOT NULL,
+                            risk_tolerance VARCHAR(50) NOT NULL,
+                            max_position_size_pct DECIMAL(5,2) DEFAULT 5.0,
+                            max_sector_exposure_pct DECIMAL(5,2) DEFAULT 20.0,
+                            cash_reserve_pct DECIMAL(5,2) DEFAULT 10.0,
+                            trading_enabled BOOLEAN DEFAULT TRUE,
+                            rebalance_frequency VARCHAR(50) DEFAULT 'weekly',
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            is_active BOOLEAN DEFAULT TRUE
+                        )
+                    """)
+
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS swarm_conversations (
+                            id SERIAL PRIMARY KEY,
+                            portfolio_id VARCHAR(100) NOT NULL,
+                            conversation_id VARCHAR(100) UNIQUE NOT NULL,
+                            user_message TEXT NOT NULL,
+                            agent_responses JSONB NOT NULL,
+                            final_agent VARCHAR(100) NOT NULL,
+                            turns_used INTEGER NOT NULL,
+                            success BOOLEAN NOT NULL,
+                            error_message TEXT,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            conversation_metadata JSONB
+                        )
+                    """)
+
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS trading_decisions (
+                            id SERIAL PRIMARY KEY,
+                            conversation_id VARCHAR(100) NOT NULL,
+                            portfolio_id VARCHAR(100) NOT NULL,
+                            decision_type VARCHAR(50) NOT NULL,
+                            symbol VARCHAR(20),
+                            quantity DECIMAL(15,6),
+                            price DECIMAL(15,6),
+                            reasoning TEXT NOT NULL,
+                            confidence_score DECIMAL(3,2),
+                            risk_assessment TEXT,
+                            executed BOOLEAN DEFAULT FALSE,
+                            execution_result JSONB,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            executed_at TIMESTAMP
+                        )
+                    """)
+
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS swarm_market_context (
+                            id SERIAL PRIMARY KEY,
+                            portfolio_id VARCHAR(100) NOT NULL,
+                            context_type VARCHAR(100) NOT NULL,
+                            symbol VARCHAR(20),
+                            data JSONB NOT NULL,
+                            relevance_score DECIMAL(3,2),
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            expires_at TIMESTAMP
+                        )
+                    """)
+
+                    # Create indexes for PostgreSQL
+                    cursor.execute("CREATE INDEX IF NOT EXISTS idx_agent_prompts_active ON agent_prompts(agent_name, is_active)")
+                    cursor.execute("CREATE INDEX IF NOT EXISTS idx_portfolio_configs_active ON portfolio_configs(portfolio_id, is_active)")
+                    cursor.execute("CREATE INDEX IF NOT EXISTS idx_conversations_portfolio ON swarm_conversations(portfolio_id, created_at)")
+                    cursor.execute("CREATE INDEX IF NOT EXISTS idx_decisions_portfolio ON trading_decisions(portfolio_id, created_at)")
+                    cursor.execute("CREATE INDEX IF NOT EXISTS idx_context_portfolio ON swarm_market_context(portfolio_id, context_type, created_at)")
+
+                    conn.commit()
+                    logger.info("✅ Swarm database tables created/verified (PostgreSQL)")
         finally:
             self.return_connection(conn)
 
@@ -164,23 +259,45 @@ class SwarmDatabase:
         """Initialize default agent prompts if they don't exist"""
         conn = self.get_connection()
         try:
-            with conn.cursor() as cursor:
-                for agent_name, prompt_text in DEFAULT_AGENT_PROMPTS.items():
-                    # Check if default prompt exists
-                    cursor.execute("SELECT id FROM agent_prompts WHERE agent_name = %s AND prompt_version = 'default'", (agent_name,))
+            if self.is_sqlite:
+                cursor = conn.cursor()
+                try:
+                    for agent_name, prompt_text in DEFAULT_AGENT_PROMPTS.items():
+                        # Check if default prompt exists
+                        cursor.execute("SELECT id FROM agent_prompts WHERE agent_name = ? AND prompt_version = 'default'", (agent_name,))
 
-                    if not cursor.fetchone():
-                        cursor.execute(
-                            """
-                            INSERT INTO agent_prompts
-                            (agent_name, prompt_version, system_prompt, description, created_by)
-                            VALUES (%s, 'default', %s, 'Default system prompt', 'system')
-                        """,
-                            (agent_name, prompt_text),
-                        )
+                        if not cursor.fetchone():
+                            cursor.execute(
+                                """
+                                INSERT INTO agent_prompts
+                                (agent_name, prompt_version, system_prompt, description, created_by)
+                                VALUES (?, 'default', ?, 'Default system prompt', 'system')
+                            """,
+                                (agent_name, prompt_text),
+                            )
 
-                conn.commit()
-                logger.info("✅ Default agent prompts initialized")
+                    conn.commit()
+                    logger.info("✅ Default agent prompts initialized (SQLite)")
+                finally:
+                    cursor.close()
+            else:
+                with conn.cursor() as cursor:
+                    for agent_name, prompt_text in DEFAULT_AGENT_PROMPTS.items():
+                        # Check if default prompt exists
+                        cursor.execute("SELECT id FROM agent_prompts WHERE agent_name = %s AND prompt_version = 'default'", (agent_name,))
+
+                        if not cursor.fetchone():
+                            cursor.execute(
+                                """
+                                INSERT INTO agent_prompts
+                                (agent_name, prompt_version, system_prompt, description, created_by)
+                                VALUES (%s, 'default', %s, 'Default system prompt', 'system')
+                            """,
+                                (agent_name, prompt_text),
+                            )
+
+                    conn.commit()
+                    logger.info("✅ Default agent prompts initialized (PostgreSQL)")
         finally:
             self.return_connection(conn)
 
@@ -454,6 +571,40 @@ class SwarmDatabase:
         """Close database connection pool"""
         if self.pool:
             self.pool.closeall()
+
+    def _get_cursor(self, conn, dict_cursor=False):
+        """Get a cursor that works with both SQLite and PostgreSQL"""
+        if self.is_sqlite:
+            cursor = conn.cursor()
+            if dict_cursor:
+                # For SQLite, we'll handle dict conversion manually
+                cursor.row_factory = sqlite3.Row
+            return cursor
+        else:
+            # PostgreSQL
+            if dict_cursor:
+                return conn.cursor(cursor_factory=RealDictCursor)
+            else:
+                return conn.cursor()
+
+    def _serialize_json(self, data):
+        """Serialize data to JSON string for SQLite or return as-is for PostgreSQL"""
+        if self.is_sqlite:
+            import json
+
+            return json.dumps(data)
+        return data
+
+    def _deserialize_json(self, data):
+        """Deserialize JSON string for SQLite or return as-is for PostgreSQL"""
+        if self.is_sqlite and isinstance(data, str):
+            import json
+
+            try:
+                return json.loads(data)
+            except (json.JSONDecodeError, TypeError):
+                return data
+        return data
 
 
 # Global database instance
