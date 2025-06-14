@@ -25,6 +25,15 @@ from llm.deepseek_analyzer import DeepSeekAnalyzer
 from models.pydantic_models import HealthCheckResult
 from pipeline.research_engine import ResearchEngine
 
+# Import trading endpoints
+try:
+    from api.trading_endpoints import router as trading_router
+
+    TRADING_ENABLED = True
+except ImportError as e:
+    print(f"Trading endpoints not available: {e}")
+    TRADING_ENABLED = False
+
 # Initialize FastAPI app
 app = FastAPI(title="Stock Analysis API", description="REST API for stock analysis and portfolio management", version="1.0.0")
 
@@ -36,6 +45,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include trading router if available
+if TRADING_ENABLED:
+    app.include_router(trading_router)
+    print("✅ AI Trading endpoints enabled")
 
 # Security
 security = HTTPBearer()
@@ -117,9 +131,19 @@ async def health_check():
 async def get_portfolio_summary(portfolio_id: int, token: str = Depends(verify_token)):
     """Get portfolio summary data"""
     try:
-        # This would integrate with your portfolio management system
-        # For now, return a mock response that matches expected structure
-        return {"portfolio_id": portfolio_id, "name": f"Portfolio {portfolio_id}", "total_value": 100000.0, "positions": [], "performance": {"day_change": 0.0, "day_change_pct": 0.0}}
+        # Return mock response that matches TypeScript expected structure
+        return {
+            "portfolioId": portfolio_id,
+            "name": f"Portfolio {portfolio_id}",
+            "totalValue": 100000.0,  # Changed from total_value to totalValue
+            "positions": [
+                {"symbol": "AAPL", "quantity": 100, "currentPrice": 150.0, "marketValue": 15000.0, "costBasis": 14500.0, "unrealizedPnL": 500.0, "weight": 0.15},
+                {"symbol": "MSFT", "quantity": 50, "currentPrice": 400.0, "marketValue": 20000.0, "costBasis": 19500.0, "unrealizedPnL": 500.0, "weight": 0.20},
+                {"symbol": "GOOGL", "quantity": 25, "currentPrice": 2600.0, "marketValue": 65000.0, "costBasis": 62500.0, "unrealizedPnL": 2500.0, "weight": 0.65},
+            ],
+            "performance": {"dayChange": 1250.0, "dayChangePct": 1.25, "totalReturn": 3500.0, "totalReturnPct": 3.62},
+            "riskMetrics": {"beta": 1.15, "volatility": 0.18, "sharpeRatio": 1.25},
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -134,15 +158,20 @@ async def analyze_portfolio_with_llm(request: AnalysisRequest, token: str = Depe
 
         _ = DeepSeekAnalyzer()  # Initialize analyzer
 
-        # Mock analysis result - replace with actual analysis
+        # Mock analysis result that matches TypeScript expected structure
+        portfolio_id = request.portfolio_data.get("portfolioId", 1)
         return {
-            "analysis_id": f"analysis_{datetime.now().isoformat()}",
-            "portfolio_id": request.portfolio_data.get("portfolio_id"),
-            "analysis_type": request.analysis_type,
-            "recommendations": ["Sample recommendation"],
-            "risk_analysis": {"risk_score": 5.0},
-            "opportunities": ["Sample opportunity"],
-            "llm_response": "Sample LLM analysis response",
+            "analysisId": f"analysis_{datetime.now().isoformat()}",
+            "portfolioId": portfolio_id,
+            "analysisType": request.analysis_type,
+            "totalValue": 100000.0,
+            "recommendations": ["Consider rebalancing tech positions to reduce concentration risk", "AAPL showing strong technical indicators - consider increasing position", "Market volatility suggests defensive positioning may be prudent"],
+            "riskFactors": ["High concentration in technology sector (65%)", "Portfolio beta of 1.15 indicates higher volatility than market", "Recent market uncertainty may impact growth positions"],
+            "opportunities": ["Strong earnings season for tech companies", "Market dip presents buying opportunities", "Dividend growth stocks showing resilience"],
+            "riskScore": 0.65,  # 65% risk score
+            "dailyReturn": 0.0125,  # 1.25% daily return
+            "llmResponse": f"Portfolio {portfolio_id} analysis completed. The portfolio shows strong performance with a 1.25% daily return and total value of $100,000. Key recommendations include rebalancing tech concentration and considering defensive positions given current market volatility.",
+            "timestamp": datetime.now().isoformat(),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
