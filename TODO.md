@@ -204,7 +204,7 @@ CREATE TABLE market_context (
 -   [x] **All core functionality tests passing**
 -   [x] **Mock-based testing for external dependencies**
 
-### 🔧 Development Workflow
+### 🔧 Development Workflow (first priority)
 
 -   [ ] **CI/CD Pipeline**
     -   [ ] GitHub Actions setup

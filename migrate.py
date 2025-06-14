@@ -7,13 +7,14 @@ Run database migrations for the stock analysis system
 import argparse
 import sys
 
-from src.db.connection import db
+from src.db.connection import get_db_connection
 from src.db.migrations import MigrationRunner
 
 
 def test_connection():
     """Test database connection"""
     print("🔌 Testing database connection...")
+    db = get_db_connection()
     if db.test_connection():
         print("✅ Database connection successful")
         return True

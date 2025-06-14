@@ -9,7 +9,7 @@ from datetime import datetime
 
 from sqlalchemy import text
 
-from .connection import db, get_engine
+from .connection import get_db_connection, get_engine
 from .models import Base, DailyAnalysis, DailyDecision, MarketContext, MigrationHistory, PerformanceTracking
 
 
@@ -18,7 +18,7 @@ class MigrationRunner:
 
     def __init__(self):
         self.engine = get_engine()
-        self.session = db.get_session()
+        self.session = get_db_connection().get_session()
 
     def create_tables(self) -> bool:
         """Create all database tables"""
@@ -372,7 +372,7 @@ class MigrationRunner:
         print("🚀 Starting full database migration...")
 
         # Test connection
-        if not db.test_connection():
+        if not get_db_connection().test_connection():
             print("❌ Database connection failed")
             return False
 
