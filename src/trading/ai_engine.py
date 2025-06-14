@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional
 
-from src.llm.deepseek_client import DeepSeekClient
+from src.llm.deepseek_analyzer import DeepSeekAnalyzer as DeepSeekClient
 from src.models.trading_models import (
     MarketCondition,
     OrderType,

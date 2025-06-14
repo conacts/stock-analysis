@@ -1,0 +1,93 @@
+{
+  "passed": 11,
+  "failed": 1,
+  "errors": [
+    "Trading Config: HTTP 404"
+  ],
+  "details": [
+    {
+      "name": "Health Check",
+      "success": true,
+      "details": "Status: healthy, DB: healthy, DeepSeek: healthy, Env: healthy",
+      "error": "",
+      "timestamp": "2025-06-14T02:59:13.325280"
+    },
+    {
+      "name": "Active Portfolios",
+      "success": true,
+      "details": "Found 3 portfolios",
+      "error": "",
+      "timestamp": "2025-06-14T02:59:13.434629"
+    },
+    {
+      "name": "Portfolio Summary",
+      "success": true,
+      "details": "Value: $100,000.00, Positions: 3",
+      "error": "",
+      "timestamp": "2025-06-14T02:59:13.465301"
+    },
+    {
+      "name": "LLM Analysis",
+      "success": true,
+      "details": "ID: analysis_2025-06-14T..., Recommendations: 3, Risk: 0.65",
+      "error": "",
+      "timestamp": "2025-06-14T02:59:13.530351"
+    },
+    {
+      "name": "Trading Config",
+      "success": false,
+      "details": "",
+      "error": "HTTP 404",
+      "timestamp": "2025-06-14T02:59:13.641383"
+    },
+    {
+      "name": "Market Gaps Analysis",
+      "success": true,
+      "details": "Gaps found: 0",
+      "error": "",
+      "timestamp": "2025-06-14T02:59:13.749263"
+    },
+    {
+      "name": "Daily Performance",
+      "success": true,
+      "details": "Portfolios analyzed: 3",
+      "error": "",
+      "timestamp": "2025-06-14T02:59:13.781111"
+    },
+    {
+      "name": "Active Price Alerts",
+      "success": true,
+      "details": "Active alerts: 0",
+      "error": "",
+      "timestamp": "2025-06-14T02:59:13.886789"
+    },
+    {
+      "name": "Opening Bell Alerts",
+      "success": true,
+      "details": "Alerts generated: 0",
+      "error": "",
+      "timestamp": "2025-06-14T02:59:13.917870"
+    },
+    {
+      "name": "Overnight News Analysis",
+      "success": true,
+      "details": "Symbols: 3, Sentiment: neutral",
+      "error": "",
+      "timestamp": "2025-06-14T02:59:14.031308"
+    },
+    {
+      "name": "Portfolio Summary Structure",
+      "success": true,
+      "details": "All required fields present",
+      "error": "",
+      "timestamp": "2025-06-14T02:59:14.135059"
+    },
+    {
+      "name": "LLM Analysis Structure",
+      "success": true,
+      "details": "All required fields present",
+      "error": "",
+      "timestamp": "2025-06-14T02:59:14.191863"
+    }
+  ]
+}

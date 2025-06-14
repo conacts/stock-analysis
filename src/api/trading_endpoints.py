@@ -11,7 +11,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from src.llm.deepseek_client import DeepSeekClient
+from src.llm.deepseek_analyzer import DeepSeekAnalyzer as DeepSeekClient
 from src.models.trading_models import (
     RiskStatus,
     StopResult,
