@@ -288,7 +288,7 @@ jobs:
 
             - name: Deploy to Trigger.dev Development
               run: |
-                  npx trigger.dev@latest deploy --env staging
+                  npx trigger.dev@latest deploy
               env:
                   TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
                   DATABASE_URL: ${{ secrets.DATABASE_URL }}
