@@ -28,14 +28,3 @@ export const getConfig = (): Config => {
 	};
 	return config;
 };
-
-// Lazy-loaded config instance
-let _config_instance: Config | null = null;
-export const config_instance = new Proxy({} as Config, {
-	get(target, prop) {
-		if (_config_instance === null) {
-			_config_instance = getConfig();
-		}
-		return _config_instance[prop as keyof Config];
-	}
-}); 
