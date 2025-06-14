@@ -52,10 +52,10 @@ uv run python run_tests.py --integration
 
 # Test portfolio CLI
 echo "💼 Testing portfolio CLI functionality..."
-uv run portfolio_manager.py create "Test Portfolio" personal "CI test portfolio"
-uv run portfolio_manager.py list
-uv run portfolio_manager.py add 1 AAPL 100 150.00
-uv run portfolio_manager.py show 1
+uv run scripts/portfolio_manager.py create "Test Portfolio" personal "CI test portfolio"
+uv run scripts/portfolio_manager.py list
+uv run scripts/portfolio_manager.py add 1 AAPL 100 150.00
+uv run scripts/portfolio_manager.py show 1
 
 # Clean up test database
 rm -f test.db

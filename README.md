@@ -131,13 +131,13 @@ bunx trigger.dev@latest dev
 
 ```bash
 # Create and manage portfolios
-uv run portfolio_manager.py create "My Portfolio" personal "Main investment portfolio"
-uv run portfolio_manager.py add 1 AAPL 100 150.00
-uv run portfolio_manager.py show 1
+uv run scripts/portfolio_manager.py create "My Portfolio" personal "Main investment portfolio"
+uv run scripts/portfolio_manager.py add 1 AAPL 100 150.00
+uv run scripts/portfolio_manager.py show 1
 
 # Get AI-powered recommendations
-uv run portfolio_manager.py sells 1    # Sell recommendations
-uv run portfolio_manager.py health 1   # Portfolio health check
+uv run scripts/portfolio_manager.py sells 1    # Sell recommendations
+uv run scripts/portfolio_manager.py health 1   # Portfolio health check
 
 # Set up Slack alerts
 uv run alert_manager.py test

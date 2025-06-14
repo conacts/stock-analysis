@@ -1,4 +1,5 @@
 import { task } from "@trigger.dev/sdk/v3";
+import { getValidatedEnv, createApiClient } from "../shared/env-validation";
 import {
 	PortfolioPayload,
 	PortfolioAnalysisResult,
@@ -206,6 +207,15 @@ export const dailyPortfolioAnalysis = task({
 	run: async () => {
 		console.log("🌅 Starting daily portfolio analysis for all portfolios");
 
+		// Validate environment first
+		try {
+			const env = getValidatedEnv(['PYTHON_API_URL', 'API_TOKEN']);
+			console.log(`🔗 Using API: ${env.PYTHON_API_URL}`);
+		} catch (error) {
+			console.error("❌ Environment validation failed:", error.message);
+			throw error;
+		}
+
 		// Get all active portfolios
 		const portfolios = await getActivePortfolios();
 		console.log(`📋 Found ${portfolios.length} active portfolios to analyze`);
@@ -253,17 +263,16 @@ export const dailyPortfolioAnalysis = task({
 
 // Get all active portfolios
 async function getActivePortfolios(): Promise<Array<{ id: number, name: string }>> {
-	const result = await fetch(`${process.env.PYTHON_API_URL}/portfolios/active`, {
-		method: 'GET',
-		headers: {
-			'Authorization': `Bearer ${process.env.API_TOKEN}`,
-			'Content-Type': 'application/json'
-		}
-	});
+	// Validate environment variables first
+	const env = getValidatedEnv(['PYTHON_API_URL', 'API_TOKEN']);
+	const apiClient = createApiClient(env);
 
-	if (!result.ok) {
-		throw new Error(`Failed to get active portfolios: ${result.statusText}`);
+	try {
+		return await apiClient.get('/portfolios/active');
+	} catch (error) {
+		console.error('❌ Failed to get active portfolios:', error);
+		console.error(`🔗 API URL: ${env.PYTHON_API_URL}`);
+		console.error(`🔑 API Token configured: ${env.API_TOKEN ? 'Yes' : 'No'}`);
+		throw new Error(`Failed to get active portfolios: ${error.message}`);
 	}
-
-	return await result.json();
 }

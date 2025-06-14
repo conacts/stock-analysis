@@ -1,231 +1,319 @@
-# Deployment Guide
+# Deployment Strategy for Stock Analysis System
 
-## Overview
+This document outlines the deployment strategy for hosting the Python API and automating deployments.
 
-This project uses GitHub Actions for continuous integration and automatic deployment to Trigger.dev. Every push to the `main` branch triggers a full CI/CD pipeline that includes testing, security checks, and automatic deployment of Trigger.dev tasks.
+## 🏗️ Architecture Overview
 
-## GitHub Actions Workflow
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   GitHub Repo   │───▶│   Python API    │───▶│   Trigger.dev   │
+│                 │    │   (Railway)     │    │   (Tasks)       │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  CI/CD Pipeline │    │   PostgreSQL    │    │   Slack Alerts  │
+│  (GitHub Actions)│    │   (Railway)     │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
 
-### Pipeline Structure
+## 🚀 Recommended Hosting Platform: Railway
 
-The CI/CD pipeline consists of several jobs that run in parallel and sequence:
+**Why Railway?**
 
-1. **test** - Runs on multiple Python versions (3.11, 3.12, 3.13)
-2. **test-llm** - Runs LLM tests (only on main branch pushes)
-3. **security** - Security scanning with bandit and safety
-4. **performance** - Performance benchmarks (only on main branch pushes)
-5. **deploy-docs** - Documentation generation (only on main branch pushes)
-6. **deploy-trigger** - Automatic Trigger.dev deployment (only on main branch pushes)
+-   ✅ **Easy Python deployment** - Automatic detection of Python apps
+-   ✅ **Built-in PostgreSQL** - Managed database with automatic backups
+-   ✅ **GitHub integration** - Automatic deployments on push
+-   ✅ **Environment management** - Separate staging/production environments
+-   ✅ **Affordable pricing** - $5/month for hobby projects, scales up
+-   ✅ **Zero-config deployments** - Just connect your repo
+-   ✅ **Built-in monitoring** - Logs, metrics, and health checks
 
-### Trigger.dev Deployment Jobs
+### Alternative Options Considered
 
-The pipeline now includes two deployment jobs:
+| Platform                      | Pros                                                | Cons                                  | Cost        |
+| ----------------------------- | --------------------------------------------------- | ------------------------------------- | ----------- |
+| **Railway** ⭐                | Easy setup, PostgreSQL included, GitHub integration | Newer platform                        | $5-20/month |
+| **Render**                    | Good Python support, free tier                      | Limited free tier, slower cold starts | $0-25/month |
+| **Fly.io**                    | Fast global deployment, good pricing                | More complex setup                    | $5-15/month |
+| **Heroku**                    | Mature platform, easy setup                         | Expensive, no free tier               | $25+/month  |
+| **DigitalOcean App Platform** | Good pricing, simple                                | Limited database options              | $12+/month  |
 
-1. **`deploy-trigger-dev`** - Deploys to development environment on **any push**
-2. **`deploy-trigger-prod`** - Deploys to production environment on **main branch pushes only**
+## 📋 Deployment Setup Guide
 
-Each job:
+### Step 1: Create Railway Account and Project
 
-1. Sets up Node.js and Python environments
-2. Installs all dependencies
-3. Validates the Python API server is accessible
-4. Deploys tasks to Trigger.dev using the official CLI
+1. **Sign up at [Railway.app](https://railway.app)**
+2. **Connect your GitHub account**
+3. **Create new project from GitHub repo**
+4. **Add PostgreSQL database service**
 
-## Required GitHub Secrets
+### Step 2: Configure Environment Variables
 
-To enable automatic deployment, you need to configure the following secrets in your GitHub repository:
-
-### Trigger.dev Secrets
-
--   `TRIGGER_ACCESS_TOKEN` - Your Trigger.dev access token (get from Trigger.dev dashboard)
-
-### Database & API Secrets
-
--   `DATABASE_URL` - PostgreSQL connection string for production
--   `PYTHON_API_URL` - Public URL of your deployed Python API server (e.g., https://your-api.herokuapp.com)
--   `API_TOKEN` - Authentication token for the Python API server
-
-### External Service Secrets
-
--   `DEEPSEEK_API_KEY` - DeepSeek API key for LLM functionality
--   `SLACK_BOT_TOKEN` - Slack bot token for notifications
--   `SLACK_USER_ID` - Your Slack user ID for direct messages
-
-## Setting Up GitHub Secrets
-
-1. Go to your GitHub repository
-2. Navigate to **Settings** → **Secrets and variables** → **Actions**
-3. Click **New repository secret**
-4. Add each secret with its corresponding value
-
-### Getting Your Trigger.dev Access Token
-
-1. Log in to [Trigger.dev](https://trigger.dev)
-2. Go to your project dashboard
-3. Navigate to **Settings** → **API Keys**
-4. Create a new access token or copy an existing one
-5. Add it as `TRIGGER_ACCESS_TOKEN` in GitHub secrets
-
-## Manual Deployment
-
-You can also deploy manually using the npm scripts:
+Set these in Railway dashboard:
 
 ```bash
-# Deploy to development environment
-npm run trigger:deploy:dev
+# Required
+DATABASE_URL=postgresql://user:pass@host:port/db  # Auto-generated by Railway
+ALPHA_VANTAGE_API_KEY=your_alpha_vantage_key
+API_TOKEN=your_secure_api_token
 
-# Deploy to production environment
+# Optional but recommended
+DEEPSEEK_API_KEY=your_deepseek_key
+SLACK_BOT_TOKEN=your_slack_bot_token
+SLACK_USER_ID=your_slack_user_id
+ENVIRONMENT=production
+```
+
+### Step 3: Create Dockerfile
+
+```dockerfile
+# Dockerfile
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Install dependencies
+RUN uv sync --frozen --no-cache
+
+# Copy source code
+COPY src/ ./src/
+COPY scripts/ ./scripts/
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
+
+# Run the API server
+CMD ["uv", "run", "python", "-m", "src.api.server"]
+```
+
+### Step 4: Configure Railway Deployment
+
+Create `railway.toml`:
+
+```toml
+[build]
+builder = "dockerfile"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 10
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[[services]]
+name = "stock-analysis-api"
+source = "."
+
+[services.variables]
+PORT = "8000"
+```
+
+### Step 5: Set up GitHub Actions for Automated Deployment
+
+Create `.github/workflows/deploy.yml`:
+
+```yaml
+name: Deploy to Railway
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - name: Run CI tests
+              run: make ci
+
+    deploy-staging:
+        runs-on: ubuntu-latest
+        needs: [test]
+        if: github.event_name == 'pull_request'
+        steps:
+            - uses: actions/checkout@v4
+            - name: Deploy to Railway Staging
+              uses: railway-app/railway-action@v1
+              with:
+                  railway-token: ${{ secrets.RAILWAY_TOKEN_STAGING }}
+                  service: stock-analysis-api-staging
+
+    deploy-production:
+        runs-on: ubuntu-latest
+        needs: [test]
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        steps:
+            - uses: actions/checkout@v4
+            - name: Deploy to Railway Production
+              uses: railway-app/railway-action@v1
+              with:
+                  railway-token: ${{ secrets.RAILWAY_TOKEN_PROD }}
+                  service: stock-analysis-api-prod
+
+            - name: Update Trigger.dev Environment
+              run: |
+                  echo "🚀 Production API deployed successfully"
+                  echo "📝 Update PYTHON_API_URL in Trigger.dev to: https://your-app.railway.app"
+
+    deploy-trigger:
+        runs-on: ubuntu-latest
+        needs: [deploy-production]
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        steps:
+            - uses: actions/checkout@v4
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+            - name: Deploy Trigger.dev Tasks
+              run: |
+                  npm install
+                  npx trigger.dev@latest deploy --env prod
+              env:
+                  TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
+                  PYTHON_API_URL: https://your-app.railway.app
+                  # ... other env vars
+```
+
+## 🔧 Required GitHub Secrets
+
+Add these secrets in your GitHub repository settings:
+
+```bash
+# Railway deployment tokens
+RAILWAY_TOKEN_STAGING=your_staging_token
+RAILWAY_TOKEN_PROD=your_production_token
+
+# Trigger.dev
+TRIGGER_ACCESS_TOKEN=your_trigger_token
+
+# API credentials
+DATABASE_URL=your_production_db_url
+ALPHA_VANTAGE_API_KEY=your_api_key
+API_TOKEN=your_secure_token
+DEEPSEEK_API_KEY=your_deepseek_key
+SLACK_BOT_TOKEN=your_slack_token
+SLACK_USER_ID=your_slack_user_id
+
+# Environment URLs (set after deployment)
+STAGING_API_URL=https://your-staging-app.railway.app
+PRODUCTION_API_URL=https://your-production-app.railway.app
+```
+
+## 🔄 Deployment Workflow
+
+### Automatic Deployments
+
+1. **Pull Request** → Deploy to staging environment
+2. **Merge to main** → Deploy to production environment
+3. **Production deployment** → Update Trigger.dev tasks
+
+### Manual Deployment Commands
+
+```bash
+# Deploy to Railway manually
+railway login
+railway link your-project-id
+railway up
+
+# Deploy Trigger.dev tasks manually
 npm run trigger:deploy:prod
-
-# Start local development mode
-npm run trigger:dev
-
-# List deployed tasks (development)
-npm run trigger:list:dev
-
-# List deployed tasks (production)
-npm run trigger:list:prod
-
-# View logs (development)
-npm run trigger:logs:dev
-
-# View logs (production)
-npm run trigger:logs:prod
 ```
 
-## Environment Variables
+## 📊 Monitoring and Health Checks
 
-The deployment process uses the following environment variables:
+### Health Check Endpoint
 
-### Required for Trigger.dev Tasks
+The API includes a health check at `/health`:
 
--   `TRIGGER_ACCESS_TOKEN` - Trigger.dev authentication
--   `DATABASE_URL` - PostgreSQL connection
--   `PYTHON_API_URL` - Public URL of your deployed Python API server
--   `API_TOKEN` - API authentication token
-
-### Optional for Enhanced Features
-
--   `DEEPSEEK_API_KEY` - LLM analysis capabilities
--   `SLACK_BOT_TOKEN` - Slack notifications
--   `SLACK_USER_ID` - Direct message target
-
-## Deployment Architecture
-
-```
-GitHub Push → GitHub Actions → Tests Pass → Deploy to Development
-     ↓                                              ↓
-Main Branch? ────────────────────────────→ Deploy to Production
-     ↓                                              ↓
-Validate Python API Server (must be publicly accessible)
-     ↓                                              ↓
-Deploy Trigger.dev Tasks (dev/prod environments)
-     ↓                                              ↓
-Tasks can call Python API endpoints
+```python
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.0",
+        "database": "connected",
+        "services": {
+            "portfolio_manager": "active",
+            "stock_analyzer": "active",
+            "alert_system": "active"
+        }
+    }
 ```
 
-### Deployment Flow
+### Monitoring Setup
 
-1. **Any Push**: Deploys to development environment after tests pass
-2. **Main Branch Push**: Additionally deploys to production environment after security checks
-3. **Environment Separation**: Development and production tasks are isolated
-4. **Testing**: Development deployment is tested before production deployment
+1. **Railway Dashboard** - Built-in metrics and logs
+2. **Trigger.dev Dashboard** - Task execution monitoring
+3. **Custom Alerts** - Slack notifications for failures
+4. **Database Monitoring** - PostgreSQL performance metrics
 
-## Python API Server Deployment
+## 🚨 Rollback Strategy
 
-**Important**: Your Python API server must be deployed to a publicly accessible URL before Trigger.dev deployment will work. Options include:
+### Automatic Rollback
 
-### Cloud Deployment Options
+Railway supports automatic rollbacks on health check failures.
 
-1. **Railway** (Recommended)
-
-    ```bash
-    # Install Railway CLI
-    npm install -g @railway/cli
-
-    # Deploy
-    railway login
-    railway init
-    railway up
-    ```
-
-2. **Heroku**
-
-    ```bash
-    # Create Procfile
-    echo "web: uvicorn src.api.main:app --host 0.0.0.0 --port \$PORT" > Procfile
-
-    # Deploy
-    heroku create your-stock-api
-    git push heroku main
-    ```
-
-3. **Render**
-
-    - Connect your GitHub repo
-    - Set build command: `uv sync --all-extras`
-    - Set start command: `uv run uvicorn src.api.main:app --host 0.0.0.0 --port $PORT`
-
-4. **DigitalOcean App Platform**
-    - Similar setup to Render
-    - Good performance and pricing
-
-### Environment Variables for API Deployment
-
-Your deployed API server needs these environment variables:
+### Manual Rollback
 
 ```bash
-API_TOKEN=your-secure-api-token
-DATABASE_URL=your-postgresql-url
-DEEPSEEK_API_KEY=your-deepseek-key
+# Rollback to previous deployment
+railway rollback
+
+# Rollback Trigger.dev tasks
+npx trigger.dev@latest deploy --env prod --version previous
 ```
 
-## Troubleshooting Deployment
+## 💰 Cost Estimation
 
-### Common Issues
+### Railway Costs (Monthly)
 
-1. **Missing Secrets**: Ensure all required GitHub secrets are configured
-2. **API Server Startup**: The Python API server must start successfully for deployment
-3. **Environment Validation**: Tasks use fail-fast validation and will fail if required env vars are missing
+-   **Hobby Plan**: $5/month
 
-### Debugging Steps
+    -   512MB RAM, 1 vCPU
+    -   PostgreSQL included
+    -   Good for development/small production
 
-1. Check GitHub Actions logs for detailed error messages
-2. Verify all secrets are properly configured
-3. Test the Python API server locally: `make run-api`
-4. Test Trigger.dev connection: `npm run trigger:list`
+-   **Pro Plan**: $20/month
+    -   8GB RAM, 8 vCPU
+    -   High availability
+    -   Better for production workloads
 
-### Manual Deployment Fallback
+### Total Monthly Cost
 
-If automatic deployment fails, you can deploy manually:
+-   **Development**: ~$5/month (Railway Hobby)
+-   **Production**: ~$20-30/month (Railway Pro + Trigger.dev)
 
-```bash
-# Ensure API server is running
-make run-api
+## 🎯 Next Steps
 
-# Deploy in another terminal
-npm run trigger:deploy
-```
+1. **Set up Railway account** and connect GitHub repo
+2. **Configure environment variables** in Railway dashboard
+3. **Add GitHub secrets** for automated deployment
+4. **Test deployment pipeline** with a small change
+5. **Update Trigger.dev** with production API URL
+6. **Monitor deployment** and set up alerts
 
-## Monitoring Deployments
+## 🔗 Useful Links
 
--   **GitHub Actions**: Monitor deployment status in the Actions tab
--   **Trigger.dev Dashboard**: View deployed tasks and their status
--   **Logs**: Use `npm run trigger:logs` to view task execution logs
+-   [Railway Documentation](https://docs.railway.app/)
+-   [Railway Python Guide](https://docs.railway.app/guides/python)
+-   [Trigger.dev Deployment Guide](https://trigger.dev/docs/documentation/guides/deployment)
+-   [GitHub Actions Railway Integration](https://github.com/railway-app/railway-action)
 
-## Security Considerations
-
--   All sensitive data is stored in GitHub secrets
--   API tokens are rotated regularly
--   Database connections use SSL
--   Tasks validate environment variables before execution
-
-## Next Steps
-
-After setting up deployment:
-
-1. Configure all required GitHub secrets
-2. Push to main branch to trigger first deployment
-3. Monitor the deployment in GitHub Actions
-4. Verify tasks are running in Trigger.dev dashboard
-5. Test task execution and monitoring
+This deployment strategy provides a robust, scalable, and cost-effective solution for hosting your Python API with automated CI/CD pipelines.

@@ -65,10 +65,10 @@ jobs:
                   TESTING: "1"
               run: |
                   # Test portfolio creation and basic operations
-                  uv run portfolio_manager.py create "Test Portfolio" --type personal --description "CI test portfolio"
-                  uv run portfolio_manager.py list
-                  uv run portfolio_manager.py add 1 AAPL 100 150.00
-                  uv run portfolio_manager.py show 1
+                  uv run scripts/portfolio_manager.py create "Test Portfolio" --type personal --description "CI test portfolio"
+                  uv run scripts/portfolio_manager.py list
+                  uv run scripts/portfolio_manager.py add 1 AAPL 100 150.00
+                  uv run scripts/portfolio_manager.py show 1
 
             - name: Upload coverage reports to Codecov
               uses: codecov/codecov-action@v4
@@ -218,16 +218,16 @@ jobs:
                   ## CLI Usage
                   \`\`\`bash
                   # Create portfolio
-                  uv run portfolio_manager.py create \"My Portfolio\" personal \"Main investment portfolio\"
+                  uv run scripts/portfolio_manager.py create \"My Portfolio\" personal \"Main investment portfolio\"
 
                   # Add position
-                  uv run portfolio_manager.py add 1 AAPL 100 150.00
+                  uv run scripts/portfolio_manager.py add 1 AAPL 100 150.00
 
                   # View portfolio
-                  uv run portfolio_manager.py show 1
+                  uv run scripts/portfolio_manager.py show 1
 
                   # Get sell recommendations
-                  uv run portfolio_manager.py sells 1
+                  uv run scripts/portfolio_manager.py sells 1
                   \`\`\`
                   ''')
                   print('Documentation generated successfully')
