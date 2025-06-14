@@ -40,7 +40,7 @@ class AlpacaPaperTradingClient:
 
         logger.info("✅ Alpaca Paper Trading Client initialized")
 
-    def get_account_info(self) -> Dict[str, Any]:
+    async def get_account_info(self) -> Dict[str, Any]:
         """Get account information and buying power"""
         try:
             account = self.trading_client.get_account()
@@ -59,7 +59,7 @@ class AlpacaPaperTradingClient:
             logger.error(f"❌ Failed to get account info: {e}")
             raise
 
-    def get_positions(self) -> List[Dict[str, Any]]:
+    async def get_positions(self) -> List[Dict[str, Any]]:
         """Get all current positions"""
         try:
             positions = self.trading_client.get_all_positions()
@@ -81,7 +81,7 @@ class AlpacaPaperTradingClient:
             logger.error(f"❌ Failed to get positions: {e}")
             raise
 
-    def place_market_order(self, symbol: str, quantity: float, side: str, time_in_force: str = "day") -> Dict[str, Any]:
+    async def place_market_order(self, symbol: str, quantity: float, side: str, time_in_force: str = "day") -> Dict[str, Any]:
         """
         Place a market order
 
@@ -118,7 +118,7 @@ class AlpacaPaperTradingClient:
             logger.error(f"❌ Failed to place market order: {e}")
             raise
 
-    def place_limit_order(self, symbol: str, quantity: float, side: str, limit_price: float, time_in_force: str = "day") -> Dict[str, Any]:
+    async def place_limit_order(self, symbol: str, quantity: float, side: str, limit_price: float, time_in_force: str = "day") -> Dict[str, Any]:
         """
         Place a limit order
 
@@ -157,7 +157,7 @@ class AlpacaPaperTradingClient:
             logger.error(f"❌ Failed to place limit order: {e}")
             raise
 
-    def get_orders(self, status: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+    async def get_orders(self, status: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
         """
         Get orders with optional status filter
 
@@ -192,17 +192,36 @@ class AlpacaPaperTradingClient:
             logger.error(f"❌ Failed to get orders: {e}")
             raise
 
-    def cancel_order(self, order_id: str) -> bool:
+    async def get_position(self, symbol: str) -> Dict[str, Any]:
+        """Get position for a specific symbol"""
+        try:
+            position = self.trading_client.get_open_position(symbol)
+            return {
+                "symbol": position.symbol,
+                "quantity": float(position.qty),
+                "market_value": float(position.market_value) if position.market_value else 0,
+                "cost_basis": float(position.cost_basis) if position.cost_basis else 0,
+                "unrealized_pl": float(position.unrealized_pl) if position.unrealized_pl else 0,
+                "unrealized_plpc": float(position.unrealized_plpc) if position.unrealized_plpc else 0,
+                "current_price": float(position.current_price) if position.current_price else 0,
+                "side": position.side.value,
+                "avg_entry_price": float(position.avg_entry_price) if position.avg_entry_price else 0,
+            }
+        except Exception as e:
+            logger.error(f"❌ Failed to get position for {symbol}: {e}")
+            raise
+
+    async def cancel_order(self, order_id: str) -> Dict[str, Any]:
         """Cancel an open order"""
         try:
             self.trading_client.cancel_order_by_id(order_id)
             logger.info(f"✅ Order cancelled: {order_id}")
-            return True
+            return {"order_id": order_id, "status": "cancelled"}
         except Exception as e:
             logger.error(f"❌ Failed to cancel order {order_id}: {e}")
-            return False
+            raise
 
-    def close_position(self, symbol: str, percentage: Optional[float] = None) -> Dict[str, Any]:
+    async def close_position(self, symbol: str, percentage: Optional[float] = None) -> Dict[str, Any]:
         """
         Close a position (partial or full)
 
@@ -224,7 +243,49 @@ class AlpacaPaperTradingClient:
             logger.error(f"❌ Failed to close position {symbol}: {e}")
             raise
 
-    def get_market_data(self, symbol: str, timeframe: str = "1Day", start_date: Optional[datetime] = None, end_date: Optional[datetime] = None) -> List[Dict[str, Any]]:
+    async def close_all_positions(self) -> Dict[str, Any]:
+        """Close all open positions"""
+        try:
+            orders = self.trading_client.close_all_positions(cancel_orders=True)
+            logger.info(f"✅ All positions closed: {len(orders)} orders created")
+            return {"orders_created": len(orders), "orders": [{"order_id": order.id, "symbol": order.symbol, "quantity": float(order.qty), "side": order.side.value, "status": order.status.value} for order in orders]}
+        except Exception as e:
+            logger.error(f"❌ Failed to close all positions: {e}")
+            raise
+
+    async def cancel_all_orders(self) -> Dict[str, Any]:
+        """Cancel all open orders"""
+        try:
+            orders = self.trading_client.cancel_orders()
+            logger.info(f"✅ All orders cancelled: {len(orders)} orders")
+            return {"orders_cancelled": len(orders), "orders": [{"order_id": order.id, "symbol": order.symbol, "status": order.status.value} for order in orders]}
+        except Exception as e:
+            logger.error(f"❌ Failed to cancel all orders: {e}")
+            raise
+
+    async def get_order(self, order_id: str) -> Dict[str, Any]:
+        """Get specific order by ID"""
+        try:
+            order = self.trading_client.get_order_by_id(order_id)
+            return {
+                "order_id": order.id,
+                "symbol": order.symbol,
+                "quantity": float(order.qty),
+                "side": order.side.value,
+                "order_type": order.order_type.value,
+                "status": order.status.value,
+                "submitted_at": order.submitted_at.isoformat() if order.submitted_at else None,
+                "filled_at": order.filled_at.isoformat() if order.filled_at else None,
+                "filled_qty": float(order.filled_qty) if order.filled_qty else 0,
+                "filled_avg_price": float(order.filled_avg_price) if order.filled_avg_price else 0,
+                "limit_price": float(order.limit_price) if order.limit_price else None,
+                "stop_price": float(order.stop_price) if order.stop_price else None,
+            }
+        except Exception as e:
+            logger.error(f"❌ Failed to get order {order_id}: {e}")
+            raise
+
+    async def get_market_data(self, symbol: str, timeframe: str = "1Day", start_date: Optional[datetime] = None, end_date: Optional[datetime] = None) -> Dict[str, Any]:
         """
         Get historical market data
 
@@ -251,15 +312,24 @@ class AlpacaPaperTradingClient:
             bars = self.data_client.get_stock_bars(request_params)
 
             # Convert to list of dictionaries
-            data = []
+            bars_data = []
             for bar in bars[symbol]:
-                data.append({"timestamp": bar.timestamp.isoformat(), "open": float(bar.open), "high": float(bar.high), "low": float(bar.low), "close": float(bar.close), "volume": int(bar.volume), "vwap": float(bar.vwap) if bar.vwap else None})
+                bars_data.append({"timestamp": bar.timestamp.isoformat(), "open": float(bar.open), "high": float(bar.high), "low": float(bar.low), "close": float(bar.close), "volume": int(bar.volume), "vwap": float(bar.vwap) if bar.vwap else None})
 
-            logger.info(f"✅ Retrieved {len(data)} bars for {symbol}")
-            return data
+            logger.info(f"✅ Retrieved {len(bars_data)} bars for {symbol}")
+            return {"symbol": symbol, "timeframe": timeframe, "bars": bars_data, "count": len(bars_data)}
 
         except Exception as e:
             logger.error(f"❌ Failed to get market data for {symbol}: {e}")
+            raise
+
+    async def get_market_status(self) -> Dict[str, Any]:
+        """Get comprehensive market status"""
+        try:
+            clock = self.trading_client.get_clock()
+            return {"is_open": clock.is_open, "next_open": clock.next_open.isoformat() if clock.next_open else None, "next_close": clock.next_close.isoformat() if clock.next_close else None, "timezone": "America/New_York"}
+        except Exception as e:
+            logger.error(f"❌ Failed to get market status: {e}")
             raise
 
     def is_market_open(self) -> bool:

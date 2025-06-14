@@ -57,9 +57,9 @@ test_endpoint() {
     fi
 
     # Extract HTTP status code (last line)
-    http_code=$(echo "$response" | tail -n1)
+    http_code=$(echo "$response" | tail -n 1)
     # Extract response body (all but last line)
-    response_body=$(echo "$response" | head -n -1)
+    response_body=$(echo "$response" | sed '$d')
 
     if [ "$http_code" -eq 200 ] || [ "$http_code" -eq 201 ]; then
         echo -e "   ${GREEN}✅ SUCCESS ($http_code)${NC}"
