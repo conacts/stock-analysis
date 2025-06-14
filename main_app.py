@@ -75,22 +75,14 @@ class StockResearchApp:
 
         for i, pick in enumerate(report["top_picks"], 1):
             print(f"\n{i}. {pick['symbol']} - {pick['company']}")
-            print(
-                f"   Score: {pick['score']:.1f}/100 | Rating: {pick['rating']} | Confidence: {pick['confidence']}"
-            )
+            print(f"   Score: {pick['score']:.1f}/100 | Rating: {pick['rating']} | Confidence: {pick['confidence']}")
             print(f"   Sector: {pick['sector']}")
-            print(
-                f"   Price: ${pick['current_price']:.2f} → Target: ${pick['target_price']:.2f} ({pick['upside_potential']:+.1f}%)"
-            )
-            print(
-                f"   Allocation: {pick['allocation']} | Time Horizon: {pick['time_horizon']}"
-            )
+            print(f"   Price: ${pick['current_price']:.2f} → Target: ${pick['target_price']:.2f} ({pick['upside_potential']:+.1f}%)")
+            print(f"   Allocation: {pick['allocation']} | Time Horizon: {pick['time_horizon']}")
 
             # Key metrics
             metrics = pick["key_metrics"]
-            print(
-                f"   Metrics: PE {metrics['pe_ratio']:.1f} | ROE {metrics['roe']*100:.1f}% | Growth {metrics['revenue_growth']*100:.1f}%"
-            )
+            print(f"   Metrics: PE {metrics['pe_ratio']:.1f} | ROE {metrics['roe'] * 100:.1f}% | Growth {metrics['revenue_growth'] * 100:.1f}%")
 
             # Strengths (top 3)
             if pick["strengths"]:
@@ -140,9 +132,7 @@ class StockResearchApp:
         if performance["active_positions"]:
             print("\nActive Positions:")
             for pos in performance["active_positions"]:
-                print(
-                    f"  {pos['symbol']}: {pos['return_pct']:+.2f}% ({pos['days_held']} days)"
-                )
+                print(f"  {pos['symbol']}: {pos['return_pct']:+.2f}% ({pos['days_held']} days)")
 
     def get_recent_decisions(self, days: int = 7):
         """Display recent decisions"""
@@ -160,10 +150,7 @@ class StockResearchApp:
             print(f"Reasoning: {decision['reasoning']}")
 
             if decision["selected_stocks"]:
-                symbols = [
-                    stock.get("symbol", "Unknown")
-                    for stock in decision["selected_stocks"]
-                ]
+                symbols = [stock.get("symbol", "Unknown") for stock in decision["selected_stocks"]]
                 print(f"Selected: {', '.join(symbols)}")
 
     def analyze_single_stock(self, symbol: str):

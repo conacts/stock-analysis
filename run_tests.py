@@ -13,7 +13,7 @@ Usage:
 
 import argparse
 import os
-import subprocess
+import subprocess  # nosec B404 - subprocess is needed for running tests
 import sys
 from pathlib import Path
 
@@ -25,7 +25,7 @@ def run_command(cmd, description):
     print("-" * 60)
 
     try:
-        subprocess.run(cmd, check=True, capture_output=False)
+        subprocess.run(cmd, check=True, capture_output=False)  # nosec B603 - cmd is constructed internally
         print(f"✅ {description} completed successfully")
         return True
     except subprocess.CalledProcessError as e:
@@ -35,20 +35,12 @@ def run_command(cmd, description):
 
 def main():
     parser = argparse.ArgumentParser(description="Run tests for stock analysis system")
-    parser.add_argument(
-        "--unit", action="store_true", help="Run unit tests only (default)"
-    )
-    parser.add_argument(
-        "--integration", action="store_true", help="Run integration tests"
-    )
-    parser.add_argument(
-        "--llm", action="store_true", help="Run LLM tests (requires API key)"
-    )
+    parser.add_argument("--unit", action="store_true", help="Run unit tests only (default)")
+    parser.add_argument("--integration", action="store_true", help="Run integration tests")
+    parser.add_argument("--llm", action="store_true", help="Run LLM tests (requires API key)")
     parser.add_argument("--all", action="store_true", help="Run all tests")
     parser.add_argument("--fast", action="store_true", help="Run only fast unit tests")
-    parser.add_argument(
-        "--coverage", action="store_true", help="Generate coverage report"
-    )
+    parser.add_argument("--coverage", action="store_true", help="Generate coverage report")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
     parser.add_argument("--parallel", "-n", type=int, help="Number of parallel workers")
 
