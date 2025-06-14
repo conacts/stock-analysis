@@ -1,0 +1,32 @@
+import { defineConfig } from "@trigger.dev/sdk/v3";
+import { pythonExtension } from "@trigger.dev/python/extension";
+
+export default defineConfig({
+  project: "<your-project-ref>", // Replace with your trigger.dev project reference
+  build: {
+    extensions: [
+      pythonExtension({
+        // Include all Python scripts and source code
+        scripts: [
+          "./scripts/**/*.py",
+          "./src/**/*.py",
+        ],
+        // Use our requirements.txt for dependencies
+        requirementsFile: "./requirements.txt",
+        // Point to our virtual environment for development
+        devPythonBinaryPath: ".venv/bin/python",
+      }),
+    ],
+  },
+  // Optional: Configure retries and timeouts
+  retries: {
+    enabledInDev: true,
+    default: {
+      maxAttempts: 3,
+      minTimeoutInMs: 1000,
+      maxTimeoutInMs: 10000,
+      factor: 2,
+      randomize: true,
+    },
+  },
+});

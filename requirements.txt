@@ -1,0 +1,26 @@
+# Stock Analysis System - Python Dependencies for Trigger.dev
+# Generated from pyproject.toml for trigger.dev automation
+
+# Core dependencies
+alembic>=1.16.1
+matplotlib>=3.10.3
+numpy>=2.3.0
+openai>=1.86.0
+pandas>=2.3.0
+plotly>=6.1.2
+psycopg2-binary>=2.9.10
+python-dotenv>=1.1.0
+requests>=2.32.4
+seaborn>=0.13.2
+sqlalchemy>=2.0.41
+yfinance>=0.2.63
+
+# Testing (for validation in trigger.dev)
+pytest>=8.4.0
+pytest-asyncio>=1.0.0
+pytest-cov>=6.2.1
+pytest-mock>=3.14.1
+
+# Development tools (optional for trigger.dev)
+black>=25.1.0
+isort>=6.0.1
