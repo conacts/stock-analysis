@@ -323,7 +323,7 @@ async def send_premarket_summary(data: Dict, token: str = Depends(verify_token))
 async def get_account_info(token: str = Depends(verify_token)):
     """Get Alpaca account information"""
     try:
-        from src.trading.alpaca_client import AlpacaPaperTradingClient
+        from trading.alpaca_client import AlpacaPaperTradingClient
 
         client = AlpacaPaperTradingClient()
         account_info = await client.get_account_info()
@@ -336,7 +336,7 @@ async def get_account_info(token: str = Depends(verify_token)):
 async def get_positions(token: str = Depends(verify_token)):
     """Get all current positions"""
     try:
-        from src.trading.alpaca_client import AlpacaPaperTradingClient
+        from trading.alpaca_client import AlpacaPaperTradingClient
 
         client = AlpacaPaperTradingClient()
         positions = await client.get_positions()
@@ -349,7 +349,7 @@ async def get_positions(token: str = Depends(verify_token)):
 async def get_position(symbol: str, token: str = Depends(verify_token)):
     """Get position for specific symbol"""
     try:
-        from src.trading.alpaca_client import AlpacaPaperTradingClient
+        from trading.alpaca_client import AlpacaPaperTradingClient
 
         client = AlpacaPaperTradingClient()
         position = await client.get_position(symbol.upper())
@@ -362,7 +362,7 @@ async def get_position(symbol: str, token: str = Depends(verify_token)):
 async def close_position(symbol: str, token: str = Depends(verify_token)):
     """Close position for specific symbol"""
     try:
-        from src.trading.alpaca_client import AlpacaPaperTradingClient
+        from trading.alpaca_client import AlpacaPaperTradingClient
 
         client = AlpacaPaperTradingClient()
         result = await client.close_position(symbol.upper())
@@ -375,7 +375,7 @@ async def close_position(symbol: str, token: str = Depends(verify_token)):
 async def close_all_positions(token: str = Depends(verify_token)):
     """Close all positions"""
     try:
-        from src.trading.alpaca_client import AlpacaPaperTradingClient
+        from trading.alpaca_client import AlpacaPaperTradingClient
 
         client = AlpacaPaperTradingClient()
         result = await client.close_all_positions()
@@ -403,10 +403,10 @@ class LimitOrderRequest(BaseModel):
 async def place_market_order(order: MarketOrderRequest, token: str = Depends(verify_token)):
     """Place a market order"""
     try:
-        from src.trading.alpaca_client import AlpacaPaperTradingClient
+        from trading.alpaca_client import AlpacaPaperTradingClient
 
         client = AlpacaPaperTradingClient()
-        result = await client.place_market_order(symbol=order.symbol.upper(), qty=order.qty, side=order.side, time_in_force=order.time_in_force)
+        result = await client.place_market_order(symbol=order.symbol.upper(), quantity=order.qty, side=order.side, time_in_force=order.time_in_force)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to place market order: {str(e)}")
@@ -416,10 +416,10 @@ async def place_market_order(order: MarketOrderRequest, token: str = Depends(ver
 async def place_limit_order(order: LimitOrderRequest, token: str = Depends(verify_token)):
     """Place a limit order"""
     try:
-        from src.trading.alpaca_client import AlpacaPaperTradingClient
+        from trading.alpaca_client import AlpacaPaperTradingClient
 
         client = AlpacaPaperTradingClient()
-        result = await client.place_limit_order(symbol=order.symbol.upper(), qty=order.qty, side=order.side, limit_price=order.limit_price, time_in_force=order.time_in_force)
+        result = await client.place_limit_order(symbol=order.symbol.upper(), quantity=order.qty, side=order.side, limit_price=order.limit_price, time_in_force=order.time_in_force)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to place limit order: {str(e)}")
@@ -429,7 +429,7 @@ async def place_limit_order(order: LimitOrderRequest, token: str = Depends(verif
 async def get_orders(status: str = "all", limit: int = 50, token: str = Depends(verify_token)):
     """Get orders with optional status filter"""
     try:
-        from src.trading.alpaca_client import AlpacaPaperTradingClient
+        from trading.alpaca_client import AlpacaPaperTradingClient
 
         client = AlpacaPaperTradingClient()
         orders = await client.get_orders(status=status, limit=limit)
@@ -442,7 +442,7 @@ async def get_orders(status: str = "all", limit: int = 50, token: str = Depends(
 async def get_order(order_id: str, token: str = Depends(verify_token)):
     """Get specific order by ID"""
     try:
-        from src.trading.alpaca_client import AlpacaPaperTradingClient
+        from trading.alpaca_client import AlpacaPaperTradingClient
 
         client = AlpacaPaperTradingClient()
         order = await client.get_order(order_id)
@@ -455,7 +455,7 @@ async def get_order(order_id: str, token: str = Depends(verify_token)):
 async def cancel_order(order_id: str, token: str = Depends(verify_token)):
     """Cancel specific order"""
     try:
-        from src.trading.alpaca_client import AlpacaPaperTradingClient
+        from trading.alpaca_client import AlpacaPaperTradingClient
 
         client = AlpacaPaperTradingClient()
         result = await client.cancel_order(order_id)
@@ -468,7 +468,7 @@ async def cancel_order(order_id: str, token: str = Depends(verify_token)):
 async def cancel_all_orders(token: str = Depends(verify_token)):
     """Cancel all open orders"""
     try:
-        from src.trading.alpaca_client import AlpacaPaperTradingClient
+        from trading.alpaca_client import AlpacaPaperTradingClient
 
         client = AlpacaPaperTradingClient()
         result = await client.cancel_all_orders()
@@ -481,10 +481,10 @@ async def cancel_all_orders(token: str = Depends(verify_token)):
 async def get_market_data(symbol: str, timeframe: str = "1Day", start: str = None, end: str = None, token: str = Depends(verify_token)):
     """Get market data for symbol"""
     try:
-        from src.trading.alpaca_client import AlpacaPaperTradingClient
+        from trading.alpaca_client import AlpacaPaperTradingClient
 
         client = AlpacaPaperTradingClient()
-        data = await client.get_market_data(symbol=symbol.upper(), timeframe=timeframe, start=start, end=end)
+        data = await client.get_market_data(symbol=symbol.upper(), timeframe=timeframe, start_date=start, end_date=end)
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get market data: {str(e)}")
@@ -494,7 +494,7 @@ async def get_market_data(symbol: str, timeframe: str = "1Day", start: str = Non
 async def get_market_status(token: str = Depends(verify_token)):
     """Get current market status"""
     try:
-        from src.trading.alpaca_client import AlpacaPaperTradingClient
+        from trading.alpaca_client import AlpacaPaperTradingClient
 
         client = AlpacaPaperTradingClient()
         status = await client.get_market_status()
@@ -507,7 +507,7 @@ async def get_market_status(token: str = Depends(verify_token)):
 async def get_trading_portfolio_summary(token: str = Depends(verify_token)):
     """Get comprehensive portfolio summary from Alpaca"""
     try:
-        from src.trading.alpaca_client import AlpacaPaperTradingClient
+        from trading.alpaca_client import AlpacaPaperTradingClient
 
         client = AlpacaPaperTradingClient()
 
@@ -548,15 +548,80 @@ async def get_trading_portfolio_summary(token: str = Depends(verify_token)):
 # ============================================================================
 
 
+class AITradingRequest(BaseModel):
+    context: str
+    symbols: Optional[List[str]] = None
+    conversation_messages: Optional[List[Dict[str, str]]] = None
+    portfolio_id: Optional[int] = None
+    max_iterations: int = 25
+
+
+class ConversationMessage(BaseModel):
+    role: str  # "user", "assistant", "system"
+    content: str
+
+
+class AIConversationRequest(BaseModel):
+    messages: List[ConversationMessage]
+    max_iterations: int = 25
+    portfolio_id: Optional[int] = None
+
+
 @app.post("/trading/ai-analysis")
 async def analyze_for_trading(symbols: List[str], token: str = Depends(verify_token)):
-    """Analyze symbols using AI for trading decisions"""
+    """Analyze symbols using AI for trading decisions (legacy endpoint)"""
     try:
-        # This will integrate with your DeepSeek analyzer
-        # For now, return a placeholder
-        return {"symbols_analyzed": symbols, "analysis_timestamp": datetime.now().isoformat(), "recommendations": [], "risk_assessment": "pending_implementation", "suggested_actions": []}
+        from ai.deepseek_trading_bot import trading_bot
+
+        context = f"Analyze these symbols: {', '.join(symbols)}"
+        result = await trading_bot.analyze_and_trade(context, symbols)
+
+        return {
+            "symbols_analyzed": symbols,
+            "analysis_timestamp": result.get("timestamp"),
+            "ai_response": result.get("ai_response"),
+            "trade_actions": result.get("trade_actions", []),
+            "recommendations": [action.get("arguments", {}).get("reason", "") for action in result.get("trade_actions", [])],
+            "risk_assessment": "AI-driven analysis completed",
+            "suggested_actions": result.get("trade_actions", []),
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to analyze for trading: {str(e)}")
+
+
+@app.post("/trading/ai-trade")
+async def ai_trading_decision(request: AITradingRequest, token: str = Depends(verify_token)):
+    """Let AI make trading decisions based on context and conversation history"""
+    try:
+        from ai.deepseek_trading_bot import trading_bot
+
+        if request.conversation_messages:
+            # Process full conversation
+            messages = [{"role": msg["role"], "content": msg["content"]} for msg in request.conversation_messages]
+            # Add current context as latest user message
+            messages.append({"role": "user", "content": request.context})
+            result = await trading_bot.process_conversation(messages, max_iterations=request.max_iterations, portfolio_id=request.portfolio_id)
+        else:
+            # Simple analysis and trade
+            result = await trading_bot.analyze_and_trade(request.context, request.symbols, portfolio_id=request.portfolio_id)
+
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process AI trading decision: {str(e)}")
+
+
+@app.post("/trading/ai-conversation")
+async def ai_conversation(request: AIConversationRequest, token: str = Depends(verify_token)):
+    """Have a full conversation with the AI trading bot"""
+    try:
+        from ai.deepseek_trading_bot import trading_bot
+
+        messages = [{"role": msg.role, "content": msg.content} for msg in request.messages]
+        result = await trading_bot.process_conversation(messages, max_iterations=request.max_iterations, portfolio_id=request.portfolio_id)
+
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process AI conversation: {str(e)}")
 
 
 # ============================================================================

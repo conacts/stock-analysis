@@ -3173,6 +3173,7 @@ name = "stock-analysis"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "aiohttp" },
     { name = "alembic" },
     { name = "alpaca-py" },
     { name = "fastapi" },
@@ -3209,6 +3210,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiohttp", specifier = ">=3.12.12" },
     { name = "alembic", specifier = ">=1.16.1" },
     { name = "alpaca-py", specifier = ">=0.40.1" },
     { name = "fastapi", specifier = ">=0.115.0" },

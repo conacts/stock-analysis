@@ -14,12 +14,14 @@ else
     echo "🌐 Testing PRODUCTION endpoints at $BASE_URL"
 fi
 
-# Load environment variables
+# Load environment variables using the same method as run_with_env.sh
 if [ -f .env ]; then
-    export $(cat .env | grep -v '^#' | xargs)
+    set -a
+    source .env
+    set +a
 fi
 
-API_TOKEN=${API_TOKEN:-"your-api-token-here"}
+API_TOKEN=${API_TOKEN:-"default-dev-token"}
 
 # Colors for output
 RED='\033[0;31m'
@@ -88,7 +90,7 @@ test_endpoint "GET" "/trading/positions/AAPL" "Get AAPL Position"
 test_endpoint "GET" "/trading/orders" "Get All Orders"
 
 # Test 5: Get Orders with Status Filter
-test_endpoint "GET" "/trading/orders?status=filled&limit=10" "Get Filled Orders"
+test_endpoint "GET" "/trading/orders?status=closed&limit=10" "Get Closed Orders"
 
 # Test 6: Market Data for AAPL
 test_endpoint "GET" "/trading/market-data/AAPL" "Get AAPL Market Data"
