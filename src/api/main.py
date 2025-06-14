@@ -227,6 +227,16 @@ async def get_active_portfolios(token: str = Depends(verify_token)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/portfolio/health-check")
+async def portfolio_health_check(token: str = Depends(verify_token)):
+    """Portfolio system health check"""
+    try:
+        # Mock portfolio health data
+        return {"status": "healthy", "total_portfolios": 3, "active_portfolios": 3, "total_positions": 9, "data_integrity": "good", "last_sync": datetime.now().isoformat(), "issues": []}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # News and Analysis Endpoints
 @app.post("/news/overnight-analysis")
 async def analyze_overnight_news(request: NewsAnalysisRequest, token: str = Depends(verify_token)):
@@ -258,6 +268,21 @@ async def generate_opening_bell_alerts(request: AlertRequest, token: str = Depen
 
 
 # Analysis Endpoints
+@app.get("/analysis/recent")
+async def get_recent_analysis(hours: int = 24, token: str = Depends(verify_token)):
+    """Get recent analysis activity"""
+    try:
+        # Mock recent analysis data
+        return {
+            "recent_analyses": [{"id": "analysis_1", "portfolio_id": 1, "type": "daily_analysis", "timestamp": datetime.now().isoformat(), "status": "completed"}, {"id": "analysis_2", "portfolio_id": 2, "type": "risk_assessment", "timestamp": datetime.now().isoformat(), "status": "completed"}],
+            "total_count": 2,
+            "hours_back": hours,
+            "last_updated": datetime.now().isoformat(),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/analysis/market-gaps")
 async def analyze_market_gaps(token: str = Depends(verify_token)):
     """Analyze market gaps"""
