@@ -1,312 +1,334 @@
-# 🚀 Advanced Stock Analysis & AI Trading System
+# 🚀 AI Trading System
 
-A comprehensive, AI-powered stock analysis platform with automated monitoring, portfolio management, intelligent alerts, and **AI-driven trading capabilities** powered by DeepSeek AI and Trigger.dev automation.
+A TypeScript-based AI trading system that uses DeepSeek for market analysis and Alpaca for market data. The system features automated portfolio analysis with configurable AI agents and scheduled market monitoring.
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests: 175 Passing](https://img.shields.io/badge/tests-175%20passing-green.svg)](#testing)
-[![API Status](https://img.shields.io/badge/API-100%25%20operational-brightgreen.svg)](https://stock-analysis-production-31e9.up.railway.app/health)
-[![Production](https://img.shields.io/badge/production-deployed-success.svg)](https://stock-analysis-production-31e9.up.railway.app)
+[![Trigger.dev](https://img.shields.io/badge/Trigger.dev-v3-purple.svg)](https://trigger.dev/)
 
 ## ✨ Key Features
 
-### 🤖 **AI Trading System** (NEW)
+### 🤖 **AI-Powered Analysis**
 
-- **DeepSeek AI Integration**: Advanced portfolio analysis and trading signal generation
-- **Risk Management**: Comprehensive risk assessment with position limits and emergency stops
-- **Trading Endpoints**: RESTful API for portfolio analysis, signal generation, and trade recommendations
-- **Market Data Integration**: Real-time price data with technical indicators
-- **30-Second Timeouts**: Robust timeout handling across all endpoints
+- **DeepSeek AI Integration**: Advanced market analysis with configurable AI agents
+- **Custom System Prompts**: Each portfolio can use different AI strategies
+- **Automated Analysis**: Scheduled market opening analysis every weekday
+- **Flexible Storage**: JSONB-based analysis result storage
 
-### 🔄 **Automated Stock Monitoring**
+### 🔄 **Automated Portfolio Management**
 
-- **Real-time Price Alerts**: Automated notifications for significant price movements (±5%, ±10%, ±15%)
-- **Portfolio Analysis**: Scheduled analysis with LLM-powered insights
-- **Health Monitoring**: System health checks with comprehensive status reporting
-- **Trigger.dev Integration**: Automated tasks for comprehensive monitoring
+- **Multi-Agent System**: Different AI agents for different trading strategies
+- **Portfolio-Agent Association**: Each portfolio linked to specific AI agent
+- **Market Opening Coordination**: Automated analysis when markets open
+- **Status Tracking**: Portfolio and agent status management
 
-### 🧠 **AI-Enhanced Analysis**
+### 📊 **Real-Time Market Data**
 
-- **DeepSeek LLM Integration**: Sophisticated market analysis and insights with working API integration
-- **Intelligent Scoring**: AI-enhanced composite scoring system (169 passing tests)
-- **News Impact Analysis**: Real-time sentiment and catalyst identification
-- **Growth Catalyst Detection**: AI-powered identification of growth drivers
+- **Alpaca Markets Integration**: Live market data and trading capabilities
+- **Market Status Monitoring**: Automatic market open/close detection
+- **Symbol Analysis**: Individual stock analysis with AI insights
+- **Health Monitoring**: Comprehensive system health checks
 
-### 💼 **Portfolio Management**
+### 🏗️ **Modern Architecture**
 
-- **Multi-Portfolio Support**: Personal, IRA, 401k tracking with real-time P&L
-- **Risk Assessment**: Volatility analysis, sector risk, market correlation
-- **AI Trading Recommendations**: Automated trade suggestions with position sizing
-- **Slack Integration**: Real-time alerts and daily summaries
+- **TypeScript-Only**: Clean, type-safe codebase
+- **Trigger.dev v3**: Scheduled task automation and workflow orchestration
+- **PostgreSQL**: Robust data storage with JSONB for flexible data
+- **Zod Validation**: Runtime type validation and schema enforcement
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Python 3.11+ with [uv](https://docs.astral.sh/uv/) package manager
-- Node.js 18+ with Bun (for Trigger.dev automation)
-- DeepSeek API key (required for AI features)
+- Node.js 18+
+- PostgreSQL database
+- Alpaca Markets API account
+- DeepSeek API account
+- Trigger.dev account
 
-### Installation & Setup
+### Installation
 
-```bash
-# 1. Clone and setup
-git clone https://github.com/your-username/stock-analysis.git
-cd stock-analysis
-make dev-setup
-
-# 2. Configure environment variables
-cp .env.example .env.local
-# Edit .env.local with your API keys (see Environment Configuration below)
-
-# 3. Verify installation
-./run_with_env.sh make test-fast  # Should show 169 passing tests
-
-# 4. Start the API server with environment
-./run_with_env.sh bash -c "cd src/api && uv run python main.py"
-# Server starts on http://localhost:8000 with all services configured
-
-# 5. Test the system
-./run_with_env.sh bash -c "API_BASE_URL=http://localhost:8000 uv run python tools/check_api_environments.py"
-# Should show 100% success rate with all endpoints working
-```
-
-### Environment Configuration
-
-Create a `.env.local` file with your API keys:
+1. **Clone and install dependencies:**
 
 ```bash
-# Required for AI features
-DEEPSEEK_API_KEY=sk-your-deepseek-api-key
-
-# Required for database
-DATABASE_URL=postgresql://user:pass@host:port/database
-
-# Required for API authentication
-API_TOKEN=your-secure-api-token
-
-# Required for automation
-TRIGGER_SECRET_KEY=tr_prod_your-trigger-secret
-TRIGGER_ACCESS_TOKEN=tr_pat_your-trigger-token
-
-# Optional for enhanced features
-SLACK_BOT_TOKEN=xoxb-your-slack-token
-SLACK_CHANNEL=#your-channel
-ALPHA_VANTAGE_API_KEY=your-alpha-vantage-key
+git clone <repository-url>
+cd ai-trading-system
+npm install
 ```
 
-**Important**: Always use `./run_with_env.sh` to run commands that need environment variables loaded.
-
-## 🏗️ System Architecture
-
-```
-stock-analysis/
-├── src/
-│   ├── automation/                   # Trigger.dev tasks
-│   │   └── tasks/                    # AI-powered automation tasks
-│   │       ├── ai-trading-analysis.ts    # DeepSeek analysis task
-│   │       └── health-check.ts           # System monitoring
-│   ├── core/analyzer.py              # Main analysis engine
-│   ├── portfolio/                    # Portfolio management system
-│   ├── llm/deepseek_analyzer.py      # AI integration
-│   ├── alerts/slack_alerts.py        # Notification system
-│   └── db/                           # Database models & migrations
-├── tests/                            # TypeScript/JavaScript tests
-├── run_with_env.sh                   # Environment loader script
-└── trigger.config.ts                 # Trigger.dev configuration
-```
-
-## 🤖 AI Trading System
-
-### Automated Analysis
-
-The system runs automated analysis through Trigger.dev tasks:
-
-- **AI Trading Analysis**: DeepSeek-powered market analysis and trade recommendations
-- **Health Monitoring**: System health checks and alerts
-- **Scheduled Tasks**: Automated portfolio analysis and risk monitoring
-
-### AI Trading Features
-
-- **Portfolio Analysis**: AI-powered analysis using DeepSeek for market insights
-- **Signal Generation**: Technical and fundamental analysis with confidence scoring
-- **Risk Management**: Position limits (10%), daily loss limits (2%), emergency stops
-- **Trade Recommendations**: Position sizing and entry/exit strategies
-- **Market Data**: Real-time prices, technical indicators, sentiment analysis
-
-## 🤖 Automation System
-
-### Setup Trigger.dev Development
+2. **Environment Setup:**
+   Create `.env.local` with your API keys:
 
 ```bash
-# 1. Start development server
-npx trigger.dev@latest dev
+# Database
+DATABASE_URL=postgresql://user:password@host:port/database
 
-# 2. Test portfolio analysis task
-# The task will call your local/production API endpoints
+# Alpaca Markets API
+ALPACA_API_KEY=your_alpaca_key
+ALPACA_SECRET_KEY=your_alpaca_secret
+ALPACA_BASE_URL=https://paper-api.alpaca.markets  # or live API
 
-# 3. Deploy to production
-bunx trigger.dev@latest deploy
+# DeepSeek AI API
+DEEPSEEK_API_KEY=your_deepseek_api_key
+
+# Trigger.dev
+TRIGGER_SECRET_KEY=your_trigger_secret_key
 ```
 
-### Available Tasks
-
-- **Portfolio Analysis**: AI-powered portfolio insights with 300s timeout
-- **Daily Portfolio Analysis**: Scheduled analysis with 600s timeout
-- **Health Monitor**: System health checks
-- **Stock Price Alerts**: Real-time price movement notifications
-
-## 💼 Portfolio Management
-
-### Quick Commands
+3. **Database Setup:**
 
 ```bash
-# Portfolio management is now handled through Trigger.dev automation
-# The system automatically analyzes portfolios and provides AI-powered insights
+# Run database migrations
+npm run db:migrate:latest
+
+# Inspect database structure
+npm run db:inspect
 ```
 
-### Features
-
-- **Real-time P&L**: Live position tracking with current market prices
-- **AI Risk Analysis**: DeepSeek-powered risk assessment and recommendations
-- **Trading Signals**: AI-generated buy/sell signals with confidence scores
-- **Performance Analytics**: Historical analysis and backtesting
-
-## 🧪 Testing & Quality
-
-We maintain high code quality with comprehensive testing:
+4. **Development:**
 
 ```bash
-# Run tests with environment loaded
-./run_with_env.sh make test-fast          # Quick unit tests (169 tests, ~10s)
-./run_with_env.sh make test-integration   # Integration tests (~30s)
-./run_with_env.sh make test-all          # Complete test suite
-./run_with_env.sh make coverage          # Generate coverage report
-```
+# Build the project
+npm run build
 
-### Test Coverage
-
-- **Core Analyzer**: 80%+ coverage
-- **Portfolio Management**: 90%+ coverage
-- **LLM Components**: 88-92% coverage
-- **AI Trading System**: Comprehensive integration tests
-- **API Endpoints**: 100% operational (7/7 tests passing)
-- **Total**: 169 tests across unit and integration suites
-
-### System Status
-
-- **TypeScript Tests**: ✅ All tests passing
-- **Trigger.dev Tasks**: ✅ Fully operational
-- **DeepSeek Integration**: ✅ Working with API key
-- **Automation System**: ✅ Running scheduled analysis
-
-## 📊 AI Trading Analysis Example
-
-```python
-{
-    "portfolio_id": 1,
-    "market_condition": "bullish",
-    "ai_summary": "Portfolio shows strong performance with balanced risk profile",
-    "key_opportunities": [
-        "Tech sector showing momentum with AI growth drivers",
-        "Market dip presents buying opportunities in quality names"
-    ],
-    "key_risks": [
-        "High concentration in technology sector (65%)",
-        "Portfolio beta of 1.15 indicates higher volatility"
-    ],
-    "recommended_actions": [
-        "Consider rebalancing tech positions to reduce concentration",
-        "Add defensive positions given current market volatility"
-    ],
-    "risk_assessment": {
-        "overall_risk": "medium",
-        "risk_score": 0.65,
-        "daily_pnl": 125.50,
-        "trading_halted": false
-    }
-}
-```
-
-## 🛠️ Development
-
-### Daily Workflow
-
-```bash
-# Always use environment loader for development
-./run_with_env.sh make check             # Quick lint + test
-./run_with_env.sh make format            # Format code
-./run_with_env.sh make pre-commit        # Full pre-commit checks
-```
-
-### Trigger.dev Development
-
-```bash
 # Start Trigger.dev development server
-npx trigger.dev@latest dev
+npm run trigger:dev
 
-# Test endpoints
-curl http://localhost:8000/health  # Test API health
-curl http://localhost:8000/docs    # View API documentation
-
-# Test trading endpoints
-curl -H "Authorization: Bearer default-dev-token" \
-  http://localhost:8000/trading/trading-config
+# Run tests
+npm test
 ```
 
-### Automation Development
+## 📊 System Workflow
+
+### Market Opening Analysis
+
+Every weekday at 9:30 AM ET (market open), the system:
+
+1. **Checks Market Status** - Verifies markets are open via Alpaca API
+2. **Fetches Active Portfolios** - Gets all portfolios with `status = 'active'`
+3. **Agent Assignment** - Each portfolio uses its assigned AI agent
+4. **Analysis Coordination** - Triggers individual portfolio analysis tasks
+
+### AI Agent System
+
+- **Configurable Prompts** - Each agent has a custom system prompt for different strategies
+- **Model Settings** - Temperature, max tokens, and model selection per agent
+- **Strategy Specialization** - Growth-focused, conservative, sector-specific agents
+
+### Analysis Storage
+
+Results are stored in `analysis_results` with:
+
+- **Portfolio Context** - Links to specific portfolio and agent
+- **Analysis Type** - Market opening, daily check, manual analysis
+- **Flexible Data** - JSONB storage for complex analysis results
+- **Recommendations** - Structured trading recommendations
+
+## 🛠️ Available Scripts
+
+### Development
+
+- `npm run build` - Compile TypeScript
+- `npm run dev` - Development server with hot reload
+- `npm test` - Run test suite
+- `npm run type-check` - TypeScript type checking
+
+### Database
+
+- `npm run db:migrate <file>` - Run specific migration
+- `npm run db:migrate:latest` - Run latest migration
+- `npm run db:inspect` - Inspect database structure
+
+### Trigger.dev
+
+- `npm run trigger:dev` - Development server
+- `npm run trigger:deploy` - Deploy to production
+- `npm run trigger:whoami` - Check authentication
+
+### Code Quality
+
+- `npm run format` - Format code with Prettier
+- `npm run lint` - Run ESLint (currently disabled)
+- `npm run ci` - Full CI pipeline
+
+## 📈 Current Tasks
+
+### Active Trigger.dev Tasks
+
+1. **`market-opening-analysis`** - Scheduled weekday market open coordinator
+2. **`ai-trading-analysis`** - Individual stock analysis with DeepSeek
+3. **`health-check`** - System health monitoring
+4. **`alpaca-health-check`** - Alpaca API connectivity check
+5. **`deepseek-health-check`** - DeepSeek API connectivity check
+
+### Task Schedule
+
+- **Market Opening Analysis**: `30 13 * * 1-5` (9:30 AM ET weekdays)
+- **Health Checks**: Various intervals for system monitoring
+
+## 🔧 Configuration
+
+### AI Agent Configuration
+
+Create custom AI agents with different trading strategies:
+
+```sql
+INSERT INTO ai_agents (name, system_prompt, model, temperature) VALUES (
+    'Growth Investor',
+    'You are a growth-focused investment advisor. Prioritize companies with strong revenue growth, innovative products, and expanding markets. Focus on technology, healthcare, and emerging sectors.',
+    'deepseek-chat',
+    0.1
+);
+```
+
+### Portfolio Setup
+
+Link portfolios to specific AI agents:
+
+```sql
+INSERT INTO portfolios (name, description, agent_id, status) VALUES (
+    'Tech Growth Portfolio',
+    'High-growth technology stocks',
+    1,  -- Growth Investor agent
+    'active'
+);
+```
+
+## 🏛️ Database Schema
+
+### Core Tables
+
+#### AI Agents
+
+```sql
+CREATE TABLE ai_agents (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    system_prompt TEXT NOT NULL,
+    model VARCHAR(50) DEFAULT 'deepseek-chat',
+    temperature DECIMAL(3,2) DEFAULT 0.1,
+    max_tokens INTEGER DEFAULT 2000,
+    status VARCHAR(20) DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+#### Portfolios
+
+```sql
+CREATE TABLE portfolios (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    agent_id INTEGER REFERENCES ai_agents(id),
+    status VARCHAR(20) DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+#### Analysis Results
+
+```sql
+CREATE TABLE analysis_results (
+    id SERIAL PRIMARY KEY,
+    portfolio_id INTEGER NOT NULL,
+    agent_id INTEGER NOT NULL,
+    analysis_type VARCHAR(50) NOT NULL,
+    symbol VARCHAR(20),
+    analysis_data JSONB,
+    recommendations JSONB,
+    status VARCHAR(20) DEFAULT 'completed',
+    created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Key Features
+
+- **Agent-Portfolio Association** - Each portfolio can use a different AI agent
+- **Flexible Analysis Storage** - JSONB fields for storing complex analysis data
+- **Status Tracking** - Portfolio and agent status management
+- **Audit Trail** - Timestamps and status tracking for all operations
+
+## 🏗️ Architecture
+
+```
+ai-trading-system/
+├── src/
+│   ├── automation/
+│   │   └── tasks/                    # Trigger.dev automation tasks
+│   │       ├── market-opening-analysis.ts
+│   │       ├── ai-trading-analysis.ts
+│   │       └── health-check.ts
+│   ├── clients/                      # API clients
+│   │   ├── alpaca.ts                 # Alpaca Markets API
+│   │   └── deepseek.ts               # DeepSeek AI API
+│   ├── database/                     # Database layer
+│   │   ├── connection.ts             # Database connection
+│   │   ├── models.ts                 # Zod schemas and types
+│   │   ├── migrate.ts                # Migration runner
+│   │   └── migrations/               # SQL migration files
+│   └── utils/
+│       └── config.ts                 # Environment configuration
+├── tests/                            # Test suite
+├── trigger.config.ts                 # Trigger.dev configuration
+└── package.json                      # Dependencies and scripts
+```
+
+## 🔄 Migration History
+
+- **004_core_portfolio_and_agents.sql** - Core schema with AI agents and simplified portfolio structure
+
+## 🚧 Development Status
+
+### ✅ Completed
+
+- TypeScript-only architecture
+- Trigger.dev v3 integration
+- Database migration system
+- Core AI agent and portfolio models
+- Market opening analysis framework
+- Health monitoring tasks
+- Alpaca Markets integration
+- DeepSeek AI integration
+
+### 🔄 In Progress
+
+- Individual portfolio analysis tasks
+- AI agent prompt optimization
+- Analysis result processing
+
+### 📋 Planned
+
+- Web dashboard for portfolio management
+- Real-time analysis triggers
+- Performance tracking and reporting
+- Advanced risk management
+- Trading execution integration
+
+## 🧪 Testing
 
 ```bash
-npx trigger.dev@latest dev        # Start development server
-bunx trigger.dev@latest deploy     # Deploy to production
+# Run tests
+npm test
+
+# Type checking
+npm run type-check
+
+# Build verification
+npm run build
 ```
 
-## 📚 Documentation Structure
+## 📝 Contributing
 
-- **[AI_TRADING_PLAN.md](AI_TRADING_PLAN.md)**: Complete AI trading system roadmap
-- **[API_TESTING_GUIDE.md](API_TESTING_GUIDE.md)**: API testing and validation guide
-- **[DEVELOPMENT.md](DEVELOPMENT.md)**: Complete development setup and workflow
-- **[DEPLOYMENT.md](DEPLOYMENT.md)**: GitHub Actions and Railway deployment guide
-- **[CONFIGURATION.md](CONFIGURATION.md)**: Environment and configuration guide
-- **[CONTRIBUTING.md](CONTRIBUTING.md)**: Contribution guidelines and standards
-
-## 🚨 Important Notes
-
-### Environment Setup
-
-- **Always use `./run_with_env.sh`** for commands that need environment variables
-- **DeepSeek API key is required** for AI features to work properly
-- **Database URL is required** for portfolio and trading functionality
-- **API token is required** for authentication
-
-### Production Deployment
-
-- **Railway**: Automatic deployment from main branch
-- **Environment Variables**: Set in Railway dashboard
-- **Health Monitoring**: Available at `/health` endpoint
-- **API Documentation**: Available at `/docs` endpoint
-
-### AI Trading System Status
-
-- **Phase 1**: ✅ Complete - AI Analysis Engine with DeepSeek integration
-- **Phase 2**: 🚧 In Development - Trade execution and broker integration
-- **Phase 3**: 📋 Planned - Live broker integration
-- **Phase 4**: 📋 Planned - Advanced monitoring and control
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Set up environment: Copy `.env.example` to `.env.local` and configure
-4. Add tests for your changes
-5. Run the test suite: `./run_with_env.sh make test-all`
-6. Commit using conventional commits: `git commit -m "feat: add amazing feature"`
-7. Open a Pull Request
+1. Follow TypeScript best practices
+2. Use Zod for all data validation
+3. Write tests for new functionality
+4. Update documentation for schema changes
+5. Use conventional commit messages
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file for details.
-
----
-
-**⚠️ Disclaimer**: This tool is for educational and research purposes only. The AI trading system is currently in development and should not be used for live trading without proper testing and risk management. Always consult with financial professionals before making investment decisions. Past performance does not guarantee future results.
+MIT License - see LICENSE file for details

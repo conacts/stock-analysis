@@ -23,6 +23,9 @@
     "format:check": "prettier --check src/**/*.ts tests/**/*.ts",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist coverage .nyc_output",
+    "db:migrate": "tsx src/database/migrate.ts",
+    "db:migrate:latest": "npm run db:migrate 004_enhanced_conversation_threads.sql",
+    "db:inspect": "npm run db:migrate inspect",
     "prepare": "husky",
     "ci": "npm run format:check && npm run lint && npm run type-check && npm run test:coverage"
   },
