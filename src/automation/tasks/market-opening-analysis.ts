@@ -1,6 +1,8 @@
 import { schedules } from '@trigger.dev/sdk/v3';
 import { AlpacaClient } from '../../clients/alpaca';
 // import { DeepSeekClient } from "../../clients/deepseek"; // TODO: Will use this for AI analysis
+// import { db } from "../../database/connection"; // TODO: Will use this to get portfolios
+// import { portfolioAnalysisTask } from './portfolio-analysis'; // TODO: Create this task
 
 export const marketOpeningAnalysis = schedules.task({
   id: 'market-opening-analysis',
@@ -52,17 +54,29 @@ export const marketOpeningAnalysis = schedules.task({
       console.log('🚀 Market opening analysis framework ready!');
       console.log('📈 Next: Add stock screening, news analysis, and trading signals');
 
+      // 2. Get all portfolios from database
+      // TODO: const portfolios = await db.getActivePortfolios();
+      // TODO: Filter portfolios that should run at market open
+
+      // 3. For each portfolio, trigger individual portfolio analysis
+      // TODO: for (const portfolio of portfolios) {
+      //   await portfolioAnalysisTask.trigger({
+      //     portfolio_id: portfolio.id,
+      //     session: 'market_open',
+      //     timestamp: new Date().toISOString()
+      //   });
+      // }
+
+      // 4. Log summary of triggered analyses
+      // TODO: console.log(`✅ Triggered analysis for ${portfolios.length} portfolios`);
+
       analysis.status = 'completed';
 
       return {
         success: true,
-        message: 'Market opening analysis completed successfully',
-        market_clock: marketClock,
-        account_info: {
-          portfolio_value: account.portfolio_value,
-          buying_power: account.buying_power,
-        },
-        analysis,
+        message: 'Portfolio analyses triggered successfully',
+        // portfolios_count: portfolios.length,
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       console.error('❌ Market opening analysis failed:', error);
