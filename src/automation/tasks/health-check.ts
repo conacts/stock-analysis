@@ -1,6 +1,6 @@
 import { task } from '@trigger.dev/sdk/v3';
-import { db } from '../../database/connection';
-import { DEEPSEEK_API_KEY, ALPACA_API_KEY, ALPACA_SECRET_KEY } from '../../utils/config';
+import { DEEPSEEK_API_KEY, ALPACA_API_KEY, ALPACA_SECRET_KEY } from '@/utils/config';
+import { testDatabaseConnection } from '@/db/utils';
 
 export const healthCheck = task({
   id: 'health-check',
@@ -20,7 +20,7 @@ export const healthCheck = task({
 
     try {
       // Test database connection
-      const dbTest = await db.testConnection();
+      const dbTest = await testDatabaseConnection();
       healthStatus.database = dbTest;
 
       console.log('✅ Health check completed');

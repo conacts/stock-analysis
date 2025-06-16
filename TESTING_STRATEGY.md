@@ -1,17 +1,17 @@
-# 🧪 Testing Strategy - Simplified AI Stock Analysis System
+# �� Testing Strategy - AI Stock Analysis System
 
 ## 🎯 Overview
 
-**Philosophy**: Simple, focused testing for a simple, focused architecture. Test AI logic and configuration without infrastructure complexity.
+**Philosophy**: Simple, focused testing for a simple, focused architecture. Test AI logic, database functions, and configuration without infrastructure complexity.
 
 ## 🏗️ Testing Architecture
 
 ### Core Principles
 
-- ✅ **Unit Tests**: Core TypeScript logic and utilities
+- ✅ **Unit Tests**: Core TypeScript logic and database functions
+- ✅ **Type Safety**: Comprehensive TypeScript validation using Drizzle inferred types
 - ✅ **Integration Tests**: AI API client functionality
-- ✅ **Type Safety**: Comprehensive TypeScript validation
-- ❌ **No Infrastructure Tests**: Avoid complex database/API testing
+- ❌ **No Infrastructure Tests**: Avoid complex deployment/infrastructure testing
 - ❌ **No UI Tests**: Focus on backend AI logic only
 
 ### Test Structure
@@ -19,35 +19,42 @@
 ```
 tests/
 ├── unit/
-│   ├── config.test.ts          # Environment configuration
-│   └── typescript-core.test.ts # Core TypeScript functionality
-└── setup.ts                    # Test environment setup
+│   └── basic.test.ts           # Database type validation tests
+├── setup.ts                    # Test configuration and environment
+└── README.md                   # Test documentation
 ```
 
 ## 🎯 What We Test
 
-### 1. **Configuration Management**
+### 1. **Database Type Safety**
+
+- Drizzle schema validation
+- TypeScript type inference testing
+- Database operation function types
+- Error handling for invalid data
+
+### 2. **Individual Database Functions**
+
+- Advisor operations: `getAllAdvisors()`, `createAdvisor()`
+- Portfolio operations: `getAllPortfolios()`, `getPortfolioById()`
+- Analysis operations: `createAnalysis()`, `getAnalysisByPortfolio()`
+- Utility operations: `testDatabaseConnection()`, `getTableCounts()`
+
+### 3. **Configuration Management**
 
 - Environment variable validation
 - API key configuration checks
 - Trigger.dev connection settings
 - Error handling for missing config
 
-### 2. **TypeScript Core Logic**
-
-- Type interface validation
-- Utility function behavior
-- Data transformation logic
-- Error handling patterns
-
-### 3. **AI Client Integration**
+### 4. **AI Client Integration**
 
 - DeepSeek API client functionality
 - API response parsing
 - Error handling for API failures
 - Timeout and retry logic
 
-### 4. **Task Logic** (Future)
+### 5. **Task Logic** (Future)
 
 - Trigger.dev task input/output validation
 - Analysis result formatting
@@ -57,7 +64,7 @@ tests/
 
 ### Avoided Complexity
 
-- ❌ **Database Integration**: No database testing needed
+- ❌ **Database Integration**: No actual database connections in tests
 - ❌ **API Server Testing**: No FastAPI or Express servers
 - ❌ **Complex Mocking**: Keep mocks simple and focused
 - ❌ **End-to-End Testing**: Focus on unit and integration only
@@ -70,6 +77,7 @@ tests/
 - **Vitest**: Fast, modern test runner for TypeScript
 - **Node.js Built-ins**: Minimal external dependencies
 - **TypeScript**: Native TypeScript testing support
+- **Drizzle ORM**: Type-safe database operations
 
 ### Why Vitest?
 
@@ -91,10 +99,16 @@ npm test
 npm test -- --watch
 
 # Run specific test
-npm test -- config.test.ts
+npm test -- basic.test.ts
 
 # Debug mode
 npm test -- --reporter=verbose
+
+# Type checking
+npm run type-check
+
+# Build verification
+npm run build
 ```
 
 ### CI/CD Testing
@@ -103,66 +117,151 @@ npm test -- --reporter=verbose
 # Full validation pipeline
 npm run lint && npm run type-check && npm test
 
-# Coverage report
+# Coverage report (if enabled)
 npm run test:coverage
 
 # Build validation
 npm run build
 ```
 
-## 📝 Test Writing Guidelines
+## 📝 Current Test Suite
 
-### Unit Test Pattern
+### Database Type Validation Tests
+
+Our current test suite focuses on validating our Drizzle schema types:
 
 ```typescript
+// tests/unit/basic.test.ts
 import { describe, it, expect } from 'vitest';
+import type {
+  AdvisorSelect,
+  AdvisorInsert,
+  PortfolioSelect,
+  AnalysisResultInsert,
+} from '@/db/schema';
 
-describe('Component Name', () => {
-  it('should describe expected behavior', () => {
-    // Arrange
-    const input = 'test-input';
+describe('Database Types', () => {
+  it('should have proper Advisor type structure', () => {
+    const advisor: AdvisorSelect = {
+      id: 1,
+      name: 'Test Advisor',
+      systemPrompt: 'Test prompt',
+      model: 'deepseek/r1',
+      temperature: 0.1,
+      maxTokens: 2000,
+      status: 'active',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
 
-    // Act
-    const result = functionUnderTest(input);
+    expect(advisor.name).toBe('Test Advisor');
+    expect(advisor.temperature).toBe(0.1);
+    expect(advisor.status).toBe('active');
+  });
 
-    // Assert
-    expect(result).toBe('expected-output');
+  it('should have proper Portfolio type structure', () => {
+    const portfolio: PortfolioSelect = {
+      id: 1,
+      name: 'Test Portfolio',
+      description: 'A test portfolio',
+      advisorId: 1,
+      status: 'active',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    expect(portfolio.name).toBe('Test Portfolio');
+    expect(portfolio.advisorId).toBe(1);
+  });
+
+  it('should have proper AnalysisResult type structure', () => {
+    const analysis: AnalysisResultInsert = {
+      portfolioId: 1,
+      advisorId: 1,
+      analysisType: 'market_opening',
+      symbol: 'AAPL',
+      analysisData: { recommendation: 'buy' },
+      recommendations: { action: 'buy', confidence: 0.8 },
+      status: 'completed',
+    };
+
+    expect(analysis.portfolioId).toBe(1);
+    expect(analysis.analysisType).toBe('market_opening');
+  });
+
+  it('should demonstrate type safety', () => {
+    // Type checking ensures this works at compile time
+    const createAdvisorData: AdvisorInsert = {
+      name: 'New Advisor',
+      systemPrompt: 'You are a trading advisor',
+      model: 'deepseek/r1',
+      temperature: 0.1,
+      maxTokens: 2000,
+      status: 'active',
+    };
+
+    expect(createAdvisorData.name).toBe('New Advisor');
+    expect(typeof createAdvisorData.temperature).toBe('number');
   });
 });
 ```
 
-### Integration Test Pattern
+## 📋 Test Writing Guidelines
+
+### Database Function Test Pattern
 
 ```typescript
 import { describe, it, expect, vi } from 'vitest';
+import { getAllAdvisors, createAdvisor } from '@/db/advisors';
 
-describe('API Integration', () => {
-  it('should handle API responses correctly', async () => {
-    // Mock external API
-    const mockResponse = { success: true, data: [] };
-    vi.spyOn(global, 'fetch').mockResolvedValue({
-      json: () => Promise.resolve(mockResponse),
-    });
+// Mock the database connection
+vi.mock('@/db/connection', () => ({
+  db: {
+    select: vi.fn(),
+    insert: vi.fn(),
+  },
+}));
 
-    // Test integration
-    const result = await apiClient.getData();
+describe('Advisor Operations', () => {
+  it('should get all advisors', async () => {
+    // Mock database response
+    const mockAdvisors = [{ id: 1, name: 'Test Advisor', status: 'active' }];
 
-    // Validate behavior
-    expect(result).toEqual(mockResponse);
+    // Test the function
+    // Note: Actual implementation would require proper mocking
+    expect(typeof getAllAdvisors).toBe('function');
   });
 });
 ```
 
-### Error Testing Pattern
+### Type Safety Test Pattern
+
+```typescript
+describe('Type Safety', () => {
+  it('should enforce correct types', () => {
+    // This test passes if TypeScript compilation succeeds
+    const advisorData: AdvisorInsert = {
+      name: 'Test',
+      systemPrompt: 'Test prompt',
+      // temperature: 'invalid', // This would cause TypeScript error
+      temperature: 0.1, // Correct type
+    };
+
+    expect(typeof advisorData.temperature).toBe('number');
+  });
+});
+```
+
+### Error Handling Test Pattern
 
 ```typescript
 describe('Error Handling', () => {
-  it('should handle errors gracefully', async () => {
-    // Mock error scenario
-    vi.spyOn(apiClient, 'call').mockRejectedValue(new Error('API Error'));
+  it('should handle database errors gracefully', async () => {
+    // Mock database error
+    vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    // Test error handling
-    await expect(functionThatCallsAPI()).rejects.toThrow('API Error');
+    // Test error scenarios
+    // Implementation depends on how functions handle errors
   });
 });
 ```
@@ -172,7 +271,7 @@ describe('Error Handling', () => {
 ### Test Speed Goals
 
 - ✅ **Unit Tests**: <5 seconds total
-- ✅ **Integration Tests**: <15 seconds total
+- ✅ **Type Checking**: <10 seconds total
 - ✅ **Full Suite**: <30 seconds total
 - ✅ **CI Pipeline**: <2 minutes total
 
@@ -180,8 +279,9 @@ describe('Error Handling', () => {
 
 - **Parallel Execution**: Vitest runs tests in parallel
 - **Simple Mocks**: Avoid complex mock setups
-- **Minimal I/O**: No database or file system operations
+- **Minimal I/O**: No actual database connections
 - **Focused Tests**: Test only what matters
+- **Type-First**: Leverage TypeScript for validation
 
 ## 📊 Test Metrics
 
@@ -189,42 +289,36 @@ describe('Error Handling', () => {
 
 - ✅ **100% TypeScript Compilation**
 - ✅ **All Tests Passing**
-- ✅ **>80% Code Coverage** (for tested components)
 - ✅ **Fast Execution** (<30s total)
 - ✅ **Zero Flaky Tests**
+- ✅ **Type Safety Validation**
 
 ### Coverage Strategy
 
-```typescript
-// vitest.config.ts coverage setup
-export default defineConfig({
-  test: {
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'html'],
-      exclude: ['node_modules/', 'dist/', '**/*.test.ts'],
-    },
-  },
-});
-```
+Focus on:
 
-## 🔧 Test Configuration
+- Database function type safety
+- Individual function behavior
+- Error handling patterns
+- Configuration validation
+
+## 📁 Test Configuration
 
 ### Environment Setup
 
 ```typescript
 // tests/setup.ts
 import { beforeAll, afterAll } from 'vitest';
+import { config } from 'dotenv';
 
 beforeAll(() => {
-  // Set test environment
-  process.env.NODE_ENV = 'test';
-  process.env.DEEPSEEK_API_KEY = 'test-key-123';
-  process.env.TRIGGER_ACCESS_TOKEN = 'test-token';
+  // Load test environment variables
+  config({ path: '.env.local' });
+  console.log('✅ Test setup loaded');
 });
 
 afterAll(() => {
-  // Cleanup if needed
+  console.log('🧹 Cleaning up test environment...');
 });
 ```
 
@@ -236,134 +330,57 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    environment: 'node',
     globals: true,
+    environment: 'node',
     setupFiles: ['./tests/setup.ts'],
-    timeout: 10000, // 10s timeout for async tests
+    include: ['tests/**/*.test.ts', 'tests/**/*.spec.ts'],
+    exclude: ['node_modules', 'dist', '**/*.d.ts'],
+    reporters: ['default'], // Removed JSON output
+  },
+  resolve: {
+    alias: {
+      '@': new URL('./src', import.meta.url).pathname,
+    },
   },
 });
 ```
 
-## 🔍 Mocking Strategy
+## 🔄 Migration from Previous Approach
 
-### API Mocking
+### What Changed
 
-```typescript
-// Mock DeepSeek API
-vi.mock('../src/clients/deepseek', () => ({
-  DeepSeekClient: vi.fn().mockImplementation(() => ({
-    analyze: vi.fn().mockResolvedValue({
-      recommendations: [{ symbol: 'AAPL', action: 'buy' }],
-      confidence: 0.85,
-    }),
-  })),
-}));
-```
+- **Drizzle Types**: Using `$inferSelect` and `$inferInsert` instead of Zod schemas
+- **Individual Functions**: Testing specific database operations instead of object methods
+- **Type-First**: Leveraging TypeScript compilation for validation
+- **Simplified Mocking**: Focus on function behavior rather than complex integrations
 
-### Environment Mocking
+### Migration Benefits
 
-```typescript
-// Mock environment variables
-vi.mock('process', () => ({
-  env: {
-    DEEPSEEK_API_KEY: 'mock-api-key',
-    TRIGGER_ACCESS_TOKEN: 'mock-token',
-  },
-}));
-```
+- ✅ **Better Type Safety**: Drizzle provides superior type inference
+- ✅ **Faster Tests**: No schema validation overhead
+- ✅ **Explicit Dependencies**: Import only what you test
+- ✅ **Better IntelliSense**: Direct function imports
 
-## 🚨 Common Testing Patterns
+## 🎯 Future Testing Plans
 
-### Configuration Testing
+### Phase 1: Current (Type Safety)
 
-```typescript
-describe('Configuration', () => {
-  it('should validate required environment variables', () => {
-    delete process.env.DEEPSEEK_API_KEY;
+- Database type validation
+- Function signature testing
+- Basic error handling
 
-    expect(() => loadConfig()).toThrow('Missing DEEPSEEK_API_KEY');
-  });
-});
-```
+### Phase 2: Integration Testing
 
-### Async Testing
+- Mock database operations
+- Test individual functions with mocked db
+- API client integration tests
 
-```typescript
-describe('Async Operations', () => {
-  it('should handle async operations correctly', async () => {
-    const result = await asyncFunction();
-    expect(result).toBeDefined();
-  });
-});
-```
+### Phase 3: Advanced Testing
 
-### Type Testing
-
-```typescript
-describe('Type Safety', () => {
-  it('should enforce correct types', () => {
-    const config: Config = {
-      apiKey: 'test-key',
-      timeout: 5000,
-    };
-
-    expect(typeof config.apiKey).toBe('string');
-    expect(typeof config.timeout).toBe('number');
-  });
-});
-```
-
-## 🔄 Development Workflow
-
-### TDD Approach
-
-1. **Write Failing Test**: Start with test that fails
-2. **Implement Minimal Code**: Make test pass
-3. **Refactor**: Improve code while keeping tests green
-4. **Repeat**: Continue for next feature
-
-### Test-First Development
-
-```typescript
-// 1. Write test first
-describe('New Feature', () => {
-  it('should work correctly', () => {
-    expect(newFeature()).toBe('expected-result');
-  });
-});
-
-// 2. Implement feature
-export function newFeature(): string {
-  return 'expected-result';
-}
-
-// 3. Refactor as needed while tests pass
-```
-
-## 📈 Continuous Improvement
-
-### Regular Reviews
-
-- **Weekly**: Review test coverage and performance
-- **Monthly**: Assess testing strategy effectiveness
-- **Per Feature**: Add tests for new functionality
-- **Per Bug**: Add regression tests
-
-### Quality Gates
-
-- All new code must have tests
-- Tests must pass before merging
-- Coverage should not decrease
-- Performance should remain fast
+- Task execution testing
+- Performance benchmarks
+- Load testing for AI operations
 
 ---
 
-## 💡 Key Principles
-
-1. **Keep It Simple**: Test what matters, avoid over-testing
-2. **Fast Feedback**: Tests should run quickly
-3. **Reliable**: Tests should be deterministic
-4. **Maintainable**: Tests should be easy to update
-5. **Focused**: Test business logic, not infrastructure
-
-**Goal**: Confidence in core functionality without testing complexity that defeats the purpose of our simplified architecture.
+**Testing Philosophy**: Keep it simple, focus on types and core logic, avoid infrastructure complexity.

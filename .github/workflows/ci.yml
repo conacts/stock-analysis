@@ -22,28 +22,25 @@ jobs:
       - name: Install Node.js dependencies
         run: npm install
 
+      - name: Setup test database
+        run: |
+          echo "DATABASE_URL=file:./test-database.db" > .env
+          npm run db:migrate
+
       - name: Lint TypeScript code
         run: npm run lint
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Type check TypeScript
         run: npm run type-check
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Test database connectivity
+        run: npm run db:test
 
       - name: Run TypeScript tests
         run: npm run test
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
-          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
 
       - name: Build TypeScript project
         run: npm run build
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
   security:
     runs-on: ubuntu-latest

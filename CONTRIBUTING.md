@@ -2,7 +2,7 @@
 
 ## 🎯 Welcome!
 
-Thank you for your interest in contributing to the **simplified AI stock analysis system**! This project focuses on **AI-powered market analysis** through **Trigger.dev automation**.
+Thank you for your interest in contributing to the **simplified AI stock analysis system**! This project focuses on **AI-powered market analysis** through **Trigger.dev automation** with **type-safe database operations**.
 
 ## 🏗️ Project Overview
 
@@ -11,11 +11,13 @@ Thank you for your interest in contributing to the **simplified AI stock analysi
 - **Simplicity First**: Avoid complexity that defeats the original purpose
 - **AI-Focused**: DeepSeek integration for market insights
 - **Automation-Driven**: Trigger.dev tasks for scheduled analysis
-- **TypeScript-Only**: Clean, typed codebase
+- **TypeScript-Only**: Clean, typed codebase with Drizzle ORM
+- **Function-Based**: Individual database functions for better type safety
 
 ### What We DON'T Want
 
 - Complex API servers
+- Object-based database operations
 - Multiple deployment platforms
 - Heavy database systems
 - Timeout-prone architectures
@@ -27,6 +29,7 @@ Thank you for your interest in contributing to the **simplified AI stock analysi
 - Node.js 18+
 - TypeScript knowledge
 - Basic understanding of AI/market analysis
+- Familiarity with Drizzle ORM (helpful)
 
 ### Setup
 
@@ -40,6 +43,9 @@ npm install
 cp .env.example .env
 # Add your DeepSeek API key and Trigger.dev tokens
 
+# Setup database
+npm run db:migrate
+
 # Start development
 npx trigger.dev@latest dev
 ```
@@ -52,28 +58,41 @@ src/
 │   ├── ai-trading-analysis.ts  # DeepSeek AI analysis
 │   └── health-check.ts         # System monitoring
 ├── clients/                    # API clients
-├── database/                   # Minimal data models
+├── db/                         # Database operations (NEW!)
+│   ├── schema.ts              # All table definitions & types
+│   ├── connection.ts          # Database connection
+│   ├── advisors.ts            # getAllAdvisors(), createAdvisor()
+│   ├── portfolios.ts          # getAllPortfolios(), getPortfolioById()
+│   ├── performance.ts         # getPerformanceByAdvisor()
+│   └── utils.ts               # testDatabaseConnection()
 ├── types/                      # TypeScript types
 └── utils/                      # Configuration utils
 ```
 
 ## 🎯 Contribution Areas
 
-### 1. AI Task Development (High Priority)
+### 1. Database Operations (High Priority)
+
+- Improve individual database functions
+- Add new type-safe operations
+- Enhance error handling for database operations
+- Optimize query performance with Drizzle
+
+### 2. AI Task Development (High Priority)
 
 - Improve DeepSeek prompts and analysis quality
 - Add new market analysis capabilities
 - Enhance error handling and reliability
 - Optimize task scheduling and performance
 
-### 2. TypeScript Infrastructure
+### 3. TypeScript Infrastructure
 
-- Add new TypeScript types
+- Add new TypeScript types using Drizzle inferred types
 - Improve configuration management
 - Enhance testing coverage
 - Code quality improvements
 
-### 3. Documentation
+### 4. Documentation
 
 - Update guides and examples
 - Improve code comments
@@ -86,49 +105,66 @@ src/
 
 - Check [Issues](https://github.com/your-repo/issues) for open tasks
 - Look for "good first issue" labels
-- Focus on AI and Trigger.dev related improvements
+- Focus on database functions, AI tasks, and TypeScript improvements
 
 ### 2. Create Branch
 
 ```bash
-git checkout -b feat/improve-ai-prompts
+git checkout -b feat/improve-advisor-functions
 # or
-git checkout -b fix/task-error-handling
+git checkout -b fix/database-error-handling
 ```
 
 ### 3. Develop & Test
 
 ```bash
-# Make changes
-npm test                         # Run tests
-npm run lint                     # Check code style
-npx trigger.dev@latest dev       # Test tasks locally
+# Make changes to database functions
+npm run type-check                  # Check TypeScript
+npm test                           # Run tests
+npm run db:test                    # Test database connection
+npx trigger.dev@latest dev         # Test tasks locally
 ```
 
 ### 4. Submit PR
 
 - Write clear commit messages
-- Include tests for new features
+- Include tests for new database functions
 - Update documentation
 - Request review
 
 ## 📝 Code Standards
 
+### Database Function Style
+
+```typescript
+// src/db/advisors.ts
+import { db } from '@/db/connection';
+import { advisors } from '@/db/schema';
+import type { AdvisorSelect, AdvisorInsert } from '@/db/schema';
+
+// Individual function exports (NOT object exports)
+export async function getAllAdvisors(): Promise<AdvisorSelect[]> {
+  return await db.select().from(advisors);
+}
+
+export async function createAdvisor(data: AdvisorInsert): Promise<AdvisorSelect> {
+  const [advisor] = await db.insert(advisors).values(data).returning();
+  return advisor;
+}
+```
+
 ### TypeScript Style
 
 ```typescript
-// Use strict typing
-interface AnalysisResult {
-  symbol: string;
-  recommendation: 'buy' | 'sell' | 'hold';
-  confidence: number;
-  reasoning: string;
-}
+// Use Drizzle inferred types
+import type { AdvisorSelect, AdvisorInsert } from '@/db/schema';
 
-// Prefer async/await
-async function analyzeStock(symbol: string): Promise<AnalysisResult> {
-  // Implementation
-}
+// Prefer individual function imports
+import { getAllAdvisors, createAdvisor } from '@/db/advisors';
+import { getAllPortfolios } from '@/db/portfolios';
+
+// Use absolute imports with @/ prefix
+import { testDatabaseConnection } from '@/db/utils';
 ```
 
 ### Task Development
@@ -137,6 +173,10 @@ async function analyzeStock(symbol: string): Promise<AnalysisResult> {
 export const myAnalysisTask = task({
   id: 'my-analysis-task',
   run: async (payload: { symbols: string[] }) => {
+    // Use individual database functions
+    const advisors = await getAllAdvisors();
+    const portfolios = await getAllPortfolios();
+
     // Clear input validation
     // Robust error handling
     // Meaningful return values
@@ -148,11 +188,25 @@ export const myAnalysisTask = task({
 ### Testing
 
 ```typescript
-describe('AI Analysis Task', () => {
-  it('should analyze stock symbols correctly', async () => {
-    const result = await analyzeStock('AAPL');
-    expect(result.symbol).toBe('AAPL');
-    expect(result.confidence).toBeGreaterThan(0);
+import { describe, it, expect } from 'vitest';
+import type { AdvisorSelect } from '@/db/schema';
+
+describe('Database Types', () => {
+  it('should have proper Advisor type structure', () => {
+    const advisor: AdvisorSelect = {
+      id: 1,
+      name: 'Test Advisor',
+      systemPrompt: 'Test prompt',
+      model: 'deepseek/r1',
+      temperature: 0.1,
+      maxTokens: 2000,
+      status: 'active',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    expect(advisor.name).toBe('Test Advisor');
+    expect(typeof advisor.temperature).toBe('number');
   });
 });
 ```
@@ -161,18 +215,20 @@ describe('AI Analysis Task', () => {
 
 ### Required Tests
 
-- Unit tests for all new functions
+- Type validation tests for database operations
+- Unit tests for individual functions
 - Integration tests for Trigger.dev tasks
 - Type checking must pass
-- Lint checks must pass
+- Database connection tests
 
 ### Test Commands
 
 ```bash
 npm test                    # All tests
 npm test -- --watch        # Watch mode
-npm test -- specific.test  # Specific test
+npm test -- basic.test.ts   # Specific test
 npm run type-check          # TypeScript validation
+npm run db:test            # Database connectivity
 ```
 
 ## 📋 Pull Request Guidelines
@@ -182,7 +238,9 @@ npm run type-check          # TypeScript validation
 - [ ] Clear description of changes
 - [ ] Tests pass (`npm test`)
 - [ ] TypeScript compiles (`npm run type-check`)
-- [ ] Code is linted (`npm run lint`)
+- [ ] Database functions tested (`npm run db:test`)
+- [ ] Code follows individual function pattern
+- [ ] Uses absolute imports with `@/db/...`
 - [ ] Documentation updated if needed
 
 ### PR Template
@@ -195,19 +253,30 @@ Brief description of changes
 ## Type of Change
 
 - [ ] Bug fix
-- [ ] New feature
+- [ ] New database function
+- [ ] New AI task feature
 - [ ] Documentation update
 - [ ] Performance improvement
+
+## Database Changes
+
+- [ ] Added new individual functions
+- [ ] Updated schema types
+- [ ] Migration required
+- [ ] No database changes
 
 ## Testing
 
 - [ ] Tests pass locally
+- [ ] Database connectivity tested
 - [ ] Tested with Trigger.dev dev server
 - [ ] Added/updated tests for changes
 
 ## Checklist
 
 - [ ] TypeScript compiles without errors
+- [ ] Uses individual function exports
+- [ ] Uses absolute imports (@/db/...)
 - [ ] Code follows project style
 - [ ] Self-review completed
 ```
@@ -216,8 +285,9 @@ Brief description of changes
 
 ### Avoid These Additions
 
+- ❌ Object-based database operations (`export const advisorOps = {...}`)
 - ❌ New API servers or web frameworks
-- ❌ Complex database migrations
+- ❌ Complex database migrations without clear purpose
 - ❌ Multiple deployment platforms
 - ❌ Heavy external dependencies
 - ❌ Features that add complexity without clear value
@@ -227,33 +297,52 @@ Brief description of changes
 Ask yourself:
 
 1. Does this solve a real problem?
-2. Can it be solved more simply?
+2. Can it be solved with individual functions?
 3. Does it maintain focus on AI analysis?
 4. Will it add complexity that defeats our purpose?
+5. Does it follow the function-based pattern?
 
-## 🤖 AI & Trigger.dev Focus Areas
+## 🤖 Database & AI Focus Areas
 
 ### Priority Contributions
 
-1. **Better AI Prompts**: Improve DeepSeek analysis quality
-2. **Error Handling**: Robust failure recovery
-3. **Task Optimization**: Faster, more reliable execution
-4. **Monitoring**: Better health checks and alerting
+1. **Better Database Functions**: Improve type safety and performance
+2. **Enhanced AI Prompts**: Improve DeepSeek analysis quality
+3. **Error Handling**: Robust failure recovery for database and AI operations
+4. **Task Optimization**: Faster, more reliable execution
+5. **Monitoring**: Better health checks and alerting
 
 ### Examples of Good Contributions
+
+#### Database Functions
+
+```typescript
+// Adding a new advisor function
+export async function getAdvisorByStatus(status: 'active' | 'inactive'): Promise<AdvisorSelect[]> {
+  return await db.select().from(advisors).where(eq(advisors.status, status));
+}
+```
+
+#### AI Task Improvements
 
 - Adding market context to AI analysis
 - Improving error messages and logging
 - Adding new stock analysis indicators
 - Optimizing task scheduling
-- Better TypeScript types and interfaces
+
+#### Type Safety Enhancements
+
+- Better TypeScript types with Drizzle inferred types
+- Improved error handling patterns
+- Enhanced type validation
 
 ## 🔍 Code Review Process
 
 ### What We Look For
 
 - **Simplicity**: Is this the simplest solution?
-- **Type Safety**: Proper TypeScript usage
+- **Type Safety**: Proper Drizzle ORM usage and TypeScript types
+- **Function Pattern**: Individual functions instead of object exports
 - **Testing**: Adequate test coverage
 - **Documentation**: Clear code and comments
 - **Focus**: Does it align with project goals?
@@ -266,11 +355,33 @@ Ask yourself:
 
 ## 🛠️ Development Tips
 
+### Database Development
+
+```bash
+# Check database schema
+npm run db:studio
+
+# Generate new migration
+npm run db:generate
+
+# Reset database (development only)
+npm run db:reset
+
+# Test specific database function
+npm run test -- advisors.test.ts
+```
+
 ### Local Development
 
 ```bash
 # Start Trigger.dev development server
 npx trigger.dev@latest dev
+
+# Test database connectivity
+npm run db:test
+
+# Run type checking
+npm run type-check
 
 # Test specific task
 # Use Trigger.dev dashboard to manually trigger tasks
@@ -282,6 +393,7 @@ npx trigger.dev@latest dev
 ### Debugging
 
 - Use TypeScript strict mode
+- Test database functions individually
 - Add comprehensive logging
 - Test edge cases thoroughly
 - Monitor task execution in Trigger.dev dashboard
@@ -290,6 +402,7 @@ npx trigger.dev@latest dev
 
 ### Documentation
 
+- [Drizzle ORM Docs](https://orm.drizzle.team/docs/overview)
 - [Trigger.dev Docs](https://trigger.dev/docs)
 - [DeepSeek API Docs](https://platform.deepseek.com/docs)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
@@ -299,6 +412,7 @@ npx trigger.dev@latest dev
 - [README.md](README.md) - Project overview
 - [DEVELOPMENT.md](DEVELOPMENT.md) - Development guide
 - [CONFIGURATION.md](CONFIGURATION.md) - Setup guide
+- [TESTING_STRATEGY.md](TESTING_STRATEGY.md) - Testing approach
 
 ## 🆘 Getting Help
 
@@ -324,4 +438,4 @@ Contributors will be:
 - Mentioned in release notes for significant contributions
 - Invited to provide input on project direction
 
-**Thank you for helping keep this project simple, focused, and effective!**
+**Thank you for helping keep this project simple, focused, and effective with type-safe database operations!**

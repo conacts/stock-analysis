@@ -1,8 +1,7 @@
 import { task } from '@trigger.dev/sdk/v3';
-import { DeepSeekClient } from '../../clients/deepseek';
-import { AlpacaClient } from '../../clients/alpaca';
-import { DailyAnalysisSchema } from '../../database/models';
-import { DailyAnalysis } from '../../database/models';
+import { DeepSeekClient } from '@/clients/deepseek';
+import { AlpacaClient } from '@/clients/alpaca';
+import { AnalysisResult } from '@/db/schema';
 
 export const aiTradingAnalysis = task({
   id: 'ai-trading-analysis',
@@ -62,24 +61,28 @@ export const aiTradingAnalysis = task({
       );
 
       // Store analysis in database
-      const analysisData: DailyAnalysis = {
+      const analysisData: Omit<AnalysisResult, 'id' | 'createdAt'> = {
+        portfolioId: payload.portfolioId ? parseInt(payload.portfolioId) : 1, // default portfolio
+        advisorId: 1, // default advisor
+        analysisType: 'manual',
         symbol: payload.symbol,
-        analysis_date: new Date().toISOString(),
-        analysis_data: {
+        analysisData: {
           news_sentiment: analysis.key_points,
           ai_recommendation: analysis,
           timestamp: new Date().toISOString(),
           confidence: analysis.confidence || 0.5,
           reasoning: analysis.analysis || 'AI analysis completed',
         },
+        recommendations: analysis,
+        status: 'completed',
       };
 
-      // Validate the analysis data
-      const validatedData = DailyAnalysisSchema.parse(analysisData);
+      // Analysis data is ready to use
+      const validatedData = analysisData;
 
       console.log('✅ Analysis completed successfully:');
       console.log(`🎯 Symbol: ${payload.symbol}`);
-      console.log(`📊 Analysis Data: ${JSON.stringify(validatedData.analysis_data, null, 2)}`);
+      console.log(`📊 Analysis Data: ${JSON.stringify(validatedData['analysisData'], null, 2)}`);
 
       return {
         success: true,

@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import { ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL } from '../utils/config';
+import { ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_BASE_URL } from '@/utils/config';
 
 export interface AlpacaAccount {
   id: string;

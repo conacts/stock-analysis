@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { DEEPSEEK_API_KEY } from '../utils/config';
+import { DEEPSEEK_API_KEY } from '@/utils/config';
 
 export interface DeepSeekAnalysisResult {
   analysis: string;

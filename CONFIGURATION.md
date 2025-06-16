@@ -2,7 +2,7 @@
 
 ## 🎯 Overview
 
-This simplified AI stock analysis system requires minimal configuration for **Trigger.dev automation** and **DeepSeek AI integration**.
+This simplified AI stock analysis system requires minimal configuration for **Trigger.dev automation**, **DeepSeek AI integration**, and **type-safe database operations** with Drizzle ORM.
 
 ## 📋 Required Environment Variables
 
@@ -18,9 +18,53 @@ DEEPSEEK_API_KEY=sk-your-deepseek-api-key
 TRIGGER_SECRET_KEY=tr_prod_your-trigger-secret
 TRIGGER_ACCESS_TOKEN=tr_pat_your-trigger-token
 
+# Required for database (SQLite)
+DATABASE_URL=file:./database.db
+
 # Optional for notifications
 SLACK_BOT_TOKEN=xoxb-your-slack-token
 SLACK_CHANNEL=#your-channel
+```
+
+## 🗄️ Database Configuration
+
+### Drizzle ORM Setup
+
+The system uses **Drizzle ORM** with individual function exports for type-safe database operations:
+
+```typescript
+// src/db/connection.ts
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import Database from 'better-sqlite3';
+
+const sqlite = new Database(process.env.DATABASE_URL!);
+export const db = drizzle(sqlite);
+```
+
+### Database Operations Structure
+
+```
+src/db/
+├── schema.ts              # All table definitions & TypeScript types
+├── connection.ts          # Database connection setup
+├── migrate.ts            # Migration runner
+├── advisors.ts           # getAllAdvisors(), createAdvisor(), etc.
+├── portfolios.ts         # getAllPortfolios(), getPortfolioById(), etc.
+├── performance.ts        # getPerformanceByAdvisor(), etc.
+└── utils.ts              # testDatabaseConnection(), getTableCounts()
+```
+
+### Migration Setup
+
+```bash
+# Run database migrations
+npm run db:migrate
+
+# Generate new migration
+npm run db:generate
+
+# Reset database (development only)
+npm run db:reset
 ```
 
 ## 🔑 API Key Setup
@@ -49,6 +93,12 @@ SLACK_CHANNEL=#your-channel
 ### Development
 
 ```bash
+# Install dependencies
+npm install
+
+# Run database migrations
+npm run db:migrate
+
 # Start development server
 npx trigger.dev@latest dev
 ```
@@ -56,6 +106,9 @@ npx trigger.dev@latest dev
 ### Production
 
 ```bash
+# Build the project
+npm run build
+
 # Deploy to Trigger.dev
 npx trigger.dev@latest deploy
 ```
@@ -67,9 +120,17 @@ npx trigger.dev@latest deploy
 Template file showing required variables:
 
 ```bash
+# AI Configuration
 DEEPSEEK_API_KEY=sk-your-key-here
+
+# Trigger.dev Configuration
 TRIGGER_ACCESS_TOKEN=tr_pat_your-token
 TRIGGER_SECRET_KEY=tr_prod_your-secret
+
+# Database Configuration
+DATABASE_URL=file:./database.db
+
+# Optional Notifications
 SLACK_BOT_TOKEN=xoxb-your-token
 SLACK_CHANNEL=#trading-alerts
 ```
@@ -95,6 +156,65 @@ export default defineConfig({
 });
 ```
 
+### `drizzle.config.ts`
+
+Database configuration for Drizzle ORM:
+
+```typescript
+import type { Config } from 'drizzle-kit';
+
+export default {
+  schema: './src/db/schema.ts',
+  out: './src/db/migrations',
+  driver: 'better-sqlite',
+  dbCredentials: {
+    url: process.env.DATABASE_URL!,
+  },
+} satisfies Config;
+```
+
+## 🔧 TypeScript Configuration
+
+### Path Aliases
+
+Configured in `tsconfig.json` for clean imports:
+
+```json
+{
+  "compilerOptions": {
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["*"],
+      "@/db/*": ["db/*"],
+      "@/automation/*": ["automation/*"],
+      "@/clients/*": ["clients/*"]
+    }
+  }
+}
+```
+
+### Usage Examples
+
+```typescript
+// Import database functions directly
+import { getAllAdvisors, createAdvisor } from '@/db/advisors';
+import { getAllPortfolios } from '@/db/portfolios';
+import { testDatabaseConnection } from '@/db/utils';
+
+// Import types from schema
+import type { AdvisorSelect, AdvisorInsert } from '@/db/schema';
+
+// Use in your code
+const advisors = await getAllAdvisors();
+const newAdvisor: AdvisorInsert = {
+  name: 'New Advisor',
+  systemPrompt: 'You are a trading advisor',
+  model: 'deepseek/r1',
+  temperature: 0.1,
+  status: 'active',
+};
+```
+
 ## 🔍 Validation
 
 ### Test Configuration
@@ -103,29 +223,69 @@ export default defineConfig({
 # Check TypeScript configuration
 npm run type-check
 
+# Test database connection
+npm run db:test
+
+# Run all tests
+npm test
+
 # Test tasks locally
 npx trigger.dev@latest dev
 ```
 
+### Database Health Check
+
+```typescript
+// Import and use the health check
+import { testDatabaseConnection, getTableCounts } from '@/db/utils';
+
+// Test database connectivity
+const isConnected = await testDatabaseConnection();
+console.log('Database connected:', isConnected);
+
+// Get table statistics
+const counts = await getTableCounts();
+console.log('Table counts:', counts);
+```
+
 ### Verify API Keys
 
-The system will validate API keys on startup and log any issues.
+The system will validate API keys on startup and log any issues:
+
+```typescript
+// Environment validation happens automatically
+import { config } from '@/utils/config';
+
+// This will throw if required keys are missing
+const deepseekKey = config.DEEPSEEK_API_KEY;
+const triggerToken = config.TRIGGER_ACCESS_TOKEN;
+```
 
 ## 🛠️ Troubleshooting
 
 ### Common Issues
 
-1. **Missing DeepSeek API Key**
+1. **Missing Database File**
 
-   - Error: `DeepSeek API key not found`
-   - Solution: Add valid `DEEPSEEK_API_KEY` to `.env`
+   - Error: `Database file not found`
+   - Solution: Run `npm run db:migrate` to create database
 
-2. **Trigger.dev Authentication Failed**
+2. **DeepSeek API Key Invalid**
+
+   - Error: `DeepSeek API key not found or invalid`
+   - Solution: Check `.env` has valid `DEEPSEEK_API_KEY`
+
+3. **Trigger.dev Authentication Failed**
 
    - Error: `Unauthorized`
-   - Solution: Check `TRIGGER_ACCESS_TOKEN` is valid
+   - Solution: Verify `TRIGGER_ACCESS_TOKEN` is correct
 
-3. **Task Not Running**
+4. **Database Type Errors**
+
+   - Error: TypeScript compilation errors
+   - Solution: Run `npm run db:generate` to update types
+
+5. **Task Not Running**
    - Check Trigger.dev dashboard for errors
    - Verify environment variables are set
    - Check task logs for specific errors
@@ -141,24 +301,74 @@ export default defineConfig({
 });
 ```
 
+### Database Debugging
+
+```bash
+# Check database schema
+npm run db:studio
+
+# View database directly
+sqlite3 database.db ".schema"
+
+# Check migrations status
+npm run db:check
+```
+
 ## 📊 Monitoring
 
 ### Health Checks
 
-The system includes automatic health monitoring:
+The system includes automatic health monitoring with individual functions:
 
-- Task execution status
-- API connectivity checks
-- Error rate monitoring
+```typescript
+import { testDatabaseConnection } from '@/db/utils';
+import { getAllAdvisors } from '@/db/advisors';
+
+// Database connectivity
+const dbHealth = await testDatabaseConnection();
+
+// Data availability
+const advisors = await getAllAdvisors();
+const hasData = advisors.length > 0;
+```
+
+### Performance Monitoring
+
+```typescript
+// Monitor individual function performance
+import { performance } from 'perf_hooks';
+
+const start = performance.now();
+const portfolios = await getAllPortfolios();
+const duration = performance.now() - start;
+
+console.log(`getAllPortfolios took ${duration}ms`);
+```
 
 ### Logs
 
-View logs in Trigger.dev dashboard:
+View logs in multiple places:
 
-1. Visit your Trigger.dev project
-2. Navigate to "Runs" tab
-3. Click on specific task runs for detailed logs
+1. **Local Development**: Terminal output
+2. **Trigger.dev Dashboard**: Task execution logs
+3. **Database Logs**: SQLite query logs (if enabled)
+
+## 🔄 Migration from Previous Setup
+
+### Key Changes
+
+- **Individual Functions**: Import specific functions instead of object methods
+- **Drizzle ORM**: Type-safe database operations with auto-completion
+- **Consolidated Schema**: All types in single `src/db/schema.ts` file
+- **Absolute Imports**: Clean `@/db/...` import paths
+
+### Migration Benefits
+
+- ✅ **Better Type Safety**: Full TypeScript support with Drizzle
+- ✅ **Faster Development**: Auto-completion and IntelliSense
+- ✅ **Explicit Dependencies**: Import only what you use
+- ✅ **Better Performance**: Optimized database operations
 
 ---
 
-_Configuration is now dramatically simplified - just AI API keys and Trigger.dev setup!_
+_Configuration is now focused on type-safe database operations and AI integration!_
