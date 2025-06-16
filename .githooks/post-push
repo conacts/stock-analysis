@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Git post-push hook for Trigger.dev deployment
+# This runs after a successful git push
+
+# Get the current branch name
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+echo "🚀 Post-push hook triggered for branch: $CURRENT_BRANCH"
+
+# Check if we have the required environment variables
+if [ -z "$TRIGGER_ACCESS_TOKEN" ]; then
+    echo "⚠️  TRIGGER_ACCESS_TOKEN not set. Skipping deployment."
+    echo "   Set it with: export TRIGGER_ACCESS_TOKEN=your_token"
+    exit 0
+fi
+
+# Deploy based on branch
+case $CURRENT_BRANCH in
+    "develop")
+        echo "🧪 Deploying to Trigger.dev Development environment..."
+        npx trigger.dev@latest deploy --env development
+        if [ $? -eq 0 ]; then
+            echo "✅ Development deployment completed successfully!"
+        else
+            echo "❌ Development deployment failed!"
+            exit 1
+        fi
+        ;;
+    "main")
+        echo "🚀 Deploying to Trigger.dev Production environment..."
+        npx trigger.dev@latest deploy --env production
+        if [ $? -eq 0 ]; then
+            echo "✅ Production deployment completed successfully!"
+        else
+            echo "❌ Production deployment failed!"
+            exit 1
+        fi
+        ;;
+    *)
+        echo "ℹ️  Branch '$CURRENT_BRANCH' - no deployment configured"
+        echo "   Deployments are configured for: develop (dev) and main (prod)"
+        ;;
+esac
+
+echo "🎉 Post-push hook completed!" 

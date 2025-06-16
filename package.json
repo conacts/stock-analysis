@@ -6,8 +6,8 @@
   "scripts": {
     "trigger:dev": "npx trigger.dev@latest dev",
     "trigger:deploy": "npx trigger.dev@latest deploy",
-    "trigger:deploy:dev": "npx trigger.dev@latest deploy --env staging",
-    "trigger:deploy:prod": "npx trigger.dev@latest deploy --env prod",
+    "trigger:deploy:dev": "npx trigger.dev@latest deploy --env development",
+    "trigger:deploy:prod": "npx trigger.dev@latest deploy --env production",
     "trigger:whoami": "npx trigger.dev@latest whoami",
     "build": "tsc",
     "build:watch": "tsc --watch",
@@ -32,7 +32,8 @@
     "db:up": "drizzle-kit up",
     "db:test": "npx tsx -e \"import { testDatabaseConnection } from './src/db/utils.ts'; testDatabaseConnection().then(r => console.log('Database connected:', r)).catch(console.error)\"",
     "prepare": "husky",
-    "ci": "npm run format:check && npm run lint && npm run type-check && npm run test:coverage"
+    "ci": "npm run format:check && npm run lint && npm run type-check && npm run test:coverage",
+    "setup:hooks": "bash scripts/setup-git-hooks.sh"
   },
   "dependencies": {
     "@trigger.dev/sdk": "^3.3.17",
