@@ -65,10 +65,7 @@ export default defineConfig({
     restoreMocks: true,
 
     // Reporter configuration - clean text output only
-    reporter: ['verbose', 'json'],
-    outputFile: {
-      json: 'test-results.json',
-    },
+    reporters: ['verbose'],
   },
 
   // Path resolution
