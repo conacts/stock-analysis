@@ -13,12 +13,9 @@ beforeAll(async () => {
 	// Initialize test logging
 	console.log('🧪 Initializing TypeScript test environment...');
 
-	// Check for required environment variables
-	const requiredEnvVars = ['DATABASE_URL'];
-	const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
-
-	if (missingVars.length > 0) {
-		console.warn(`⚠️  Missing environment variables: ${missingVars.join(', ')}`);
+	// Check for database connectivity (optional for most tests)
+	if (!process.env['DATABASE_URL']) {
+		console.log('ℹ️  No DATABASE_URL configured - database-dependent tests will be skipped');
 	}
 
 	// Check for optional API keys (for LLM tests)
