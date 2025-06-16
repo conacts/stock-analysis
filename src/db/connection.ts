@@ -26,7 +26,7 @@ function getConnection() {
 
 // Create the database instance with schema
 export const db = new Proxy({} as ReturnType<typeof drizzle>, {
-	get(target, prop) {
+	get(_, prop) {
 		const connection = getConnection();
 		return connection[prop as keyof typeof connection];
 	}
