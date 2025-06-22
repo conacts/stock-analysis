@@ -4,7 +4,9 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 
-config();
+config({
+  path: '.env.local',
+});
 
 const runMigrate = async () => {
   const connectionString = process.env['DATABASE_URL'];

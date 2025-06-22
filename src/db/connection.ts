@@ -3,7 +3,9 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
 
-config();
+config({
+  path: '.env.local',
+});
 
 const connectionString = process.env['DATABASE_URL'];
 
@@ -12,24 +14,24 @@ let client: postgres.Sql | null = null;
 let database: ReturnType<typeof drizzle> | null = null;
 
 function getConnection() {
-	if (!connectionString) {
-		throw new Error('DATABASE_URL environment variable is required');
-	}
+  if (!connectionString) {
+    throw new Error('DATABASE_URL environment variable is required');
+  }
 
-	if (!client) {
-		client = postgres(connectionString);
-		database = drizzle(client, { schema });
-	}
+  if (!client) {
+    client = postgres(connectionString);
+    database = drizzle(client, { schema });
+  }
 
-	return database!;
+  return database!;
 }
 
 // Create the database instance with schema
 export const db = new Proxy({} as ReturnType<typeof drizzle>, {
-	get(_, prop) {
-		const connection = getConnection();
-		return connection[prop as keyof typeof connection];
-	}
+  get(_, prop) {
+    const connection = getConnection();
+    return connection[prop as keyof typeof connection];
+  },
 });
 
 // Export types for convenience
@@ -38,14 +40,14 @@ export { schema };
 
 // Clean shutdown function
 export async function closeConnection() {
-	if (client) {
-		await client.end();
-		client = null;
-		database = null;
-	}
+  if (client) {
+    await client.end();
+    client = null;
+    database = null;
+  }
 }
 
 // Check if database is configured
 export function isDatabaseConfigured(): boolean {
-	return !!connectionString;
+  return !!connectionString;
 }
