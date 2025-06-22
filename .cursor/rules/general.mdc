@@ -83,6 +83,13 @@ alwaysApply: true
 - Database operations should be tested against actual schema
 - Tests only matter if they are purposeful
 
+**Test Co-location:**
+- **Keep test files next to the code they test** - maintain context locality
+- If testing `src/agents/market-agent.ts`, create `src/agents/market-agent.test.ts`
+- If testing `src/db/schema.ts`, create `src/db/schema.test.ts`
+- No separate `tests/` directory - tests belong with their implementation
+- Avoid generic test files like `basic.test.ts` - they serve no purpose when types provide validation
+
 ### 11. Code Quality Standards
 
 - Prefer composition over inheritance where possible

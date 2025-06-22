@@ -7,8 +7,8 @@ export default defineConfig({
     globals: true,
     environment: 'node',
 
-    // Test file patterns
-    include: ['tests/**/*.test.ts', 'tests/**/*.spec.ts'],
+    // Test file patterns - co-located with source code
+    include: ['src/**/*.test.ts', 'src/**/*.spec.ts'],
     exclude: ['node_modules', 'dist', '**/*.d.ts'],
 
     // Coverage configuration
@@ -52,7 +52,7 @@ export default defineConfig({
     },
 
     // Setup files
-    setupFiles: ['tests/setup.ts'],
+    setupFiles: ['setup.ts'],
 
     // Environment variables
     env: {
@@ -72,7 +72,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
-      '@/tests': path.resolve(__dirname, 'tests'),
     },
   },
 
