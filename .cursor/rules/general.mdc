@@ -1,0 +1,121 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+## Core Development Philosophy
+
+### 1. Type Safety as Foundation
+
+- **Types are the foundation of this application** - implementation becomes much easier when the type system is extremely organized
+- Always prioritize explicit, comprehensive TypeScript types over any shortcuts
+- Database types should be the source of truth - link types and database as closely as possible
+- Use database types throughout the application to stay true to our data model
+- Input types for functions should be written explicitly unless using common project-wide types
+- Output types should be pulled from centralized type files, not inlined unless the function is hyper specific
+
+### 2. Explicit Over Implicit
+
+- **No index.ts files** - prefer explicit imports even if longer and more complex
+- Always use explicit imports: `import { SpecificType } from '@/types/specific'`
+- Avoid barrel exports - each import should clearly show its source
+- Function signatures should be explicit about what they accept and return. We must make every function typesafe for parameters and returns
+
+### 3. Iterative Foundation Building
+
+- **Build a working product that is fully tested before adding complexity**
+- Focus on getting current functionality working before adding new features
+- Establish solid foundations (base agents, type system, config) before expanding
+- Each iteration should be fully functional and tested
+
+### 4. Configuration Centralization
+
+- **Centralize configuration as much as possible** to simplify parsing and applying changes
+- Use the `src/config/` directory structure for all configuration management
+- Environment variables, agent settings, trading parameters, and schedules should all be centralized
+- Configuration should be typed and validated
+
+### 5. Context Locality
+
+- **Keep context locally located** - prioritize local context over file size concerns
+- It's acceptable for classes to be larger files if they maintain logical cohesion
+- Don't over-break up classes just for file size - focus on keeping related functionality together
+- Separate concerns by responsibility, not by line count
+
+## File Organization Principles
+
+### 6. Directory Structure Logic
+
+- `src/workflows/` for all Trigger.dev workflows and business logic orchestration
+- `src/agents/` for AI agent implementations (these files will naturally be larger)
+- `src/types/` for all TypeScript type definitions, organized by domain
+- `src/config/` for all configuration management
+- `src/db/` for database operations and schema definitions
+
+### 7. Type Organization
+
+- Separate types by domain: `market.ts`, `analysis.ts`, `context.ts`, etc.
+- Each type file should have a single, clear responsibility
+- Cross-file type dependencies should use explicit imports
+- Types should be comprehensive and cover all edge cases
+
+### 8. Workflow Architecture
+
+- Break workflows into sub-workflows that can be composed together
+- Use cron jobs to handle logic structure and data movement between workflows
+- Each workflow should have a single primary responsibility
+- Workflows should be testable independently
+
+## Development Guardrails
+
+### 9. Error Handling
+
+- Fix type errors systematically - understand each error before fixing
+- Don't make uneducated guesses when fixing errors
+- Limit error-fixing loops to 3 attempts per file to avoid infinite loops
+- Each choice should be thoughtful and well-reasoned
+
+### 10. Testing Strategy
+
+- Every component should be fully tested before moving to the next
+- Build incrementally - working foundation before adding complexity
+- Integration tests for workflows, unit tests for individual components
+- Database operations should be tested against actual schema
+- Tests only matter if they are purposeful
+
+### 11. Code Quality Standards
+
+- Prefer composition over inheritance where possible
+- Functions should have single responsibilities
+- Error messages should be descriptive and actionable
+- Comments should explain "why" not "what"
+
+### 12. Import and Export Strategy
+
+- Use path aliases (`@/types/market`) for internal imports
+- Group imports logically: external libraries, internal modules, types
+- Export only what needs to be public
+- Avoid circular dependencies
+
+## Decision-Making Framework
+
+### 13. When to Break Up Files
+
+- Break up by logical responsibility, not file size
+- Separate when concerns are truly different
+- Keep related functionality together even if files are larger
+- Ask: "Does this separation improve understanding and maintainability?"
+
+### 14. When to Add Complexity
+
+- Only add complexity when current functionality is working and tested
+- New features should build on solid foundations
+- Each addition should have clear value and purpose
+- Complexity should be justified by real requirements, not hypothetical needs
+
+### 15. Configuration vs. Code
+
+- Prefer configuration for values that might change
+- Use code for logic that defines behavior
+- Configuration should be validated and typed
+- Environment-specific values belong in config, not scattered in code

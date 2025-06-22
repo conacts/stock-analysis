@@ -1,13 +1,18 @@
 # AI Trading System
 
-A TypeScript-based AI stock analysis system using DeepSeek AI with automated Trigger.dev workflows.
+A TypeScript-based AI trading analysis system using OpenAI Agents SDK with automated Trigger.dev workflows for intelligent market analysis.
 
-## Features
+## Overview
 
-- **AI Analysis**: DeepSeek AI integration for market analysis
-- **Database**: PostgreSQL with Drizzle ORM
-- **Automation**: Trigger.dev for scheduled tasks
-- **Type Safety**: Full TypeScript support
+This system provides AI-powered market analysis through specialized trading agents that can analyze market conditions, assess risk, and provide trading insights. Built with type safety and modular architecture as core principles.
+
+## Key Features
+
+- **AI Agents**: OpenAI Agents SDK integration for specialized trading analysis
+- **Type-Safe Architecture**: Comprehensive TypeScript types for all trading data
+- **Automated Workflows**: Trigger.dev scheduling for market analysis tasks
+- **Database Integration**: PostgreSQL with Drizzle ORM for data persistence
+- **Configuration Management**: Centralized config system for all settings
 
 ## Quick Start
 
@@ -15,7 +20,7 @@ A TypeScript-based AI stock analysis system using DeepSeek AI with automated Tri
 
 - Node.js 18+
 - PostgreSQL database
-- DeepSeek API key
+- OpenAI API key
 - Trigger.dev account
 
 ### Setup
@@ -27,11 +32,10 @@ npm install
 ```
 
 2. **Environment variables:**
-   Create `.env` file:
 
 ```bash
 DATABASE_URL=your_postgres_connection_string
-DEEPSEEK_API_KEY=your_deepseek_api_key
+OPENAI_API_KEY=your_openai_api_key
 TRIGGER_SECRET_KEY=your_trigger_secret
 ```
 
@@ -49,45 +53,27 @@ npm run build
 npm run trigger:dev
 ```
 
-## Available Scripts
-
-### Development
-
-- `npm run build` - Compile TypeScript
-- `npm test` - Run tests
-- `npm run type-check` - Type checking
-
-### Database
-
-- `npm run db:migrate` - Run migrations
-- `npm run db:studio` - Open Drizzle Studio
-- `npm run db:health` - Test connection
-
-### Trigger.dev
-
-- `npm run trigger:dev` - Development server
-- `npm run trigger:deploy` - Deploy tasks
-
-### Code Quality
-
-- `npm run format` - Format with Prettier
-- `npm run ci` - Full CI pipeline
-
-## Architecture
+## Project Structure
 
 ```
 src/
-├── automation/       # Trigger.dev tasks
-├── clients/          # API clients
+├── agents/          # AI trading agents
+├── config/          # Configuration management
 ├── db/              # Database layer
-├── types/           # TypeScript types
-└── utils/           # Utilities
+├── types/           # TypeScript type definitions
+├── workflows/       # Trigger.dev workflows
+└── utils/           # Shared utilities
 ```
 
-## Database
+## Development Status
 
-The system uses PostgreSQL with Drizzle ORM for type-safe database operations. Database files are organized by function (advisors, portfolios, analysis, etc.).
+Currently building the foundational architecture with focus on:
+
+- Base agent framework
+- Type system organization
+- Configuration management
+- Workflow orchestration
 
 ---
 
-**Built with TypeScript, PostgreSQL, and Trigger.dev**
+**Built with TypeScript, OpenAI Agents SDK, PostgreSQL, and Trigger.dev**
