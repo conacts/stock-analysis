@@ -208,3 +208,7 @@ output/
 # Test results files
 test_results*.json
 test_api_validation.py
+
+# Database migrations (generated artifacts)
+src/db/migrations/
+!src/db/migrations/.gitkeep
