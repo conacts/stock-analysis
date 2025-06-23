@@ -14,6 +14,9 @@ export const ALPACA_API_KEY = process.env['ALPACA_API_KEY'];
 export const ALPACA_SECRET_KEY = process.env['ALPACA_SECRET_KEY'];
 export const ALPACA_BASE_URL = process.env['ALPACA_BASE_URL'] || 'https://paper-api.alpaca.markets';
 
+// Web scraping and data extraction
+export const FIRECRAWL_API_KEY = process.env['FIRECRAWL_API_KEY'];
+
 // Structured config object for easy access
 export const environment = {
   DATABASE_URL,
@@ -23,4 +26,5 @@ export const environment = {
   ALPACA_API_KEY,
   ALPACA_SECRET_KEY,
   ALPACA_BASE_URL,
+  FIRECRAWL_API_KEY,
 } as const;

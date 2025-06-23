@@ -19,7 +19,26 @@ function getConnection() {
   }
 
   if (!client) {
-    client = postgres(connectionString);
+    // Configure connection based on environment
+    const isLocal =
+      connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
+
+    const config = isLocal
+      ? {
+          // Local PostgreSQL - no SSL needed
+          connect_timeout: 10,
+          idle_timeout: 20,
+          max_lifetime: 60 * 30,
+        }
+      : {
+          // Remote database (like Supabase) - SSL required
+          ssl: 'require' as const,
+          connect_timeout: 10,
+          idle_timeout: 20,
+          max_lifetime: 60 * 30,
+        };
+
+    client = postgres(connectionString, config);
     database = drizzle(client, { schema });
   }
 

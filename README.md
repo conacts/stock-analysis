@@ -1,79 +1,230 @@
-# AI Trading System
+# Stock Analysis Trading System
 
-A TypeScript-based AI trading analysis system using OpenAI Agents SDK with automated Trigger.dev workflows for intelligent market analysis.
+A TypeScript-based trading system with AI agents, web scraping capabilities, and comprehensive market analysis tools.
 
-## Overview
+## Features
 
-This system provides AI-powered market analysis through specialized trading agents that can analyze market conditions, assess risk, and provide trading insights. Built with type safety and modular architecture as core principles.
+- **AI Trading Agents**: OpenAI Agents SDK integration with conversation history
+- **Firecrawl MCP Integration**: Web scraping and research capabilities via Model Context Protocol
+- **Database Management**: PostgreSQL with Drizzle ORM
+- **Workflow Automation**: Trigger.dev integration for scheduled tasks
+- **Type Safety**: Comprehensive TypeScript types throughout
 
-## Key Features
+## Firecrawl MCP Integration
 
-- **AI Agents**: OpenAI Agents SDK integration for specialized trading analysis
-- **Type-Safe Architecture**: Comprehensive TypeScript types for all trading data
-- **Automated Workflows**: Trigger.dev scheduling for market analysis tasks
-- **Database Integration**: PostgreSQL with Drizzle ORM for data persistence
-- **Configuration Management**: Centralized config system for all settings
+This system integrates the official [Firecrawl MCP Server](https://github.com/mendableai/firecrawl-mcp-server) to provide powerful web scraping and research capabilities to AI agents.
 
-## Quick Start
+### Available Tools
 
-### Prerequisites
+The Firecrawl MCP integration provides the following tools to agents:
 
-- Node.js 18+
-- PostgreSQL database
-- OpenAI API key
-- Trigger.dev account
+- **`firecrawl_scrape`**: Scrape content from individual URLs
+- **`firecrawl_batch_scrape`**: Scrape multiple URLs efficiently with rate limiting
+- **`firecrawl_search`**: Search the web for market news and data
+- **`firecrawl_crawl`**: Crawl websites for comprehensive data gathering
+- **`firecrawl_extract`**: Extract structured data from financial websites
+- **`firecrawl_deep_research`**: Conduct deep research on market topics
 
-### Setup
+### Configuration
 
-1. **Install dependencies:**
-
-```bash
-npm install
-```
-
-2. **Environment variables:**
+Set your Firecrawl API key in your environment:
 
 ```bash
-DATABASE_URL=your_postgres_connection_string
-OPENAI_API_KEY=your_openai_api_key
-TRIGGER_SECRET_KEY=your_trigger_secret
+export FIRECRAWL_API_KEY=fc-your-api-key-here
 ```
 
-3. **Database setup:**
+Get your API key from [https://firecrawl.dev/app/api-keys](https://firecrawl.dev/app/api-keys)
+
+### MCP Server Modes
+
+The system supports three MCP server modes:
+
+#### 1. Hosted MCP (Recommended)
+
+Uses the remote hosted Firecrawl MCP server:
+
+```typescript
+const agent = new GeneralTradingAgent({
+  enableFirecrawl: true,
+  firecrawlMode: 'hosted', // Default
+});
+```
+
+#### 2. Streamable HTTP
+
+For custom server configurations:
+
+```typescript
+const agent = new GeneralTradingAgent({
+  enableFirecrawl: true,
+  firecrawlMode: 'streamable',
+});
+```
+
+#### 3. Stdio (Local)
+
+For local MCP server instances:
+
+```typescript
+const agent = new GeneralTradingAgent({
+  enableFirecrawl: true,
+  firecrawlMode: 'stdio',
+});
+```
+
+### Usage Examples
+
+#### Basic Market Analysis with Web Research
+
+```typescript
+import { GeneralTradingAgent } from '@/agents/general-trading-agent';
+
+const agent = new GeneralTradingAgent({
+  enableFirecrawl: true,
+  firecrawlMode: 'hosted',
+});
+
+await agent.initializeWithHistory();
+await agent.connect();
+
+try {
+  const result = await agent.analyze({
+    analysisType: 'market_research',
+    symbol: 'AAPL',
+    parameters: {
+      prompt: 'Research recent Apple earnings and provide investment analysis',
+    },
+  });
+
+  console.log(result.result);
+} finally {
+  await agent.disconnect();
+}
+```
+
+#### Market Open Workflow with News Scraping
+
+```typescript
+import { runMarketOpenWorkflow } from '@/agents/general-trading-agent';
+
+const result = await runMarketOpenWorkflow(
+  'Analyze current market conditions using recent financial news and provide trading insights'
+);
+
+console.log('Market Analysis:', result.analysis);
+```
+
+### Agent Instructions
+
+The `GeneralTradingAgent` is pre-configured with instructions for using Firecrawl tools:
+
+- Uses `firecrawl_search` to find recent market news and data
+- Uses `firecrawl_scrape` for detailed financial website analysis
+- Uses `firecrawl_extract` for structured data from earnings reports and SEC filings
+- Uses `firecrawl_deep_research` for comprehensive market trend analysis
+
+### Error Handling
+
+The integration includes comprehensive error handling:
+
+- Automatic retries with exponential backoff
+- Rate limit management
+- Credit usage monitoring
+- Connection management
+
+### Testing
+
+Run the test suite to verify Firecrawl integration:
 
 ```bash
-npm run db:migrate
-npm run db:health
+pnpm test
 ```
 
-4. **Development:**
+Tests will automatically skip Firecrawl-dependent tests if no API key is provided.
 
-```bash
-npm run build
-npm run trigger:dev
+## Setup
+
+1. **Environment Variables**
+
+   ```bash
+   cp .env.example .env.local
+   # Add your API keys
+   ```
+
+2. **Database Setup**
+
+   ```bash
+   pnpm db:push
+   ```
+
+3. **Install Dependencies**
+
+   ```bash
+   pnpm install
+   ```
+
+4. **Run Tests**
+   ```bash
+   pnpm test
+   ```
+
+## Architecture
+
+### Type-First Approach
+
+- Database types are the source of truth
+- Explicit TypeScript types throughout
+- No index.ts files - explicit imports only
+
+### Agent Structure
+
+- `BaseAgent`: Abstract base class with MCP integration
+- `GeneralTradingAgent`: Concrete implementation with Firecrawl
+- Conversation history management
+- Database persistence
+
+### Workflow Integration
+
+- Trigger.dev workflows for automation
+- Market open analysis
+- Scheduled research tasks
+
+## Development
+
+### Adding New Agents
+
+```typescript
+import {
+  BaseAgent,
+  type BaseAgentConfig,
+  type AnalysisRequest,
+  type AnalysisResponse,
+} from '@/agents/base/base-agent';
+
+export class MyCustomAgent extends BaseAgent {
+  constructor(config?: Partial<BaseAgentConfig>) {
+    super({
+      name: 'MyCustomAgent',
+      instructions: 'Your agent instructions here...',
+      enableFirecrawl: true, // Enable web scraping
+      ...config,
+    });
+  }
+
+  async analyze(request: AnalysisRequest): Promise<AnalysisResponse> {
+    // Your analysis logic here
+  }
+}
 ```
 
-## Project Structure
+### Configuration Management
 
-```
-src/
-├── agents/          # AI trading agents
-├── config/          # Configuration management
-├── db/              # Database layer
-├── types/           # TypeScript type definitions
-├── workflows/       # Trigger.dev workflows
-└── utils/           # Shared utilities
-```
+All configuration is centralized in `src/config/`:
 
-## Development Status
+- `environment.ts`: Environment variables
+- `agents.ts`: Agent configurations
+- `schedules.ts`: Workflow schedules
 
-Currently building the foundational architecture with focus on:
+## License
 
-- Base agent framework
-- Type system organization
-- Configuration management
-- Workflow orchestration
-
----
-
-**Built with TypeScript, OpenAI Agents SDK, PostgreSQL, and Trigger.dev**
+MIT

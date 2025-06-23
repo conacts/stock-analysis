@@ -10,6 +10,7 @@ export const agents = pgTable('agents', {
   name: varchar('name', { length: 100 }).notNull(),
   instructions: text('instructions').notNull(),
   model: varchar('model', { length: 50 }).default('gpt-4o'),
+  portfolioId: varchar('portfolio_id', { length: 100 }), // One agent per portfolio
   createdAt: timestamp('created_at').defaultNow(),
 });
 
@@ -32,6 +33,27 @@ export const healthChecks = pgTable('health_checks', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+// Conversation history - one continuous conversation per agent
+export const conversations = pgTable('conversations', {
+  id: serial('id').primaryKey(),
+  agentId: integer('agent_id')
+    .references(() => agents.id)
+    .notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Individual messages within conversations
+export const conversationMessages = pgTable('conversation_messages', {
+  id: serial('id').primaryKey(),
+  conversationId: integer('conversation_id')
+    .references(() => conversations.id)
+    .notNull(),
+  role: varchar('role', { length: 20 }).notNull(), // 'user' | 'assistant' | 'system'
+  content: text('content').notNull(),
+  timestamp: timestamp('timestamp').defaultNow(),
+});
+
 // ============================================================================
 // TYPESCRIPT TYPES - Auto-generated from Drizzle schemas
 // ============================================================================
@@ -44,3 +66,9 @@ export type AnalysisResultInsert = typeof analysisResults.$inferInsert;
 
 export type HealthCheck = typeof healthChecks.$inferSelect;
 export type HealthCheckInsert = typeof healthChecks.$inferInsert;
+
+export type Conversation = typeof conversations.$inferSelect;
+export type ConversationInsert = typeof conversations.$inferInsert;
+
+export type ConversationMessage = typeof conversationMessages.$inferSelect;
+export type ConversationMessageInsert = typeof conversationMessages.$inferInsert;
