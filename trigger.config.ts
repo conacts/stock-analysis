@@ -14,5 +14,5 @@ export default defineConfig({
       randomize: true,
     },
   },
-  dirs: ['./src/workflows'],
+  dirs: ['./src/trigger'],
 });

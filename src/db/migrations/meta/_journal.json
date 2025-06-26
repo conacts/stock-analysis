@@ -15,6 +15,13 @@
       "when": 1750630579466,
       "tag": "0001_silky_nekra",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1750701893757,
+      "tag": "0002_third_vertigo",
+      "breakpoints": true
     }
   ]
 }

@@ -4,7 +4,7 @@ globs: **/trigger/**/*.ts, **/trigger/**/*.tsx,**/trigger/**/*.js,**/trigger/**/
 alwaysApply: false
 ---
 ---
-globs:  */
+globs: **/trigger/**/*.ts, **/trigger/**/*.tsx,**/trigger/**/*.js,**/trigger/**/*.jsx
 description: Guidelines for writing Trigger.dev tasks
 alwaysApply: false
 ---
