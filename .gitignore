@@ -148,20 +148,46 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
-# Node.js / Bun
-node_modules/
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-bun.lockb
-.npm
-.yarn/
-.pnp.*
+.pnpm-debug.log*
 
-# TypeScript
+# vercel
+.vercel
+
+# typescript
 *.tsbuildinfo
-dist/
-build/
+next-env.d.ts
+
+.trigger
 
 # Testing
 coverage/
