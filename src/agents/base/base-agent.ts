@@ -69,8 +69,8 @@ export abstract class BaseAgent {
   constructor(config: BaseAgentConfig) {
     this.config = config;
 
-    const tools = [];
-    const mcpServers = [];
+    const tools: any[] = [];
+    const mcpServers: (MCPServerStdio | MCPServerStreamableHttp)[] = [];
 
     // Add Firecrawl MCP integration if enabled
     if (config.enableFirecrawl && FIRECRAWL_API_KEY) {
